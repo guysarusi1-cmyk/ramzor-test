@@ -1248,7 +1248,14 @@
   .plevelbar{ position:fixed; left:0; right:0; bottom:0; z-index:300; display:flex; gap:6px; padding:8px 10px calc(8px + env(safe-area-inset-bottom)); background:var(--panel); border-top:1px solid var(--line); box-shadow:0 -6px 20px rgba(0,0,0,.35); }
   .lvbtn{ flex:1; min-height:48px; border-radius:12px; border:2px solid var(--line); background:var(--panel-2); color:var(--text); font-family:'Rubik', sans-serif; font-weight:700; font-size:13px; cursor:pointer; }
   .lvbtn.lv-clear{ background:var(--panel-2); }
-  .lvbtn.active{ transform:translateY(-3px); box-shadow:0 4px 12px rgba(0,0,0,.45); border-color:#fff !important; }
+  /* each level keeps its own colour at all times; the chosen one is filled with it (and lifted a little), the others are outlined */
+  .lvbtn.active{ transform:translateY(-3px); box-shadow:0 4px 12px rgba(0,0,0,.45); }
+  .lvbtn.lv-yes.active{ background:var(--p-yes, #7be0a0); color:#0b2417; }
+  .lvbtn.lv-avoid.active{ background:var(--p-avoid, #f0c239); color:#2b2200; }
+  .lvbtn.lv-no.active{ background:var(--p-no, #ff8a80); color:#2c0b08; }
+  .lvbtn.lv-hours{ background:#14263f; color:#8ec0ff; border-color:#8ec0ff !important; }
+  .lvbtn.lv-hours.active{ background:#8ec0ff; color:#0b1a2e; }
+  .lvbtn.lv-clear{ color:var(--muted); }
 
   /* coordinator: edit one shift, submissions, timetable, settings */
   .pedit-list{ max-height:46vh; overflow:auto; margin:8px 0; }
@@ -1346,6 +1353,15 @@
   .pgoal-opt.on{ border-color:var(--gold); background:rgba(240,194,57,.12); }
   .pnote-soft{ border-right:3px solid var(--gold); padding-right:10px; }
   .pfb{ margin:10px 0; padding:12px; border:1px solid var(--p-line); border-radius:14px; background:var(--p-panel); line-height:1.6; white-space:pre-line; }
+  /* the long weekend button (candles), and the two consent buttons keep their own colours */
+  .pshift-long{ font-size:15px; line-height:1; }
+  .pchoice button[data-consent$=":1"]{ border-color:var(--p-yes, #7be0a0); color:var(--p-yes, #7be0a0); }
+  .pchoice button[data-consent$=":0"]{ border-color:var(--p-no, #ff8a80); color:var(--p-no, #ff8a80); }
+  .pchoice button[data-consent$=":1"].on{ background:var(--p-yes, #7be0a0); color:#0b2417; }
+  .pchoice button[data-consent$=":0"].on{ background:var(--p-no, #ff8a80); color:#2c0b08; }
+  /* the gear next to the theme button, and the large-text option */
+  .portal-top-actions{ display:flex; gap:8px; align-items:center; }
+  body.portal-big .portal-shell{ zoom:1.14; }
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
   .avatar-initials.avatar-has-char img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -5098,7 +5114,7 @@ function showPortal(tab){
       <div class="portal-top">
         <button type="button" class="back-btn portal-back" id="portal-home">${portalServerOn ? 'יציאה' : '→ מסך ראשי'}</button>
         <h1 class="portal-title">פורטל המדריך</h1>
-        <button type="button" class="portal-theme" id="portal-theme" aria-label="החלפה בין מצב כהה לבהיר">${st.settings.theme === 'dark' ? '☀️' : '🌙'}</button>
+        <span class="portal-top-actions">${portalServerOn ? '<button type="button" class="portal-theme" id="portal-gear" aria-label="העדפות מערכת" title="העדפות מערכת">⚙️</button>' : ''}<button type="button" class="portal-theme" id="portal-theme" aria-label="החלפה בין מצב כהה לבהיר">${st.settings.theme === 'dark' ? '☀️' : '🌙'}</button></span>
       </div>
       ${portalServerOn ? `<div class="portal-hello">שלום ${pEsc(me.first)}</div>` : `<label class="portal-as">צפייה כ:
         <select id="portal-persona">${st.instructors.filter(p => p.active).map(p => `<option value="${p.id}"${p.id === me.id ? ' selected' : ''}>${pEsc(instrName(p, st.instructors))}${p.role === 'coordinator' ? ' (רכזת)' : ''}</option>`).join('')}</select>
@@ -5108,6 +5124,7 @@ function showPortal(tab){
       <div id="portal-body"></div>
     </div>`;
   document.getElementById('portal-home').addEventListener('click', portalServerOn ? srvSignOut : showAppHome);
+  const gear = document.getElementById('portal-gear'); if(gear) gear.addEventListener('click', openPortalSettings);
   document.getElementById('portal-theme').addEventListener('click', () => { st.settings.theme = st.settings.theme === 'dark' ? 'light' : 'dark'; if(portalServerOn){ try { localStorage.setItem('ramzor-portal-theme', st.settings.theme); } catch(e){} } else portalSave(); showPortal(); });
   if(!portalServerOn) document.getElementById('portal-persona').addEventListener('change', e => { portalUi.persona = e.target.value; portalUi.tab = null; showPortal(); });
   view.querySelectorAll('[data-ptab]').forEach(b => b.addEventListener('click', () => { portalUi.tab = b.dataset.ptab; showPortal(); }));
@@ -5128,7 +5145,7 @@ function portalRefresh(){ portalRenderTab(); }
 
 // ---- shared small pieces
 function monthNavHtml(mk, extra){
-  return `<div class="pmonth"><button type="button" data-pmonth="-1" aria-label="חודש קודם">›</button><b>${monthLabel(mk)}</b><button type="button" data-pmonth="1" aria-label="חודש הבא">‹</button>${extra || ''}</div>`;
+  return `<div class="pmonth"><button type="button" data-pmonth="-1" aria-label="חודש קודם"><bdi dir="ltr">›</bdi></button><b>${monthLabel(mk)}</b><button type="button" data-pmonth="1" aria-label="חודש הבא"><bdi dir="ltr">‹</bdi></button>${extra || ''}</div>`;          // (the arrows are fixed left-to-right, so that no phone mirrors them: the right one points right, the left one points left)
 }
 function wireMonthNav(root, key){
   key = key || 'month';
@@ -5248,9 +5265,12 @@ function renderInstructorSchedule(body){
 
 // ---- preferences: every shift is "כן" until you mark otherwise; choose a level at the bottom, then tap days or shifts
 const LEVEL_BUTTONS = [['yes', 'כן'], ['avoid', 'יכול'], ['no', 'לא'], ['absent', 'היעדרות']];
-const SRV_LEVEL_BUTTONS = [['yes', 'כן'], ['avoid', 'יכול'], ['no', 'לא'], ['absent', 'היעדרות'], ['hours', 'שעות אחרות']];
-const SRV_LONG = { id:'l', label:'סופ"ש ארוך', letter:'ס' };               // the long weekend: one more button on Fridays
-const prefShiftsFor = date => portalServerOn && dowOf(date) === 5 ? portalLoad().shiftTypes.concat([SRV_LONG]) : portalLoad().shiftTypes;
+const SRV_LEVEL_BUTTONS = [['yes', 'כן'], ['avoid', 'יכול'], ['no', 'לא'], ['hours', 'שעות אחרות']];
+const SRV_LONG = { id:'l', label:'סופ"ש ארוך', letter:'🕯️' };            // the long weekend (Friday late afternoon, Saturday morning and noon, until after Shabbat ends): one more button on Fridays AND on Saturdays, the same mark
+const prefShiftsFor = date => portalServerOn && [5, 6].includes(dowOf(date)) ? portalLoad().shiftTypes.concat([SRV_LONG]) : portalLoad().shiftTypes;
+// the long-weekend mark is kept on the Friday; a tap on the Saturday button is a tap on the Friday one
+const prefKeyOf = key => { const [d, id] = key.split('|'); return id === 'l' && dowOf(d) === 6 ? `${addDays(d, -1)}|l` : key; };
+const DEFAULT_SHIFT_LEGEND = types => types.map(s => (s.letter || s.label.charAt(0)) + ' = ' + s.label);
 const FIXED_REASON = { vacation:'חופשה', sick:'מחלה', reserve:'מילואים', leave:'חופשה מיוחדת', other:'היעדרות', self:'היעדרות' };
 function renderInstructorPrefs(body){
   if(!body.isConnected) return;                                   // (a screen that finished loading after the person left it must not draw)
@@ -5269,7 +5289,7 @@ function renderInstructorPrefs(body){
     cells += `<div class="pday${absent ? ' absent' : ''}${fx ? ' fixed' : ''}${hrs ? ' has-hours' : ''}${[5, 6].includes(dowOf(date)) ? ' weekend' : ''}"${fx ? ` title="${pEsc(FIXED_REASON[fx.reason] || 'היעדרות')}"` : ''}>
       <button type="button" class="pday-num" data-pday="${date}" aria-label="${dayLabel(date)}">${parseIso(date).getDate()}</button>
       ${hrs ? `<span class="pday-hrs" title="שעות אחרות">${hrs.map(([a, b]) => a + '–' + b).join(', ')}</span>` : ''}
-      <div class="pday-shifts">${prefShiftsFor(date).map(s => { const lv = absent ? 'no' : (prefs.slots[`${date}|${s.id}`] || 'yes'); return `<button type="button" class="pshift lv-${lv}" data-pslot="${date}|${s.id}" aria-label="${pEsc(s.label)}">${pEsc(s.letter || s.label.charAt(0))}</button>`; }).join('')}</div>
+      <div class="pday-shifts">${prefShiftsFor(date).map(s => { const lv = absent ? 'no' : (prefs.slots[prefKeyOf(`${date}|${s.id}`)] || 'yes'); return `<button type="button" class="pshift lv-${lv}${s.id === 'l' ? ' pshift-long' : ''}" data-pslot="${date}|${s.id}" aria-label="${pEsc(s.label)}">${pEsc(s.letter || s.label.charAt(0))}</button>`; }).join('')}</div>
     </div>`;
   });
   const fixedList = portalServerOn ? prefs.fixed.filter(f => daysOfMonth(mk).includes(f.day)) : [];
@@ -5280,15 +5300,15 @@ function renderInstructorPrefs(body){
   let availHint = '';
   if(portalServerOn && minInfo && minInfo.total){                  // a gentle word when the marks leave little room for the minimum
     const free = days.filter(d => !fixedOn(d) && !prefs.absent.includes(d)).reduce((n, d) => n + ['m', 'e', 'n'].filter(id => !prefs.slots[`${d}|${id}`]).length, 0);
-    if(free < minInfo.total * 2) availHint = `<div class="pnote pnote-soft">שמנו לב שבסימונים הנוכחיים נשארו ${free} משמרות שמתאימות לך. כדי שנצליח לשבץ אותך במינימום (בערך ${minInfo.total} משמרות) כדאי להשאיר קצת יותר גמישות. אם משהו מגביל אותך, נשמח לשמוע ולמצוא פתרון יחד.</div>`;
+    if(free < minInfo.total * 2) availHint = `<div class="pnote pnote-soft">${tx('hint_low', free, minInfo.total)}</div>`;
   }
   const goalBtn = (v, label, sub) => `<button type="button" class="pgoal-opt${goal === v ? ' on' : ''}" data-goal="${v || ''}"${locked ? ' disabled' : ''}><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</button>`;
   body.innerHTML = `
     ${monthNavHtml(mk)}
-    <div class="pstatus ${submitted ? 'ok' : 'bad'}">${submitted ? 'ההעדפות שלך אצלנו, תודה! אפשר לעדכן עד סגירת ההגשה.' : 'נשמח לקבל את ההעדפות שלך. זה עוזר לנו לבנות סידור שמתאים לך.'}${dl ? ` · אפשר להגיש עד ${dl.getDate()}/${dl.getMonth() + 1}${m.deadlineTime ? ' בשעה ' + m.deadlineTime : ''}` : ''}${portalServerOn && !locked ? ' · <span id="srv-save-state">נשמר ✓</span>' : ''}</div>
-    ${locked ? '<div class="pnote">ההגשה לחודש הזה סגורה כרגע (היא נפתחת ב-1 בחודש הקודם ונסגרת ב-24 בו בשעה 22:30). לשינוי אפשר לפנות לרכזת, והיא תשמח לעזור.</div>' : ''}
+    <div class="pstatus ${submitted ? 'ok' : 'bad'}">${submitted ? tx('st_sub') : tx('st_unsub')}${dl ? ` · אפשר להגיש עד ${dl.getDate()}/${dl.getMonth() + 1}${m.deadlineTime ? ' בשעה ' + m.deadlineTime : ''}` : ''}${portalServerOn && !locked ? ' · <span id="srv-save-state">נשמר ✓</span>' : ''}</div>
+    ${locked ? `<div class="pnote">${tx('locked')}</div>` : ''}
     ${fixedList.length ? `<div class="pnote">הימים שאושרו לך או שהרכזת סימנה: ${fixedList.map(f => dayLabel(f.day) + ' (' + (FIXED_REASON[f.reason] || 'היעדרות') + ')').join(', ')}.</div>` : ''}
-    <div class="pnote">כל המשמרות מסומנות "כן", כלומר שאתם זמינים. נשמח לדעת אם יש משמרות שפחות מתאימות לכם: בחרו למטה רמה, ואז לחצו על יום (לכל המשמרות שלו) או על משמרת בודדת. "יכול" אומר שאפשר, אבל פחות נוח, ו"לא" אומר שלא מתאים. ${prefShiftsFor(days[0]).map(s => (s.letter || s.label.charAt(0)) + ' = ' + s.label).join(' · ')}${portalServerOn ? ' · ס = סופ"ש ארוך (שישי 17:00 עד מוצאי שבת), מסומן ביום שישי. אם אתם זמינים רק בחלק מהשעות, בחרו "שעות אחרות" ולחצו על היום.' : ''}</div>
+    <details class="pfold" data-fold="prefhelp"${openFold('prefhelp') ? ' open' : ''}><summary><span>איך ממלאים? (לחצו להסבר)</span></summary><div class="pfold-body"><div class="pnote">כל המשמרות מסומנות "כן", כלומר שאתם זמינים. נשמח לדעת אם יש משמרות שפחות מתאימות לכם: בחרו למטה רמה, ואז לחצו על יום (לכל המשמרות שלו) או על משמרת בודדת. "יכול" אומר שאפשר, אבל פחות נוח, ו"לא" אומר שלא מתאים. ${[...DEFAULT_SHIFT_LEGEND(st.shiftTypes)].join(' · ')}${portalServerOn ? ` · 🕯️ = סופ"ש ארוך (שישי צהריים מאוחר, בשבת בוקר וצהריים, עד אחרי יציאת שבת). אותה בחירה מופיעה גם ביום שישי וגם ביום שבת. אם אתם זמינים רק בחלק מהשעות, בחרו "שעות אחרות" ולחצו על היום.` : ''}</div></div></details>
     ${availHint}
     <div class="pcal">${DOW_SHORT.map(d => `<div class="pcal-head">${d}</div>`).join('')}${cells}</div>
     ${portalServerOn ? `
@@ -5310,7 +5330,8 @@ function renderInstructorPrefs(body){
     </div>
     <label class="pfield">יש משהו שחשוב לך שנדע? (לא חובה)<textarea id="prefs-note" rows="2" maxlength="400"${locked ? ' disabled' : ''}>${pEsc(m.notes && m.notes[me.id] || '')}</textarea></label>` : ''}
     <div class="pprefs-actions"><button type="button" class="btn" id="prefs-submit">${submitted ? 'עדכון והגשה מחדש' : 'הגשת ההעדפות'}</button><span class="pnote">${marked ? marked + ' סימונים שאינם "כן"' : 'הכל "כן"'}</span></div>
-    <div class="plevelbar" role="group" aria-label="בחירת רמה">${levels.map(b => `<button type="button" class="lvbtn lv-${b[0]}${portalUi.level === b[0] ? ' active' : ''}" data-plevel="${b[0]}">${b[1]}</button>`).join('')}<button type="button" class="lvbtn lv-clear" id="prefs-clear-all">${portalServerOn ? 'זמין לכל החודש' : 'נקה הכל'}</button></div>`;  wireMonthNav(body, 'pmonth');
+    <div class="plevelbar" role="group" aria-label="בחירת רמה">${levels.map(b => `<button type="button" class="lvbtn lv-${b[0]}${portalUi.level === b[0] ? ' active' : ''}" data-plevel="${b[0]}">${b[1]}</button>`).join('')}<button type="button" class="lvbtn lv-clear" id="prefs-clear-all">נקה הכל</button></div>`;
+  wireMonthNav(body, 'pmonth'); wireFolds(body);
   body.querySelectorAll('[data-plevel]').forEach(b => b.addEventListener('click', () => { portalUi.level = b.dataset.plevel; renderInstructorPrefs(body); }));
   body.querySelectorAll('[data-goal]').forEach(b => b.addEventListener('click', () => {
     if(locked) return;
@@ -5322,9 +5343,9 @@ function renderInstructorPrefs(body){
   }));
   body.querySelectorAll('[data-pslot]').forEach(b => b.addEventListener('click', () => {
     if(locked) return;
-    const key = b.dataset.pslot, date = key.split('|')[0], lv = portalUi.level;
-    if(fixedOn(date)) return;
-    if(lv === 'hours'){ openHoursSheet(date, prefs, () => renderInstructorPrefs(body)); return; }
+    const shown = b.dataset.pslot.split('|')[0], key = prefKeyOf(b.dataset.pslot), date = key.split('|')[0], lv = portalUi.level;
+    if(fixedOn(date) || fixedOn(shown)) return;
+    if(lv === 'hours'){ openHoursSheet(shown, prefs, () => renderInstructorPrefs(body)); return; }
     if(lv === 'absent'){ toggleAbsent(prefs, date); }
     else if(lv === 'yes'){ delete prefs.slots[key]; }                      // "כן" is the default, so nothing needs to be stored
     else if(prefs.slots[key] === lv){ delete prefs.slots[key]; } else { prefs.slots[key] = lv; }
@@ -5332,7 +5353,7 @@ function renderInstructorPrefs(body){
   }));
   body.querySelectorAll('[data-pday]').forEach(b => b.addEventListener('click', () => {
     if(locked) return;
-    const date = b.dataset.pday, lv = portalUi.level, keys = prefShiftsFor(date).map(s => `${date}|${s.id}`);
+    const date = b.dataset.pday, lv = portalUi.level, keys = prefShiftsFor(date).map(s => prefKeyOf(`${date}|${s.id}`));
     if(fixedOn(date)) return;
     if(lv === 'hours'){ openHoursSheet(date, prefs, () => renderInstructorPrefs(body)); return; }
     if(lv === 'absent'){ toggleAbsent(prefs, date); }
@@ -5342,17 +5363,17 @@ function renderInstructorPrefs(body){
   }));
   document.getElementById('prefs-clear-all').addEventListener('click', async () => {
     if(locked) return;
-    if(!(await confirmSheet({ title:portalServerOn ? 'לסמן זמינות לכל החודש?' : 'לנקות את כל ההעדפות?', text:'כל הסימונים של החודש יחזרו ל"כן" (ברירת המחדל), כולל היעדרויות' + (portalServerOn ? ' ושעות אחרות' : '') + '. אפשר תמיד לסמן שוב.', okLabel:portalServerOn ? 'כן, זמין/ה לכל החודש' : 'כן, לנקות הכל', cancelLabel:'חזרה', danger:true }))) return;
-    prefs.slots = {}; prefs.absent = []; if(portalServerOn) prefs.hours = {}; portalSave(); toast(portalServerOn ? 'מעולה, סימנו אותך כזמין/ה לכל החודש' : 'כל ההעדפות נוקו'); renderInstructorPrefs(body);
+    if(!(await confirmSheet({ title:'לנקות את כל ההעדפות?', text:tx('clear_text', portalServerOn ? ' ושעות אחרות' : ', היעדרויות'), okLabel:'כן, לנקות הכל', cancelLabel:'חזרה', danger:true }))) return;
+    prefs.slots = {}; prefs.absent = []; if(portalServerOn) prefs.hours = {}; portalSave(); toast(tx('clear_done')); renderInstructorPrefs(body);
   });
   document.getElementById('prefs-submit').addEventListener('click', async () => {
     if(locked) return;
     if(portalServerOn){
-      if(cons.extend === null || cons.pull === null){ toast('נשמח אם תענו על שתי השאלות הקטנות לפני ההגשה. זה עוזר לנו לתכנן'); const box = body.querySelector('.pconsents'); if(box) box.scrollIntoView({ block:'center' }); return; }
-      try { await srvSubmit(mk, (document.getElementById('prefs-note').value || '').trim(), m.goals[me.id] || null); } catch(e){ toast('לא הצלחנו לשמור את ההגשה כרגע. אפשר לנסות שוב בעוד רגע'); return; }
-      toast('תודה! ההעדפות שלך הוגשו ✓'); renderInstructorPrefs(body); return;
+      if(cons.extend === null || cons.pull === null){ toast(tx('consent_needed')); const box = body.querySelector('.pconsents'); if(box) box.scrollIntoView({ block:'center' }); return; }
+      try { await srvSubmit(mk, (document.getElementById('prefs-note').value || '').trim(), m.goals[me.id] || null); } catch(e){ toast(tx('submit_fail')); return; }
+      toast(tx('submit_ok')); renderInstructorPrefs(body); return;
     }
-    m.submitted[me.id] = true; portalSave(); toast('תודה! ההעדפות שלך הוגשו ✓'); renderInstructorPrefs(body);
+    m.submitted[me.id] = true; portalSave(); toast(tx('submit_ok')); renderInstructorPrefs(body);
   });
 }
 // custom hours for one day: up to two ranges (whole hours); used only when they complete a full shift
@@ -5394,17 +5415,17 @@ function renderInstructorSwaps(body){
     ${approvalsForMe.length ? '<h2 class="psec">בקשות אליי</h2>' : ''}
     ${approvalsForMe.map(a => `<div class="preq warn"><div>הרכזת שיבצה אותך למשמרת שסימנת עליה "לא":<br><b>${slotLabel(a.key)}</b><br>האם את/ה מאשר/ת?</div><div class="preq-actions"><button type="button" class="btn" data-appr-ok="${a.mk}|${a.k}">מאשר/ת</button><button type="button" class="btn ghost" data-appr-no="${a.mk}|${a.k}">לא מאשר/ת</button></div></div>`).join('')}
     <h2 class="psec">בקשות החלפה פתוחות</h2>
-    <div class="pnote">עמיתים שמחפשים מחליף/ה למשמרת. אם יש לכם אפשרות לעזור, לחצו על הכפתור והבקשה תעבור לרכזת. תודה שאתם שם אחד בשביל השני. כדי לבקש החלפה בעצמכם, פתחו "הסידור" ← "המשמרות שלי" ← "בקשת החלפה".</div>
+    <div class="pnote">${tx('swaps_intro')}</div>
     ${open.length ? open.map(s => {
       const own = s.from === me.id, can = !own && canTakeShift(me.id, s.key);
       return `<div class="preq swap"><div>${s.urgent ? '<span class="pchip missing">⚠ דחוף</span> ' : ''}<b>${pEsc(name(s.from))}</b> מחפש/ת מחליף/ה<br>${slotLabel(s.key)}</div><div class="preq-actions">${own ? `<button type="button" class="btn ghost" data-swap-cancel="${s.id}">ביטול הבקשה שלי</button>` : can ? `<button type="button" class="btn" data-swap-take="${s.id}">אני יכול/ה להחליף</button>` : '<em class="pst">אי אפשר לשבץ אותך כרגע</em>'}</div></div>`;
-    }).join('') : '<div class="pnote">כרגע אין בקשות החלפה פתוחות. תודה שאכפת לכם!</div>'}
+    }).join('') : `<div class="pnote">${tx('swaps_none')}</div>`}
     <h2 class="psec">הבקשות שלי</h2>
     ${mineReq.length ? mineReq.map(s => `<div class="pmine-row"><span>${slotLabel(s.key)}<br><small>${s.from === me.id ? 'ביקשתם החלפה' + (s.to ? ' · מוכן/ה לעזור: ' + pEsc(name(s.to)) : '') : 'הצעתם להחליף את ' + pEsc(name(s.from))}</small></span><span class="pmine-actions">${portalServerOn && s.from === me.id && s.status === 'open' ? `<button type="button" class="btn ghost small" data-cands="${s.aid}">מי זמין/ה?</button>` : ''}<em class="pst pst-${s.status}">${SWAP_STATUS[s.status]}</em></span></div>`).join('') : '<div class="pnote">אין בקשות.</div>'}`;
   body.querySelectorAll('[data-swap-take]').forEach(b => b.addEventListener('click', async () => {
     const sw = st.swaps.find(x => x.id === b.dataset.swapTake); if(!sw || sw.status !== 'open') return;
     if(portalServerOn){
-      try { await srvSwapAction('offer_swap', { p_swap:sw.id }); toast('תודה! הבקשה הועברה לרכזת, ונעדכן את שניכם'); } catch(e){ toast('לא הצלחנו כרגע, ייתכן שהמשמרת כבר נתפסה. תודה על הנכונות!'); }
+      try { await srvSwapAction('offer_swap', { p_swap:sw.id }); toast(tx('take_ok')); } catch(e){ toast(tx('take_fail')); }
       renderInstructorSwaps(body); return;
     }
     sw.to = me.id; sw.status = 'offered';
@@ -5418,7 +5439,7 @@ function renderInstructorSwaps(body){
     portalSheet(`<h2>עמיתים שזמינים למשמרת</h2><div class="pnote">${names.length ? 'אלה העמיתים שזמינים למשמרת הזאת ולא שובצו אליה. אפשר לפנות אליהם ישירות ולבקש עזרה: ' + names.map(pEsc).join(', ') + '.' : 'כרגע לא מצאנו עמיתים פנויים למשמרת הזאת. נשמח לעזור, ואפשר גם לדבר עם הרכזת.'}</div><div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>תודה</button></div>`);
   }));
   body.querySelectorAll('[data-swap-cancel]').forEach(b => b.addEventListener('click', async () => {
-    if(portalServerOn){ try { await srvSwapAction('cancel_swap', { p_swap:b.dataset.swapCancel }); toast('ביטלנו את הבקשה'); } catch(e){ toast('לא הצלחנו לבטל כרגע. אפשר לנסות שוב בעוד רגע'); } renderInstructorSwaps(body); return; }
+    if(portalServerOn){ try { await srvSwapAction('cancel_swap', { p_swap:b.dataset.swapCancel }); toast(tx('cancel_ok')); } catch(e){ toast(tx('cancel_fail')); } renderInstructorSwaps(body); return; }
     const sw = st.swaps.find(x => x.id === b.dataset.swapCancel); if(sw){ sw.status = 'cancelled'; portalSave(); toast('הבקשה בוטלה'); renderInstructorSwaps(body); } }));
   body.querySelectorAll('[data-appr-ok], [data-appr-no]').forEach(b => b.addEventListener('click', () => {
     const [mk, k] = (b.dataset.apprOk || b.dataset.apprNo).split(/\|(.+)/).filter(Boolean), m = portalMonth(mk), key = k.slice(0, k.lastIndexOf('|'));
@@ -5725,10 +5746,10 @@ const SRV_SHIFT_UI = { M:'m', A:'e', N:'n' };                              // (t
 const SRV_PREF_UI = { M:'m', A:'e', N:'n', L:'l' };                       // (the shifts of the preferences)
 const SRV_SHIFTS = [
   { id:'m', label:'בוקר', start:'07:00', end:'15:00', need:1, needWeekend:1, night:false },
-  { id:'e', label:'אחר הצהריים', start:'14:00', end:'22:00', need:1, needWeekend:1, night:false },
+  { id:'e', label:'צהריים', letter:'צ', start:'14:00', end:'22:00', need:1, needWeekend:1, night:false },
   { id:'n', label:'לילה', start:'22:00', end:'08:00', need:1, needWeekend:1, night:true }
 ];
-const srv = { me:null, meRow:null, saved:{}, timer:null, failed:false, busy:false, photos:null, profile:null, profileFor:null };
+const srv = { me:null, meRow:null, saved:{}, timer:null, failed:false, busy:false, photos:null, profile:null, profileFor:null, voice:null, reminders:true };
 const firstOf = mk => mk + '-01';
 
 // ---- Israel time (the database closes the preferences by Israel time, so the screen does too)
@@ -5773,7 +5794,7 @@ async function srvLoad(){
   const st = {
     version:2, serverMode:true, instructors:staff.map((s, i) => ({ id:s.id, first:s.display_name, last:'', role:s.kind, active:s.active, photo:(srv.photos && srv.photos[s.id]) || letterPhoto(s.display_name, i) })),
     shiftTypes:JSON.parse(JSON.stringify(SRV_SHIFTS)), rules:Object.assign({}, RULES_DEFAULT), months:{}, swaps:[], assignmentIds:{}, announcements:[], timetable:{}, birthdays:{}, outbox:[],
-    notices:notices.map(n => ({ id:n.id, to:meId, at:n.created_at, text:n.text, kind:n.kind, seen:n.seen, fromServer:true })),
+    notices:notices.map(n => ({ id:n.id, to:meId, at:n.created_at, text:n.text, kind:n.kind, seen:n.seen, sent:!!n.seen, fromServer:true })),
     settings:{ theme:(function(){ try { return localStorage.getItem('ramzor-portal-theme') || 'dark'; } catch(e){ return 'dark'; } })() }
   };
   portalState = st; srv.me = meId; srv.meRow = st.instructors.find(p => p.id === meId) || null;
@@ -5792,7 +5813,7 @@ async function srvLoad(){
   subs.forEach(r => { const m = st.months[monthOf(r.month)]; if(m){ m.submitted[r.staff_id] = true; if(r.note) m.notes[r.staff_id] = r.note; } });
   let goalRows = []; try { goalRows = await srvAll(() => sbPersonal.from('prefs_submission').select('staff_id,month,goal').gte('month', from).lte('month', to)); } catch(e){ goalRows = []; }          // (the goal column comes with scheduling-v5.sql; until then there is none)
   goalRows.forEach(r => { const m = st.months[monthOf(r.month)]; if(m && r.goal) m.goals[r.staff_id] = r.goal; });
-  if(srv.profileFor !== meId){ srv.profileFor = meId; try { const pr = await sbPersonal.rpc('my_profile'); srv.profile = pr.error ? null : pr.data; } catch(e){ srv.profile = null; } }
+  if(srv.profileFor !== meId){ srv.profileFor = meId; srv.me = meId; try { const pr = await sbPersonal.rpc('my_profile'); srv.profile = pr.error ? null : pr.data; } catch(e){ srv.profile = null; } await srvLoadSettings(); applyPortalSize(); }
   sched.forEach(r => { const m = st.months[monthOf(r.month)]; if(m){ m.status = r.status; m.published = r.status === 'published'; } });
   st.rows = [];
   if(sched.length){                                       // (the database shows a person only the published schedules; the coordinator sees the drafts too)
@@ -5888,7 +5909,8 @@ async function srvFlush(){
   const el = document.getElementById('srv-save-state'); if(el) el.textContent = srv.failed ? 'עוד לא נשמר, ננסה שוב' : 'נשמר ✓';
 }
 async function srvSubmit(mk, note, goal){
-  await srvFlush();
+  // first everything on the screen must be saved (a save that is already running is waited for, not skipped)
+  for(let i = 0; i < 80 && (srv.busy || srvSnapshot(mk) !== srv.saved[mk]); i++){ if(!srv.busy) await srvFlush(); else await new Promise(r => setTimeout(r, 150)); }
   if(srv.failed || srvSnapshot(mk) !== srv.saved[mk]) throw new Error('not saved');
   const row = { staff_id:srv.me, month:firstOf(mk), submitted_at:new Date().toISOString() };
   if(note !== undefined) row.note = note || null;
@@ -6031,7 +6053,7 @@ function srvRowLine(r){
 async function srvSwapCandidates(assignmentId){
   try { const r = await sbPersonal.rpc('swap_candidates', { p_assignment:assignmentId }); return r.error || !r.data ? [] : r.data.map(x => x.name); } catch(e){ return []; }
 }
-const srvCandidatesText = names => names.length ? ` עמיתים שזמינים למשמרת הזאת ולא שובצו אליה: ${names.join(', ')}. אפשר גם לפנות אליהם ישירות.` : '';
+const srvCandidatesText = names => names.length ? tx('cands', names.join(', ')) : '';
 
 // the schedule tab (everybody): how the requests went, my shifts, and the whole team's board
 function srvRenderSchedule(body){
@@ -6046,7 +6068,7 @@ function srvRenderSchedule(body){
   body.innerHTML = `
     ${notices.map(n => `<div class="pnotice ${n.kind}" role="status"><span>${pEsc(n.text)}</span><button type="button" class="btn small" data-notice-ok="${n.id}">הבנתי, תודה</button></div>`).join('')}
     ${monthNavHtml(mk)}
-    ${!m.published ? `<div class="pnote">הסידור לחודש הזה עוד בהכנה. ברגע שהוא יפורסם נעדכן אותך כאן ובמייל.</div>` : `
+    ${!m.published ? `<div class="pnote">${tx('sch_unpub')}</div>` : `
     ${fb ? `<details class="pfold" data-fold="fb"${openFold('fb') ? ' open' : ''}><summary><span>איך הלכו הבקשות שלך</span></summary><div class="pfold-body"><div class="pfb">${pEsc(fb.text)}</div></div></details>` : ''}
     <details class="pfold" data-fold="mine"${openFold('mine') ? ' open' : ''}>
       <summary><span>המשמרות שלי</span><span class="pcount">${mine.length}</span></summary>
@@ -6056,8 +6078,8 @@ function srvRenderSchedule(body){
         return `<div class="pmine-row${upcoming ? '' : ' past'}${isNext ? ' next' : ''}">
           <div class="pmine-main">${isNext ? '<span class="pnext-badge">המשמרת הבאה שלך</span>' : ''}${srvRowLine(r)}</div>
           ${req ? `<em class="pst pst-${req.status}">${SWAP_STATUS[req.status]}</em>` : canAct ? `<span class="pmine-actions"><button type="button" class="btn ghost small" data-said="${r.id}">בקשת החלפה</button><button type="button" class="btn ghost small" data-cant="${r.id}">לא יכול/ה להגיע</button></span>` : ''}
-        </div>`; }).join('') : '<div class="pnote">בחודש הזה עדיין לא שובצו לך משמרות. אם זה לא מה שציפיתם, נשמח לשמוע ולעזור.</div>'}</div>
-        ${isInstr ? '<div class="pnote">צריך להחליף משמרת? "בקשת החלפה" מפרסמת אותה בלוח ההחלפות, ועמיתים יכולים להציע לעזור. אם קרה משהו ולא תוכלו להגיע, "לא יכול/ה להגיע" מעדכן את הרכזת ופותח את המשמרת להחלפה מיד. אנחנו כאן בשבילכם.</div>' : ''}</div>
+        </div>`; }).join('') : `<div class="pnote">${tx('sch_none')}</div>`}</div>
+        ${isInstr ? `<div class="pnote">${tx('sch_help')}</div>` : ''}</div>
     </details>
     <details class="pfold" data-fold="team"${openFold('team') ? ' open' : ''}>
       <summary><span>הצוות כולו</span></summary>
@@ -6068,15 +6090,15 @@ function srvRenderSchedule(body){
   body.querySelectorAll('[data-said]').forEach(b => b.addEventListener('click', async () => {
     const r = st.rows.find(x => x.id === b.dataset.said); if(!r) return;
     const cand = await srvSwapCandidates(r.id);
-    if(!(await confirmSheet({ title:'לבקש החלפה?', text:`נפרסם את המשמרת ${dayLabel(r.day)} (${SRV_SHIFT_WORD[r.shift]}) בלוח ההחלפות, ועמיתים יוכלו להציע לעזור.${srvCandidatesText(cand)}`, okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
-    try { await srvSwapAction('request_swap', { p_assignment:r.id }); toast('פרסמנו את המשמרת בלוח ההחלפות, ונעדכן אותך כשיימצא מחליף/ה'); } catch(e){ toast('לא הצלחנו לפרסם כרגע. אפשר לנסות שוב בעוד רגע'); }
+    if(!(await confirmSheet({ title:'לבקש החלפה?', text:tx('swap_confirm', dayLabel(r.day), SRV_SHIFT_WORD[r.shift], srvCandidatesText(cand)), okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
+    try { await srvSwapAction('request_swap', { p_assignment:r.id }); toast(tx('swap_posted')); } catch(e){ toast(tx('swap_fail')); }
     srvRenderSchedule(body);
   }));
   body.querySelectorAll('[data-cant]').forEach(b => b.addEventListener('click', async () => {
     const r = st.rows.find(x => x.id === b.dataset.cant); if(!r) return;
     const cand = await srvSwapCandidates(r.id);
-    if(!(await confirmSheet({ title:'קורה, ואנחנו כאן. לדווח שלא תוכלו להגיע?', text:`נעדכן עכשיו את הרכזת ונפתח את המשמרת ${dayLabel(r.day)} (${SRV_SHIFT_WORD[r.shift]}) להחלפה, וגם המדריכים האחרים יקבלו הודעה. ההחלפה עצמה תחכה לאישור הרכזת.${srvCandidatesText(cand)}`, okLabel:'כן, לדווח', cancelLabel:'חזרה' }))) return;
-    try { await srvSwapAction('report_cannot_come', { p_assignment:r.id, p_note:null }); toast('עדכנו את הרכזת ופתחנו את המשמרת להחלפה. אין לכם מה לדאוג'); } catch(e){ toast('לא הצלחנו לשלוח את העדכון כרגע. אפשר לנסות שוב בעוד רגע'); }
+    if(!(await confirmSheet({ title:tx('cant_title'), text:tx('cant_text', dayLabel(r.day), SRV_SHIFT_WORD[r.shift], srvCandidatesText(cand)), okLabel:'כן, לדווח', cancelLabel:'חזרה' }))) return;
+    try { await srvSwapAction('report_cannot_come', { p_assignment:r.id, p_note:null }); toast(tx('cant_done')); } catch(e){ toast(tx('cant_fail')); }
     srvRenderSchedule(body);
   }));
 }
@@ -6089,7 +6111,7 @@ async function srvRenderVacation(body){
   const list = r.data || [], today = srvToday();
   body.innerHTML = `
     <h2 class="psec">בקשת חופשה</h2>
-    <div class="pnote">כדי שנצליח לתכנן את הצוות ולאשר את החופשה בקלות, נשמח לקבל בקשה של שבוע עד שלושה שבועות לפחות 30 יום מראש, ובקשה של שלושה שבועות ומעלה לפחות חודשיים מראש. אחרי שהרכזת מאשרת, הימים נכנסים אוטומטית כהיעדרות. (ליום או יומיים אפשר פשוט לסמן "היעדרות" בהעדפות.)</div>
+    <div class="pnote">${tx('vac_guide')}</div>
     <div class="pvac">
       <label class="pfield">מתאריך<input type="date" id="vac-from" min="${today}"></label>
       <label class="pfield">עד תאריך<input type="date" id="vac-to" min="${today}"></label>
@@ -6098,13 +6120,13 @@ async function srvRenderVacation(body){
       <button type="button" class="btn" id="vac-send">שליחת הבקשה</button>
     </div>
     <h2 class="psec">הבקשות שלי</h2>
-    ${list.length ? list.map(v => `<div class="pmine-row"><span><b>${parseIso(v.from_day).getDate()}/${parseIso(v.from_day).getMonth() + 1} – ${parseIso(v.to_day).getDate()}/${parseIso(v.to_day).getMonth() + 1}</b>${v.note ? `<br><small>${pEsc(v.note)}</small>` : ''}</span><span class="pmine-actions"><em class="pst pst-${v.status === 'approved' ? 'approved' : v.status === 'pending' ? 'offered' : 'rejected'}">${SRV_VAC_STATUS[v.status]}</em>${v.status === 'pending' ? `<button type="button" class="btn ghost small" data-vac-cancel="${v.id}">ביטול</button>` : ''}</span></div>`).join('') : '<div class="pnote">עדיין לא שלחתם בקשות.</div>'}`;
+    ${list.length ? list.map(v => `<div class="pmine-row"><span><b>${parseIso(v.from_day).getDate()}/${parseIso(v.from_day).getMonth() + 1} – ${parseIso(v.to_day).getDate()}/${parseIso(v.to_day).getMonth() + 1}</b>${v.note ? `<br><small>${pEsc(v.note)}</small>` : ''}</span><span class="pmine-actions"><em class="pst pst-${v.status === 'approved' ? 'approved' : v.status === 'pending' ? 'offered' : 'rejected'}">${SRV_VAC_STATUS[v.status]}</em>${v.status === 'pending' ? `<button type="button" class="btn ghost small" data-vac-cancel="${v.id}">ביטול</button>` : ''}</span></div>`).join('') : `<div class="pnote">${tx('vac_none')}</div>`}`;
   const from = body.querySelector('#vac-from'), to = body.querySelector('#vac-to'), hint = body.querySelector('#vac-hint');
   const days = () => from.value && to.value ? Math.round((parseIso(to.value) - parseIso(from.value)) / 86400000) + 1 : 0;
   const ahead = () => from.value ? Math.round((parseIso(from.value) - parseIso(today)) / 86400000) : 0;
   const update = () => {
     const d = days(), a = ahead();
-    hint.textContent = !d ? '' : d >= 21 && a < 60 ? `זו חופשה של ${d} ימים. בדרך כלל כדאי להגיש חופשה כזו חודשיים מראש. אפשר לשלוח גם עכשיו, והרכזת תעשה כל מה שאפשר.` : d >= 7 && a < 30 ? `זו חופשה של ${d} ימים. בדרך כלל כדאי להגיש חופשה כזו 30 יום מראש. אפשר לשלוח גם עכשיו, והרכזת תעשה כל מה שאפשר.` : '';
+    hint.textContent = !d ? '' : d >= 21 && a < 60 ? tx('vac_hint', d, 'חודשיים מראש') : d >= 7 && a < 30 ? tx('vac_hint', d, '30 יום מראש') : '';
   };
   from.addEventListener('change', () => { if(to.value && to.value < from.value) to.value = from.value; to.min = from.value || today; update(); }); to.addEventListener('change', update);
   body.querySelector('#vac-send').addEventListener('click', async () => {
@@ -6113,8 +6135,8 @@ async function srvRenderVacation(body){
     if(d > 119){ toast('אפשר לבקש עד 4 חודשים בבקשה אחת'); return; }
     if(!(await confirmSheet({ title:'לשלוח את הבקשה?', text:`בקשת חופשה של ${d} ימים תישלח לרכזת, והיא תחזור אליכם.`, okLabel:'כן, לשלוח', cancelLabel:'חזרה' }))) return;
     const ins = await sbPersonal.from('vacation_requests').insert({ staff_id:srv.me, from_day:from.value, to_day:to.value, note:(body.querySelector('#vac-note').value || '').trim() || null });
-    if(ins.error){ toast('לא הצלחנו לשלוח כרגע. אפשר לנסות שוב בעוד רגע'); return; }
-    toast('הבקשה נשלחה, תודה! הרכזת תחזור אליכם'); srvRenderVacation(body);
+    if(ins.error){ toast(tx('vac_fail')); return; }
+    toast(tx('vac_sent')); srvRenderVacation(body);
   });
   body.querySelectorAll('[data-vac-cancel]').forEach(b => b.addEventListener('click', async () => {
     const u = await sbPersonal.from('vacation_requests').update({ status:'cancelled' }).eq('id', b.dataset.vacCancel);
@@ -6150,7 +6172,7 @@ async function srvRenderAvailability(body){
     if(left){ toast('נשמח שתבחרו לכל יום לפני ההגשה, ככה נוכל לתכנן'); return; }
     const u = await sbPersonal.from('prefs_submission').upsert({ staff_id:srv.me, month:firstOf(mk), submitted_at:new Date().toISOString() });
     if(u.error){ toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע'); return; }
-    m.submitted[srv.me] = true; toast('תודה! הזמינות שלכן הוגשה ✓'); srvRenderAvailability(body);
+    m.submitted[srv.me] = true; toast(tx('avail_ok')); srvRenderAvailability(body);
   });
 }
 
@@ -6171,7 +6193,7 @@ async function srvRenderTeacherHours(body){
   body.querySelector('#th-submit').addEventListener('click', async () => {
     const u = await sbPersonal.from('prefs_submission').upsert({ staff_id:srv.me, month:firstOf(mk), submitted_at:new Date().toISOString() });
     if(u.error){ toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע'); return; }
-    m.submitted[srv.me] = true; toast('תודה! השעות אושרו ✓'); srvRenderTeacherHours(body);
+    m.submitted[srv.me] = true; toast(tx('avail_ok')); srvRenderTeacherHours(body);
   });
 }
 
@@ -6184,13 +6206,13 @@ async function srvRenderOpenShifts(body){
   if(!body.isConnected) return;
   body.innerHTML = `
     <h2 class="psec">משמרות שמחכות לעזרה שלך</h2>
-    <div class="pnote">כאן מופיעות משמרות שעדיין חסר בהן מישהו. תודה שאכפת לך מהצוות! אפשר לקחת מה שנוח לך, והרכזת תקבל על זה הודעה.</div>
-    ${lists.length ? lists.map(o => `<div class="pmine-row"><span><b>${dayLabel(o.day)}</b> · ${SRV_SHIFT_WORD[o.shift]} <small>(חסר/ים ${o.need - o.have})</small></span><button type="button" class="btn small" data-take="${o.day}|${o.shift}">אשמח לקחת</button></div>`).join('') : '<div class="pnote">כרגע אין משמרות חסרות. תודה שבדקת!</div>'}`;
+    <div class="pnote">${tx('open_intro')}</div>
+    ${lists.length ? lists.map(o => `<div class="pmine-row"><span><b>${dayLabel(o.day)}</b> · ${SRV_SHIFT_WORD[o.shift]} <small>(חסר/ים ${o.need - o.have})</small></span><button type="button" class="btn small" data-take="${o.day}|${o.shift}">אשמח לקחת</button></div>`).join('') : `<div class="pnote">${tx('open_none')}</div>`}`;
   body.querySelectorAll('[data-take]').forEach(b => b.addEventListener('click', async () => {
     const [day, shift] = b.dataset.take.split('|');
     if(!(await confirmSheet({ title:'למלא את המשמרת?', text:`נשבץ אותך למשמרת ${dayLabel(day)} (${SRV_SHIFT_WORD[shift]}). תודה על העזרה!`, okLabel:'כן, אשמח', cancelLabel:'חזרה' }))) return;
     const r = await sbPersonal.rpc('take_open_shift', { p_day:day, p_shift:shift });
-    toast(r.error ? 'לא הצלחנו לשבץ כרגע, ייתכן שמישהו כבר מילא את המשמרת. תודה על הנכונות!' : 'שיבצנו אותך, תודה רבה!'); await srvReloadSafe(); srvRenderOpenShifts(body);
+    toast(r.error ? tx('open_fail') : tx('open_ok')); await srvReloadSafe(); srvRenderOpenShifts(body);
   }));
 }
 // ---------- THE PORTAL ON THE SERVER: the coordinator's schedule (the board, editing a shift, publishing, what needs her attention) ----------
@@ -6258,6 +6280,7 @@ async function srvLoadCoord(){
     srvAll(() => sbPersonal.from('vacation_requests').select('id,staff_id,from_day,to_day,note,status,created_at').order('created_at', { ascending:false }).limit(60))
   ]);
   st.priv = {}; priv.forEach(r => { st.priv[r.staff_id] = r; });
+  st.voices = {}; try { const sv = await sbPersonal.from('staff_settings').select('staff_id,voice'); (sv.data || []).forEach(r => { if(r.voice) st.voices[r.staff_id] = r.voice; }); } catch(e){}          // (each person's chosen voice, so that her feedback is written in it)
   st.flags = flags; st.vacations = vac;
 }
 
@@ -6597,7 +6620,7 @@ const fbRowShiftId = r => r.shift === 'S' ? 'm' : ({ M:'m', A:'e', N:'n', L:'l' 
 
 // the whole picture for one person and one month
 function srvFeedbackFor(p, mk, input){
-  const { prefs, rows, profile, goal } = input, gx = (m, f) => fbGx(profile, m, f);
+  const { prefs, rows, profile, goal } = input, gx = (m, f) => fbGx(profile, m, f), V = input.voice || portalVoice(), T = (key, ...a) => txFor(V, key, ...a), fem = !(profile && profile.female === false);
   const days = daysOfMonth(mk), mine = rows.filter(r => r.day.slice(0, 7) === mk);
   const unmet = [], honored = [];
   const on = (day, id) => mine.filter(r => r.day === day && fbRowShiftId(r) === id);
@@ -6618,9 +6641,16 @@ function srvFeedbackFor(p, mk, input){
   let goalLine = '', goalOk = null;
   if(goal){
     const t = FB_GOAL_WORD[goal];
-    if(goal === 'min'){ goalOk = min.total == null || c.total <= min.total + 2; goalLine = !goalOk ? `ביקשת ${t}. הפעם קיבלת ${c.total} משמרות, יותר מהמינימום, כי היינו צריכים עוד ידיים. אנחנו מודים לך על הגמישות.` : (min.total != null && c.total < min.total - 1) ? `ביקשת ${t}. הפעם קיבלת ${c.total} משמרות, קצת מתחת למינימום, וזה לא קשור אלייך. נשמח להשלים את זה יחד.` : `ביקשת ${t}, וקיבלת ${c.total} משמרות, בדיוק במקום שרצית. תודה על השיתוף!`; }
-    else if(goal === 'max'){ goalOk = min.total == null || c.total >= min.total + 3; goalLine = goalOk ? `ביקשת ${t}, וקיבלת ${c.total} משמרות. תודה על הנכונות!` : `ביקשת ${t}. ניסינו לתת לך כמה שיותר, והפעם הגענו ל-${c.total} משמרות. לא הצלחנו לתת יותר בלי לפגוע בכללים ובצוות.`; }
-    else { const weeks = c.perWeek, bad = weeks.filter(w => w.all < 4 || w.all > 5); goalOk = bad.length === 0; goalLine = goalOk ? `ביקשת ${t}, ובכל שבוע קיבלת 4 או 5 משמרות. נהדר!` : `ביקשת ${t}. ניסינו, ובשבוע של ${dayLabel(bad[0].week)} יצא ${bad[0].all}${bad.length > 1 ? ` (ועוד ${bad.length - 1} שבועות)` : ''}. לא תמיד הצלחנו להתאים את זה, ותודה על ההבנה.`; }
+    if(goal === 'min'){
+      goalOk = min.total == null || c.total <= min.total + 2;
+      goalLine = !goalOk ? T('fb_g_min_high', t, c.total) : (min.total != null && c.total < min.total - 1) ? T('fb_g_min_low', t, c.total) : T('fb_g_min_ok', t, c.total);
+    } else if(goal === 'max'){
+      goalOk = min.total == null || c.total >= min.total + 3;
+      goalLine = goalOk ? T('fb_g_max_ok', t, c.total) : T('fb_g_max_no', t, c.total);
+    } else {
+      const weeks = c.perWeek, bad = weeks.filter(w => w.all < 4 || w.all > 5); goalOk = bad.length === 0;
+      goalLine = goalOk ? T('fb_g_wk_ok', t) : T('fb_g_wk_no', t, dayLabel(bad[0].week), String(bad[0].all) + (bad.length > 1 ? ` (ועוד ${bad.length - 1} שבועות)` : ''));
+    }
     (goalOk ? honored : unmet).push(`הבקשה ${t}`);
   }
   const minGaps = [];
@@ -6631,17 +6661,18 @@ function srvFeedbackFor(p, mk, input){
   } else if(profile && profile.only_long && !mine.some(r => r.shift === 'L')) minGaps.push('עוד לא שובצת לסופ"ש ארוך');
   const asked = honored.length + unmet.length, name = p.first;
   const lines = [];
-  lines.push(`הסידור של ${monthLabel(mk)} פורסם, ורצינו לשתף אותך כבר עכשיו איך הלכו הבקשות שלך.`);
-  if(!asked) lines.push(`החודש לא סימנת בקשות מיוחדות, וניסינו לתת לך סידור נוח ככל האפשר. קיבלת ${c.total} משמרות.`);
-  else lines.push(`מתוך ${asked} הבקשות שסימנת הצלחנו להיענות ל-${honored.length}, ותודה ששיתפת אותנו. זה עוזר לנו לבנות סידור שמתאים לכולם.`);
+  lines.push(T('fb_intro', monthLabel(mk)));
+  if(!asked) lines.push(T('fb_nothing', c.total));
+  else lines.push(T('fb_count', asked, honored.length));
   const reqUnmet = unmet.filter(u => !u.startsWith('הבקשה '));
-  if(reqUnmet.length) lines.push(`אלה הבקשות שהפעם לא הצלחנו לקיים, למרות שבאמת ניסינו:\n${reqUnmet.map(u => '• ' + u).join('\n')}\nלפעמים צריך להשלים צוות או לשמור על כללי הבטיחות והמנוחה. נמשיך לעשות כמיטב יכולתנו בחודשים הבאים.`);
+  if(reqUnmet.length) lines.push(T('fb_unmet', reqUnmet.map(u => '• ' + u).join('\n')));
   if(goalLine) lines.push(goalLine);
   if(min.total != null){
-    if(!minGaps.length) lines.push(`וגם: עמדת במינימום של החודש (${min.text}). תודה על ההשקעה!`);
-    else lines.push(`לגבי המינימום (${min.text}): נשארו כמה משמרות שלא הצלחנו להשלים בשבילך:\n${minGaps.map(g => '• ' + g).join('\n')}\nזה לא קשור אלייך, ואין צורך להילחץ. אם נוח לך, אפשר לפנות לרכזת ונמצא יחד פתרון.`);
+    if(!minGaps.length) lines.push(T('fb_min_ok', min.text));
+    else lines.push(T('fb_min_gap', min.text, minGaps.map(g => '• ' + g).join('\n')));
   }
-  lines.push(`אם משהו לא יושב לך טוב, אפשר לבקש החלפה בפורטל או לדבר עם הרכזת. אנחנו כאן בשבילך, ${gx('תודה שאתה חלק מהצוות', 'תודה שאת חלק מהצוות')}.`);
+  const closing = T('fb_close', T('fb_thanks', fem));
+  if(closing) lines.push(closing);
   return { subject:`הסידור של ${monthLabel(mk)} פורסם: ככה הלכו הבקשות שלך`, text:lines.join('\n\n'), asked, honored:honored.length, unmet:reqUnmet, goalOk, total:c.total, min, minGaps };
 }
 
@@ -6653,11 +6684,135 @@ async function srvSendFeedback(mk){
     const rows = st.rows.filter(r => r.staff === p.id), pr = (m.prefs[p.id] || { slots:{}, absent:[], hours:{} });
     if(!rows.length && !Object.keys(pr.slots || {}).length) continue;
     const pv = (st.priv || {})[p.id] || {};
-    const fb = srvFeedbackFor(p, mk, { prefs:pr, rows, profile:{ female:pv.female, no_nights:pv.no_nights, only_long:pv.only_long_weekend, manual_only:pv.manual_only, latest_end:pv.latest_end_hour }, goal:(m.goals || {})[p.id] || null });
+    const fb = srvFeedbackFor(p, mk, { prefs:pr, rows, profile:{ female:pv.female, no_nights:pv.no_nights, only_long:pv.only_long_weekend, manual_only:pv.manual_only, latest_end:pv.latest_end_hour }, goal:(m.goals || {})[p.id] || null, voice:(st.voices || {})[p.id] || 'warm' });
     const r = await sbPersonal.rpc('coordinator_tell', { p_staff:p.id, p_subject:fb.subject, p_text:fb.text, p_kind:'info' });
     if(r.error) sent.failed++; else sent.ok++;
   }
   return sent;
+}
+
+// ---------- THE PORTAL ON THE SERVER: three voices for everything the system says to a person, and the settings (gear) screen ----------
+//   warm  : a soft, caring voice (the default)
+//   light : a light, humorous voice (kind, never at anybody's expense)
+//   brief : short and to the point
+// The person picks one in the settings; the same choice is used by the e-mails and notices the server writes (supabase/scheduling-v6.sql) and by the reminders.
+const VOICE_NAMES = { warm:'חמה ורכה', light:'קלילה והומוריסטית', brief:'קצרה ועניינית' };
+const VOICE_SAMPLE = {
+  warm:'"תודה ששיתפת אותנו. זה עוזר לנו לבנות סידור שמתאים לך."',
+  light:'"הסידור לא יכתוב את עצמו (עדיין). נשמח להעדפות שלך!"',
+  brief:'"נא להגיש העדפות עד ה-24."'
+};
+// each key: a function of its arguments for every voice (a, b, c are the arguments of tx)
+const VOICES = {
+  // ---- the preferences screen
+  st_unsub:   { warm:() => 'נשמח לקבל את ההעדפות שלך. זה עוזר לנו לבנות סידור שמתאים לך.', light:() => 'הסידור לא יכתוב את עצמו (עדיין). נשמח להעדפות שלך!', brief:() => 'נא להגיש העדפות.' },
+  st_sub:     { warm:() => 'ההעדפות שלך אצלנו, תודה! אפשר לעדכן עד סגירת ההגשה.', light:() => 'קיבלנו, ושמנו במקום בטוח. אפשר לעדכן עד סגירת ההגשה.', brief:() => 'ההעדפות הוגשו. אפשר לעדכן עד הסגירה.' },
+  locked:     { warm:() => 'ההגשה לחודש הזה סגורה כרגע (היא נפתחת ב-1 בחודש הקודם ונסגרת ב-24 בו בשעה 22:30). לשינוי אפשר לפנות לרכזת, והיא תשמח לעזור.', light:() => 'ההגשה לחודש הזה סגורה כרגע (נפתחת ב-1 בחודש הקודם ונסגרת ב-24 ב-22:30). לשינויים הרכזת היא הכתובת, והיא מבטיחה לא לנשוך.', brief:() => 'ההגשה סגורה. לשינוי: הרכזת.' },
+  submit_ok:  { warm:() => 'תודה! ההעדפות שלך הוגשו ✓', light:() => 'הוגש! שמנו על זה חותמת ✓', brief:() => 'הוגש ✓' },
+  consent_needed:{ warm:() => 'נשמח אם תענו על שתי השאלות הקטנות לפני ההגשה. זה עוזר לנו לתכנן', light:() => 'עוד שתי שאלות קטנטנות ואנחנו שם. נשמח לתשובות לפני ההגשה', brief:() => 'יש לענות על שתי השאלות לפני ההגשה' },
+  save_later: { warm:() => 'לא הצלחנו לשמור כרגע, ננסה שוב אוטומטית בעוד רגע', light:() => 'השמירה נתקעה לרגע. ננסה שוב לבד, בלי לקחת ללב', brief:() => 'השמירה נכשלה. ננסה שוב' },
+  submit_fail:{ warm:() => 'לא הצלחנו לשמור את ההגשה כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'ההגשה לא עברה הפעם. נסו שוב בעוד רגע, בטח היה גל באינטרנט', brief:() => 'ההגשה נכשלה. נסו שוב' },
+  clear_text: { warm:(a) => `כל הסימונים שלך בחודש הזה (כן, יכול, לא${a}) יחזרו ל"כן", כלומר זמינים. אפשר תמיד לסמן שוב.`, light:(a) => `כל הסימונים (כן, יכול, לא${a}) יחזרו ל"כן". דף חלק, התחלה חדשה. אפשר תמיד לסמן שוב.`, brief:(a) => `כל הסימונים יימחקו (כן, יכול, לא${a}) ויחזרו ל"כן".` },
+  clear_done: { warm:() => 'ניקינו הכול. הכל "כן" שוב', light:() => 'הכול נוקה, הכל "כן" שוב. דף חדש!', brief:() => 'נוקה. הכל "כן"' },
+  hint_low:   { warm:(f, m) => `שמנו לב שבסימונים הנוכחיים נשארו ${f} משמרות שמתאימות לך. כדי שנצליח לשבץ אותך במינימום (בערך ${m} משמרות) כדאי להשאיר קצת יותר גמישות. אם משהו מגביל אותך, נשמח לשמוע ולמצוא פתרון יחד.`, light:(f, m) => `ספרנו, ונשארו ${f} משמרות שמתאימות לך, והמינימום הוא בערך ${m}. קצת יותר גמישות והחשבון יסתדר. ואם משהו באמת מגביל, ספרו לנו.`, brief:(f, m) => `נשארו ${f} משמרות זמינות, והמינימום הוא ${m}. כדאי להוסיף גמישות.` },
+  // ---- the schedule tab
+  sch_unpub:  { warm:() => 'הסידור לחודש הזה עוד בהכנה. ברגע שהוא יפורסם נעדכן אותך כאן ובמייל.', light:() => 'הסידור עוד בתנור. כשהוא יצא נעדכן כאן ובמייל.', brief:() => 'הסידור טרם פורסם.' },
+  sch_none:   { warm:() => 'בחודש הזה עדיין לא שובצו לך משמרות. אם זה לא מה שציפיתם, נשמח לשמוע ולעזור.', light:() => 'החודש אין לך משמרות (בינתיים). אם זה לא מה שציפית, תגיד לנו ונבדוק.', brief:() => 'אין משמרות החודש.' },
+  sch_help:   { warm:() => 'צריך להחליף משמרת? "בקשת החלפה" מפרסמת אותה בלוח ההחלפות, ועמיתים יכולים להציע לעזור. אם קרה משהו ולא תוכלו להגיע, "לא יכול/ה להגיע" מעדכן את הרכזת ופותח את המשמרת להחלפה מיד. אנחנו כאן בשבילכם.', light:() => 'צריך להחליף משמרת? "בקשת החלפה" מעלה אותה ללוח, ועמיתים יוכלו להציל את המצב. ואם קרה משהו והפעם אי אפשר להגיע, "לא יכול/ה להגיע" מעדכן את הרכזת ופותח את המשמרת מיד. קורה לכולם.', brief:() => 'החלפה: "בקשת החלפה". אי הגעה: "לא יכול/ה להגיע".' },
+  swap_confirm:{ warm:(d, s, c) => `נפרסם את המשמרת ${d} (${s}) בלוח ההחלפות, ועמיתים יוכלו להציע לעזור.${c}`, light:(d, s, c) => `נעלה את המשמרת ${d} (${s}) ללוח ההחלפות, ומי שיכול ירים יד.${c}`, brief:(d, s, c) => `המשמרת ${d} (${s}) תפורסם בלוח ההחלפות.${c}` },
+  swap_posted:{ warm:() => 'פרסמנו את המשמרת בלוח ההחלפות, ונעדכן אותך כשיימצא מחליף/ה', light:() => 'המשמרת בלוח. כשמישהו ירים יד, נעדכן', brief:() => 'פורסם בלוח ההחלפות' },
+  swap_fail:  { warm:() => 'לא הצלחנו לפרסם כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'לא הצלחנו להעלות עכשיו. עוד ניסיון בעוד רגע?', brief:() => 'הפרסום נכשל. נסו שוב' },
+  cant_title: { warm:() => 'קורה, ואנחנו כאן. לדווח שלא תוכלו להגיע?', light:() => 'קורה לטובים ביותר. לדווח שלא תגיעו?', brief:() => 'לדווח על אי הגעה?' },
+  cant_text:  { warm:(d, s, c) => `נעדכן עכשיו את הרכזת ונפתח את המשמרת ${d} (${s}) להחלפה, וגם המדריכים האחרים יקבלו הודעה. ההחלפה עצמה תחכה לאישור הרכזת.${c}`, light:(d, s, c) => `נעדכן את הרכזת ונפתח את המשמרת ${d} (${s}) להחלפה, וגם הצוות יקבל הודעה. ההחלפה תחכה לאישור הרכזת.${c}`, brief:(d, s, c) => `הרכזת והצוות יקבלו הודעה, והמשמרת ${d} (${s}) תיפתח להחלפה.${c}` },
+  cant_done:  { warm:() => 'עדכנו את הרכזת ופתחנו את המשמרת להחלפה. אין לכם מה לדאוג', light:() => 'עדכנו את הרכזת ופתחנו את המשמרת. תנוחו, אנחנו על זה', brief:() => 'דווח. המשמרת נפתחה להחלפה' },
+  cant_fail:  { warm:() => 'לא הצלחנו לשלוח את העדכון כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'העדכון לא יצא. עוד ניסיון בעוד רגע?', brief:() => 'השליחה נכשלה. נסו שוב' },
+  cands:      { warm:(n) => ` עמיתים שזמינים למשמרת הזאת ולא שובצו אליה: ${n}. אפשר גם לפנות אליהם ישירות.`, light:(n) => ` עמיתים שפנויים למשמרת הזאת: ${n}. אפשר גם להרים טלפון ישירות.`, brief:(n) => ` זמינים: ${n}.` },
+  // ---- swaps tab
+  swaps_intro:{ warm:() => 'עמיתים שמחפשים מחליף/ה למשמרת. אם יש לכם אפשרות לעזור, לחצו על הכפתור והבקשה תעבור לרכזת. תודה שאתם שם אחד בשביל השני. כדי לבקש החלפה בעצמכם, פתחו "הסידור" ← "המשמרות שלי" ← "בקשת החלפה".', light:() => 'עמיתים שמחפשים מחליף/ה. אם אתם יכולים להציל משמרת, לחצו על הכפתור והבקשה תעבור לרכזת. גיבורים אנונימיים מקבלים תודה בקול. כדי לבקש החלפה בעצמכם: "הסידור" ← "המשמרות שלי" ← "בקשת החלפה".', brief:() => 'בקשות של עמיתים. לחיצה על הכפתור מעבירה לרכזת. לבקשה משלכם: "הסידור" ← "המשמרות שלי".' },
+  swaps_none: { warm:() => 'כרגע אין בקשות החלפה פתוחות. תודה שאכפת לכם!', light:() => 'אין בקשות החלפה פתוחות. שקט ורגוע', brief:() => 'אין בקשות פתוחות.' },
+  take_ok:    { warm:() => 'תודה! הבקשה הועברה לרכזת, ונעדכן את שניכם', light:() => 'תודה, גיבור/ה! הבקשה אצל הרכזת, ונעדכן את שניכם', brief:() => 'הועבר לרכזת' },
+  take_fail:  { warm:() => 'לא הצלחנו כרגע, ייתכן שהמשמרת כבר נתפסה. תודה על הנכונות!', light:() => 'מישהו הקדים אותך, או שהמערכת התבלבלה. תודה על הנכונות!', brief:() => 'לא הצליח. ייתכן שנתפסה' },
+  cancel_ok:  { warm:() => 'ביטלנו את הבקשה', light:() => 'הבקשה בוטלה', brief:() => 'בוטל' },
+  cancel_fail:{ warm:() => 'לא הצלחנו לבטל כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'הביטול לא עבר. עוד ניסיון בעוד רגע?', brief:() => 'הביטול נכשל. נסו שוב' },
+  // ---- vacation
+  vac_guide:  { warm:() => 'כדי שנצליח לתכנן את הצוות ולאשר את החופשה בקלות, נשמח לקבל בקשה של שבוע עד שלושה שבועות לפחות 30 יום מראש, ובקשה של שלושה שבועות ומעלה לפחות חודשיים מראש. אחרי שהרכזת מאשרת, הימים נכנסים אוטומטית כהיעדרות. (ליום או יומיים אפשר פשוט לסמן "היעדרות" בהעדפות.)', light:() => 'חופש זה חשוב, ותכנון זה עוד יותר: בקשה של שבוע עד שלושה שבועות כדאי להגיש 30 יום מראש, ושל שלושה שבועות ומעלה חודשיים מראש. אחרי שהרכזת מאשרת, הימים נכנסים לבד כהיעדרות.', brief:() => 'חופשה של 1-3 שבועות: 30 יום מראש. מעל 3 שבועות: חודשיים מראש. אחרי אישור הרכזת הימים נרשמים.' },
+  vac_hint:   { warm:(d, k) => `זו חופשה של ${d} ימים. בדרך כלל כדאי להגיש חופשה כזו ${k}. אפשר לשלוח גם עכשיו, והרכזת תעשה כל מה שאפשר.`, light:(d, k) => `${d} ימים, וואו! בדרך כלל מגישים חופשה כזו ${k}, אבל אפשר לשלוח גם עכשיו והרכזת תעשה מאמץ.`, brief:(d, k) => `${d} ימים. מומלץ להגיש ${k}.` },
+  vac_sent:   { warm:() => 'הבקשה נשלחה, תודה! הרכזת תחזור אליכם', light:() => 'הבקשה בדרך! הרכזת תחזור אליכם', brief:() => 'הבקשה נשלחה' },
+  vac_fail:   { warm:() => 'לא הצלחנו לשלוח כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'הבקשה לא יצאה. עוד ניסיון בעוד רגע?', brief:() => 'השליחה נכשלה. נסו שוב' },
+  vac_none:   { warm:() => 'עדיין לא שלחתם בקשות.', light:() => 'עוד לא שלחתם בקשות. החופשה מחכה!', brief:() => 'אין בקשות.' },
+  // ---- open shifts, availability, teachers
+  open_intro: { warm:() => 'כאן מופיעות משמרות שעדיין חסר בהן מישהו. תודה שאכפת לך מהצוות! אפשר לקחת מה שנוח לך, והרכזת תקבל על זה הודעה.', light:() => 'כאן משמרות שעדיין מחפשות מישהו. כל משמרת שתקחו מקבלת תודה אישית. הרכזת תקבל הודעה.', brief:() => 'משמרות חסרות. בחירה מעדכנת את הרכזת.' },
+  open_none:  { warm:() => 'כרגע אין משמרות חסרות. תודה שבדקת!', light:() => 'אין משמרות חסרות כרגע. הצוות מסודר!', brief:() => 'אין משמרות חסרות.' },
+  open_ok:    { warm:() => 'שיבצנו אותך, תודה רבה!', light:() => 'שובצת, ותודה על ההצלה!', brief:() => 'שובצת' },
+  open_fail:  { warm:() => 'לא הצלחנו לשבץ כרגע, ייתכן שמישהו כבר מילא את המשמרת. תודה על הנכונות!', light:() => 'מישהו הקדים אותך. תודה על הנכונות!', brief:() => 'לא הצליח. ייתכן שמולאה' },
+  avail_ok:   { warm:() => 'תודה! הזמינות שלכן הוגשה ✓', light:() => 'הוגש! תודה ✓', brief:() => 'הוגש ✓' },
+  retry:      { warm:() => 'לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'השמירה נתקעה. עוד ניסיון בעוד רגע?', brief:() => 'השמירה נכשלה. נסו שוב' },
+  // ---- inbox
+  inbox_none: { warm:() => 'אין עדכונים חדשים כרגע.', light:() => 'אין חדש תחת השמש.', brief:() => 'אין עדכונים.' },
+  inbox_nomsg:{ warm:() => 'אין הודעות חדשות כרגע.', light:() => 'אין הודעות, שקט.', brief:() => 'אין הודעות.' },
+  // ---- the feedback after a schedule is published
+  fb_intro:   { warm:(m) => `הסידור של ${m} פורסם, ורצינו לשתף אותך כבר עכשיו איך הלכו הבקשות שלך.`, light:(m) => `הסידור של ${m} יצא מהתנור! הנה סיכום קצר של איך הלכו הבקשות שלך.`, brief:(m) => `הסידור של ${m} פורסם. סיכום הבקשות:` },
+  fb_nothing: { warm:(t) => `החודש לא סימנת בקשות מיוחדות, וניסינו לתת לך סידור נוח ככל האפשר. קיבלת ${t} משמרות.`, light:(t) => `לא סימנת בקשות מיוחדות, אז נתנו לך סידור נוח ככל האפשר: ${t} משמרות.`, brief:(t) => `לא סומנו בקשות. ${t} משמרות.` },
+  fb_count:   { warm:(a, h) => `מתוך ${a} הבקשות שסימנת הצלחנו להיענות ל-${h}, ותודה ששיתפת אותנו. זה עוזר לנו לבנות סידור שמתאים לכולם.`, light:(a, h) => `מתוך ${a} בקשות, הצלחנו לכבד ${h}. תודה ששיתפת, זה עוזר לנו לבנות סידור שמתאים לכולם.`, brief:(a, h) => `${h} מתוך ${a} בקשות כובדו.` },
+  fb_unmet:   { warm:(l) => `אלה הבקשות שהפעם לא הצלחנו לקיים, למרות שבאמת ניסינו:\n${l}\nלפעמים צריך להשלים צוות או לשמור על כללי הבטיחות והמנוחה. נמשיך לעשות כמיטב יכולתנו בחודשים הבאים.`, light:(l) => `את אלה הפעם לא הצלחנו לקיים, למרות שהתאמצנו (באמת):\n${l}\nלפעמים צריך להשלים צוות או לשמור על כללי בטיחות ומנוחה. בחודש הבא ננסה שוב.`, brief:(l) => `לא כובדו:\n${l}\nסיבה: השלמת צוות או כללי בטיחות.` },
+  fb_close:   { warm:(g) => `אם משהו לא יושב לך טוב, אפשר לבקש החלפה בפורטל או לדבר עם הרכזת. אנחנו כאן בשבילך, ${g}.`, light:(g) => `אם משהו לא יושב טוב, אפשר לבקש החלפה בפורטל או לדבר עם הרכזת. ${g}!`, brief:() => `לשינוי: בקשת החלפה בפורטל או הרכזת.` },
+  fb_thanks:  { warm:(f) => f ? 'תודה שאת חלק מהצוות' : 'תודה שאתה חלק מהצוות', light:(f) => f ? 'מי היה מאמין שיהיה צוות כל כך טוב בלעדייך' : 'מי היה מאמין שיהיה צוות כל כך טוב בלעדיך', brief:() => '' },
+  fb_g_min_ok:{ warm:(t, c) => `ביקשת ${t}, וקיבלת ${c} משמרות, בדיוק במקום שרצית. תודה על השיתוף!`, light:(t, c) => `ביקשת ${t}, וקיבלת ${c} משמרות. בול!`, brief:(t, c) => `יעד: מינימום. התקבלו ${c} משמרות. הושג.` },
+  fb_g_min_low:{ warm:(t, c) => `ביקשת ${t}. הפעם קיבלת ${c} משמרות, קצת מתחת למינימום, וזה לא קשור אלייך. נשמח להשלים את זה יחד.`, light:(t, c) => `ביקשת ${t}. קיבלת ${c} משמרות, קצת פחות מהמינימום, וזה לא באשמתך. נסדר יחד.`, brief:(t, c) => `יעד: מינימום. התקבלו ${c}, מתחת למינימום. נשלים מול הרכזת.` },
+  fb_g_min_high:{ warm:(t, c) => `ביקשת ${t}. הפעם קיבלת ${c} משמרות, יותר מהמינימום, כי היינו צריכים עוד ידיים. אנחנו מודים לך על הגמישות.`, light:(t, c) => `ביקשת ${t}. קיבלת ${c} משמרות, יותר מהמינימום, כי חיפשנו עוד ידיים. תודה על הגמישות!`, brief:(t, c) => `יעד: מינימום. התקבלו ${c}, מעל המינימום (השלמת צוות).` },
+  fb_g_max_ok:{ warm:(t, c) => `ביקשת ${t}, וקיבלת ${c} משמרות. תודה על הנכונות!`, light:(t, c) => `ביקשת ${t}, וקיבלת ${c} משמרות. עבודה יפה!`, brief:(t, c) => `יעד: מקסימום. התקבלו ${c} משמרות.` },
+  fb_g_max_no:{ warm:(t, c) => `ביקשת ${t}. ניסינו לתת לך כמה שיותר, והפעם הגענו ל-${c} משמרות. לא הצלחנו לתת יותר בלי לפגוע בכללים ובצוות.`, light:(t, c) => `ביקשת ${t}. התאמצנו, והגענו ל-${c} משמרות. יותר מזה היה פוגע בכללים ובצוות.`, brief:(t, c) => `יעד: מקסימום. התקבלו ${c}. מעבר לכך לא היה אפשרי.` },
+  fb_g_wk_ok: { warm:(t) => `ביקשת ${t}, ובכל שבוע קיבלת 4 או 5 משמרות. נהדר!`, light:(t) => `ביקשת ${t}, ובכל שבוע קיבלת 4 או 5. מושלם!`, brief:() => `יעד 4-5 בשבוע: הושג.` },
+  fb_g_wk_no: { warm:(t, w, x) => `ביקשת ${t}. ניסינו, ובשבוע של ${w} יצא ${x}. לא תמיד הצלחנו להתאים את זה, ותודה על ההבנה.`, light:(t, w, x) => `ביקשת ${t}. בשבוע של ${w} יצא ${x}. לא תמיד זה מסתדר, ותודה על ההבנה.`, brief:(t, w, x) => `יעד 4-5 בשבוע: לא הושג (${w}: ${x}).` },
+  fb_min_ok:  { warm:(t) => `וגם: עמדת במינימום של החודש (${t}). תודה על ההשקעה!`, light:(t) => `וגם עמדת במינימום של החודש (${t}). כל הכבוד!`, brief:() => 'המינימום הושלם.' },
+  fb_min_gap: { warm:(t, g) => `לגבי המינימום (${t}): נשארו כמה משמרות שלא הצלחנו להשלים בשבילך:\n${g}\nזה לא קשור אלייך, ואין צורך להילחץ. אם נוח לך, אפשר לפנות לרכזת ונמצא יחד פתרון.`, light:(t, g) => `לגבי המינימום (${t}): כמה משמרות עוד לא השלמנו:\n${g}\nזה לא קשור אלייך, וגם אין סיבה להילחץ. אפשר לפנות לרכזת ולסדר יחד.`, brief:(t, g) => `המינימום לא הושלם:\n${g}\nלפנייה: הרכזת.` }
+};
+// the voice of the person now: the setting, else what the browser remembers, else the warm one
+function portalVoice(){
+  if(typeof srv !== 'undefined' && srv.voice) return srv.voice;
+  try { const v = localStorage.getItem('ramzor-portal-voice'); if(v && VOICES.st_unsub[v]) return v; } catch(e){}
+  return 'warm';
+}
+const tx = (key, ...args) => { const k = VOICES[key]; if(!k) return key; return (k[portalVoice()] || k.warm)(...args); };
+// the same, for somebody else's voice (the coordinator writes the feedback in each person's own voice)
+const txFor = (voice, key, ...args) => { const k = VOICES[key]; return (k && (k[voice] || k.warm))(...args); };
+
+// ---------------------------------------------------------------- the settings (the gear)
+async function srvLoadSettings(){
+  try { const r = await sbPersonal.from('staff_settings').select('voice,reminders').eq('staff_id', srv.me).maybeSingle(); if(!r.error && r.data){ srv.voice = r.data.voice || null; srv.reminders = r.data.reminders !== false; } } catch(e){}
+  if(!srv.voice){ try { srv.voice = localStorage.getItem('ramzor-portal-voice') || null; } catch(e){} }
+}
+async function srvSaveSetting(patch){
+  Object.assign(srv, patch);
+  if(patch.voice){ try { localStorage.setItem('ramzor-portal-voice', patch.voice); } catch(e){} }
+  try {
+    const row = { staff_id:srv.me }; if('voice' in patch) row.voice = patch.voice; if('reminders' in patch) row.reminders = patch.reminders;
+    const r = await sbPersonal.from('staff_settings').upsert(row);
+    return !r.error;
+  } catch(e){ return false; }
+}
+function openPortalSettings(){
+  const st = portalLoad(), v = portalVoice(), dark = st.settings.theme === 'dark', big = (() => { try { return localStorage.getItem('ramzor-portal-big') === '1'; } catch(e){ return false; } })();
+  const sh = portalSheet(`<h2>העדפות מערכת</h2>
+    <h3 class="psec">באיזו שפה נדבר איתך?</h3>
+    <div class="pgoal-list" role="group" aria-label="שפת המערכת">${Object.keys(VOICE_NAMES).map(k => `<button type="button" class="pgoal-opt${v === k ? ' on' : ''}" data-voice="${k}"><b>${VOICE_NAMES[k]}</b><small>${VOICE_SAMPLE[k]}</small></button>`).join('')}</div>
+    <h3 class="psec">מראה</h3>
+    <div class="pchoice wrap"><button type="button" class="${dark ? 'on' : ''}" data-set-theme="dark">מצב כהה</button><button type="button" class="${dark ? '' : 'on'}" data-set-theme="light">מצב בהיר</button></div>
+    <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${big ? '' : 'on'}" data-set-big="0">טקסט רגיל</button><button type="button" class="${big ? 'on' : ''}" data-set-big="1">טקסט גדול</button></div>
+    ${srv.meRow && srv.meRow.role !== 'coordinator' ? `<h3 class="psec">מיילים</h3>
+    <div class="pchoice wrap"><button type="button" class="${srv.reminders === false ? '' : 'on'}" data-set-rem="1">תזכורות להגשת העדפות: כן</button><button type="button" class="${srv.reminders === false ? 'on' : ''}" data-set-rem="0">תזכורות: לא</button></div>
+    <div class="pnote">עדכונים על שינויים במשמרות שלך יישלחו תמיד, כדי שלא תפספסו.</div>` : ''}
+    <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סיום</button></div>`);
+  sh.querySelectorAll('[data-voice]').forEach(b => b.addEventListener('click', async () => {
+    await srvSaveSetting({ voice:b.dataset.voice }); sh.close(); toast(({ warm:'בחרנו בשפה החמה והרכה', light:'עברנו לשפה הקלילה. נתראה בבדיחות!', brief:'עברנו לשפה קצרה ועניינית' })[b.dataset.voice]); showPortal();
+  }));
+  sh.querySelectorAll('[data-set-theme]').forEach(b => b.addEventListener('click', () => { st.settings.theme = b.dataset.setTheme; try { localStorage.setItem('ramzor-portal-theme', st.settings.theme); } catch(e){} sh.close(); showPortal(); }));
+  sh.querySelectorAll('[data-set-big]').forEach(b => b.addEventListener('click', () => { try { localStorage.setItem('ramzor-portal-big', b.dataset.setBig); } catch(e){} applyPortalSize(); sh.close(); openPortalSettings(); }));
+  sh.querySelectorAll('[data-set-rem]').forEach(b => b.addEventListener('click', async () => { await srvSaveSetting({ reminders:b.dataset.setRem === '1' }); sh.close(); openPortalSettings(); }));
+}
+function applyPortalSize(){
+  let big = false; try { big = localStorage.getItem('ramzor-portal-big') === '1'; } catch(e){}
+  document.body.classList.toggle('portal-big', big);
 }
 
 // ---------- bottom navigation bar (phones) ----------
