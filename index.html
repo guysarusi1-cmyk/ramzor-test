@@ -1364,6 +1364,33 @@
   .plong small{ display:block; font-size:10px; font-weight:400; margin-top:3px; opacity:.9; }
   .ppick{ border-radius:8px; border:1px solid var(--p-line); background:transparent; color:var(--p-text); font-family:inherit; font-size:11px; font-weight:700; padding:5px 4px; cursor:pointer; }
   .ppick.on{ background:var(--gold); color:#1b1b1b; border-color:var(--gold); }
+  /* "רוצה שינוי" (my shifts): one button, then two choices, then the list of shifts */
+  .pchange{ margin:2px 0 8px; }
+  .pchange-opts{ display:flex; flex-direction:column; gap:10px; margin:8px 0 12px; }
+  .pchange-opts .btn{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:start; padding:12px 14px; height:auto; line-height:1.4; }
+  .pchange-opts .btn small{ font-weight:400; opacity:.85; font-size:12.5px; }
+  .pchange-list{ display:flex; flex-direction:column; gap:6px; margin:8px 0 12px; max-height:52vh; overflow-y:auto; }
+  .pmine-row.pick{ width:100%; cursor:pointer; font-family:inherit; color:var(--p-text); text-align:start; }
+  /* the team as a weekly calendar: days across, shifts down; scrolls sideways on a phone */
+  .pweek{ display:flex; align-items:center; justify-content:center; gap:14px; margin:4px 0 10px; font-size:15px; }
+  .pweek button{ width:40px; height:40px; border-radius:50%; border:1px solid var(--p-line); background:var(--p-panel2); color:var(--p-text); font-size:20px; cursor:pointer; }
+  .pweek button:disabled{ opacity:.35; cursor:default; }
+  .wcal-scroll{ overflow-x:auto; padding-bottom:4px; }
+  .wcal{ display:grid; grid-template-columns:72px repeat(7, minmax(104px, 1fr)); gap:4px; min-width:800px; direction:rtl; }
+  .wcal-dayhead, .wcal-rowhead{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:6px 2px; background:var(--p-panel2); border-radius:8px; font-size:13px; }
+  .wcal-dayhead small, .wcal-rowhead small{ color:var(--p-muted); font-size:11px; }
+  .wcal-dayhead span{ color:var(--p-muted); font-size:12px; }
+  .wcal-dayhead.today{ background:var(--gold); color:#1b1b1b; } .wcal-dayhead.today span{ color:#1b1b1b; }
+  .wcal-dayhead.weekend{ background:rgba(128,128,128,.18); }
+  .wcal-cell{ display:flex; flex-direction:column; align-items:stretch; gap:3px; padding:4px; min-height:64px; background:var(--p-panel); border:1px solid var(--p-line); border-radius:8px; }
+  .wcal-cell.weekend{ background:rgba(128,128,128,.08); } .wcal-cell.today{ border-color:var(--gold); }
+  .wcal-cell.off{ align-items:center; justify-content:center; color:var(--p-muted); background:transparent; border-style:dashed; }
+  .wcal-cell .pchip{ display:block; text-align:center; font-size:12.5px; line-height:1.3; padding:3px 4px; }
+  .wcal-cell .pchip small{ color:var(--p-muted); font-size:10px; }
+  .pchip.ahm{ border:1.5px solid var(--gold); background:rgba(232,185,74,.14); font-weight:800; }
+  .pchip .ahm-tag{ display:block; color:var(--gold) !important; font-weight:800; font-size:10px; letter-spacing:.3px; }
+  .ahm-star{ color:var(--gold); font-style:normal; margin-inline-end:3px; }
+  .wcal-legend{ margin-top:8px; }
   /* the gear next to the theme button, and the large-text option */
   .portal-top-actions{ display:flex; gap:8px; align-items:center; }
   body.portal-big .portal-shell{ zoom:1.14; }
@@ -5196,6 +5223,34 @@ function boardHtml(ctx, assignments, opts){
   return `<div class="board-scroll"><table class="pboard"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
 }
 
+// the whole team as a weekly calendar: seven days across, one row per shift. In the afternoon shifts and on Friday and Saturday mornings the ahmash
+// (who is in charge of the shift) is shown first, with a star and the word אחמ"ש. opts: me, week (the Sunday that is shown), ahmash ({ staff id: rank })
+function weekCalHtml(ctx, assignments, opts){
+  opts = opts || {};
+  const table = scheduleTable(ctx, assignments), today = isoDate(new Date()), rowOf = {}, weeks = [];
+  table.forEach(r => { rowOf[r.date] = r; const ws = addDays(r.date, -dowOf(r.date)); if(!weeks.includes(ws)) weeks.push(ws); });
+  if(!weeks.length) return '';
+  let wi = weeks.indexOf(opts.week); if(wi < 0) wi = Math.max(0, weeks.indexOf(addDays(today, -dowOf(today))));
+  const ws = weeks[wi], dates = [0, 1, 2, 3, 4, 5, 6].map(k => addDays(ws, k)), rank = opts.ahmash || {};
+  const dm = iso => { const d = parseIso(iso); return d.getDate() + '/' + (d.getMonth() + 1); };
+  const inCharge = (id, date) => id === 'e' || ([5, 6].includes(dowOf(date)) && id === 'm');
+  const cell = (s, date) => {
+    const r = rowOf[date], c = r && r.cells[ctx.shiftTypes.indexOf(s)];
+    if(!c || !c.slot) return `<div class="wcal-cell off${[5, 6].includes(dowOf(date)) ? ' weekend' : ''}">${r ? '—' : ''}</div>`;
+    const ranks = inCharge(s.id, date) ? c.people.map(p => rank[p.iid] || 0).filter(x => x > 0) : [], best = ranks.length ? Math.min(...ranks) : 0;
+    const chip = (p, lead) => {
+      const mine = opts.me && p.iid === opts.me, ann = ctx.annot && ctx.annot[c.slot.key + '|' + p.iid];
+      return `<span class="pchip lv-neutral${mine ? ' me' : ''}${lead ? ' ahm' : ''}">${lead ? '<i class="ahm-star" aria-hidden="true">★</i>' : ''}${pEsc(p.name)}${ann ? ` <small>${pEsc(ann)}</small>` : ''}${lead ? '<small class="ahm-tag">אחמ"ש</small>' : ''}</span>`;
+    };
+    const lead = best ? c.people.filter(p => rank[p.iid] === best) : [], rest = c.people.filter(p => !lead.includes(p));
+    return `<div class="wcal-cell${[5, 6].includes(dowOf(date)) ? ' weekend' : ''}${date === today ? ' today' : ''}">${lead.map(p => chip(p, true)).join('')}${rest.map(p => chip(p, false)).join('')}${c.missing ? `<span class="pchip missing">חסר ${c.missing}</span>` : ''}</div>`;
+  };
+  const nav = `<div class="pweek"><button type="button" data-wkgo="${weeks[wi - 1] || ''}"${wi === 0 ? ' disabled' : ''} aria-label="שבוע קודם"><bdi dir="ltr">›</bdi></button><b>שבוע ${dm(ws)} – ${dm(addDays(ws, 6))}</b><button type="button" data-wkgo="${weeks[wi + 1] || ''}"${wi === weeks.length - 1 ? ' disabled' : ''} aria-label="שבוע הבא"><bdi dir="ltr">‹</bdi></button></div>`;
+  const head = `<div class="wcal-corner"></div>${dates.map(d => `<div class="wcal-dayhead${d === today ? ' today' : ''}${[5, 6].includes(dowOf(d)) ? ' weekend' : ''}"><b>${DOW_SHORT[dowOf(d)]}</b><span>${dm(d)}</span></div>`).join('')}`;
+  const rows = ctx.shiftTypes.map(s => `<div class="wcal-rowhead"><b>${pEsc(s.label)}</b><small>${rangeHtml(s.start, s.end)}</small></div>${dates.map(d => cell(s, d)).join('')}`).join('');
+  return `${nav}<div class="wcal-scroll"><div class="wcal">${head}${rows}</div></div><div class="pnote wcal-legend"><i class="ahm-star" aria-hidden="true">★</i> אחמ"ש: מי שאחראי/ת על המשמרת (בצהריים, ובשישי ובשבת גם בבוקר)</div>`;
+}
+
 // ---------- THE INSTRUCTOR PORTAL: what an instructor sees (schedule, preferences, swaps, messages) ----------
 // a time range always reads left-to-right (07:00–15:00), also inside Hebrew text
 function rangeHtml(a, b){ return `<bdi dir="ltr">${a}–${b}</bdi>`; }
@@ -5442,14 +5497,19 @@ function renderInstructorSwaps(body){
   body.innerHTML = `
     ${approvalsForMe.length ? '<h2 class="psec">בקשות אליי</h2>' : ''}
     ${approvalsForMe.map(a => `<div class="preq warn"><div>הרכזת שיבצה אותך למשמרת שסימנת עליה "לא":<br><b>${slotLabel(a.key)}</b><br>האם את/ה מאשר/ת?</div><div class="preq-actions"><button type="button" class="btn" data-appr-ok="${a.mk}|${a.k}">מאשר/ת</button><button type="button" class="btn ghost" data-appr-no="${a.mk}|${a.k}">לא מאשר/ת</button></div></div>`).join('')}
-    <h2 class="psec">בקשות החלפה פתוחות</h2>
-    <div class="pnote">${tx('swaps_intro')}</div>
-    ${open.length ? open.map(s => {
-      const own = s.from === me.id, can = !own && canTakeShift(me.id, s.key);
-      return `<div class="preq swap"><div>${s.urgent ? '<span class="pchip missing">⚠ דחוף</span> ' : ''}<b>${pEsc(name(s.from))}</b> מחפש/ת מחליף/ה<br>${slotLabel(s.key)}</div><div class="preq-actions">${own ? `<button type="button" class="btn ghost" data-swap-cancel="${s.id}">ביטול הבקשה שלי</button>` : can ? `<button type="button" class="btn" data-swap-take="${s.id}">אני יכול/ה להחליף</button>` : '<em class="pst">אי אפשר לשבץ אותך כרגע</em>'}</div></div>`;
-    }).join('') : `<div class="pnote">${tx('swaps_none')}</div>`}
-    <h2 class="psec">הבקשות שלי</h2>
-    ${mineReq.length ? mineReq.map(s => `<div class="pmine-row"><span>${slotLabel(s.key)}<br><small>${s.from === me.id ? 'ביקשתם החלפה' + (s.to ? ' · מוכן/ה לעזור: ' + pEsc(name(s.to)) : '') : 'הצעתם להחליף את ' + pEsc(name(s.from))}</small></span><span class="pmine-actions">${portalServerOn && s.from === me.id && s.status === 'open' ? `<button type="button" class="btn ghost small" data-cands="${s.aid}">מי זמין/ה?</button>` : ''}<em class="pst pst-${s.status}">${SWAP_STATUS[s.status]}</em></span></div>`).join('') : '<div class="pnote">אין בקשות.</div>'}`;
+    <details class="pfold" data-fold="swmine"${openFold('swmine') ? ' open' : ''}>
+      <summary><span>הבקשות שלי</span><span class="pcount">${mineReq.length}</span></summary>
+      <div class="pfold-body">${mineReq.length ? mineReq.map(s => `<div class="pmine-row"><span>${slotLabel(s.key)}<br><small>${s.from === me.id ? 'ביקשתם החלפה' + (s.to ? ' · מוכן/ה לעזור: ' + pEsc(name(s.to)) : '') : 'הצעתם להחליף את ' + pEsc(name(s.from))}</small></span><span class="pmine-actions">${portalServerOn && s.from === me.id && s.status === 'open' ? `<button type="button" class="btn ghost small" data-cands="${s.aid}">מי זמין/ה?</button>` : ''}<em class="pst pst-${s.status}">${SWAP_STATUS[s.status]}</em></span></div>`).join('') : '<div class="pnote">אין בקשות.</div>'}</div>
+    </details>
+    <details class="pfold" data-fold="swopen"${openFold('swopen') ? ' open' : ''}>
+      <summary><span>בקשות החלפה פתוחות</span><span class="pcount">${open.length}</span></summary>
+      <div class="pfold-body"><div class="pnote">${tx('swaps_intro')}</div>
+      ${open.length ? open.map(s => {
+        const own = s.from === me.id, can = !own && canTakeShift(me.id, s.key);
+        return `<div class="preq swap"><div>${s.urgent ? '<span class="pchip missing">⚠ דחוף</span> ' : ''}<b>${pEsc(name(s.from))}</b> מחפש/ת מחליף/ה<br>${slotLabel(s.key)}</div><div class="preq-actions">${own ? `<button type="button" class="btn ghost" data-swap-cancel="${s.id}">ביטול הבקשה שלי</button>` : can ? `<button type="button" class="btn" data-swap-take="${s.id}">אני יכול/ה להחליף</button>` : '<em class="pst">אי אפשר לשבץ אותך כרגע</em>'}</div></div>`;
+      }).join('') : `<div class="pnote">${tx('swaps_none')}</div>`}</div>
+    </details>`;
+  wireFolds(body);
   body.querySelectorAll('[data-swap-take]').forEach(b => b.addEventListener('click', async () => {
     const sw = st.swaps.find(x => x.id === b.dataset.swapTake); if(!sw || sw.status !== 'open') return;
     if(portalServerOn){
@@ -5804,7 +5864,9 @@ async function srvAll(build){
     from += 1000;
   }
 }
+// every load takes a number; a load that is overtaken by a newer one (another person signed in meanwhile, or a second reload started) must not write anything
 async function srvLoad(){
+  const epoch = srv.epoch = (srv.epoch || 0) + 1, fresh = () => epoch === srv.epoch;
   const meId = (await sbPersonal.rpc('my_staff_id')).data;
   if(!meId) return false;
   const staff = await srvAll(() => sbPersonal.from('staff').select('id,display_name,kind,active,sort_order').order('sort_order').order('display_name'));
@@ -5825,6 +5887,7 @@ async function srvLoad(){
     notices:notices.map(n => ({ id:n.id, to:meId, at:n.created_at, text:n.text, kind:n.kind, seen:n.seen, sent:!!n.seen, fromServer:true })),
     settings:{ theme:(function(){ try { return localStorage.getItem('ramzor-portal-theme') || 'dark'; } catch(e){ return 'dark'; } })() }
   };
+  if(!fresh()) return false;
   portalState = st; srv.me = meId; srv.meRow = st.instructors.find(p => p.id === meId) || null;
   months.forEach(mk => {
     const prev = addMonths(mk, -1), m = { deadline:prev + '-24', deadlineTime:'22:30', prefs:{}, submitted:{}, notes:{}, goals:{}, assignments:{}, annot:{}, approvals:{}, published:false, status:null };
@@ -5843,7 +5906,8 @@ async function srvLoad(){
   goalRows.forEach(r => { const m = st.months[monthOf(r.month)]; if(m && r.goal) m.goals[r.staff_id] = r.goal; });
   let pickRows = []; try { pickRows = await srvAll(() => sbPersonal.from('prefs_pickone').select('staff_id,friday').gte('friday', from).lte('friday', to)); } catch(e){ pickRows = []; }          // ("only one of these weekends" comes with scheduling-v8.sql)
   pickRows.forEach(r => { const m = st.months[monthOf(r.friday)]; if(m) srvPrefsOf(m, r.staff_id).pick.push(r.friday); });
-  if(srv.profileFor !== meId){ srv.profileFor = meId; srv.me = meId; try { const pr = await sbPersonal.rpc('my_profile'); srv.profile = pr.error ? null : pr.data; } catch(e){ srv.profile = null; } await srvLoadSettings(); applyPortalSize(); }
+  if(srv.profileFor !== meId){ srv.profileFor = meId; srv.me = meId; srv.ahmash = {}; try { const ar = await sbPersonal.rpc('ahmash_staff'); if(!ar.error && ar.data) ar.data.forEach(x => { srv.ahmash[x.staff_id] = x.rank; }); } catch(e){}          // (who is an ahmash, for the star on the team calendar; comes with scheduling-v10.sql)
+    try { const pr = await sbPersonal.rpc('my_profile'); srv.profile = pr.error ? null : pr.data; } catch(e){ srv.profile = null; } await srvLoadSettings(); applyPortalSize(); }
   sched.forEach(r => { const m = st.months[monthOf(r.month)]; if(m){ m.status = r.status; m.published = r.status === 'published'; } });
   st.rows = [];
   if(sched.length){                                       // (the database shows a person only the published schedules; the coordinator sees the drafts too)
@@ -5852,6 +5916,7 @@ async function srvLoad(){
   }
   const swapRows = await srvAll(() => sbPersonal.from('swap_requests').select('id,assignment_id,from_staff,to_staff,status,urgent,created_at').order('created_at', { ascending:false })).catch(() => []);
   st.swaps = swapRows.filter(s => st.assignmentIds[s.assignment_id]).map(s => ({ id:s.id, key:st.assignmentIds[s.assignment_id].key, aid:s.assignment_id, urgent:!!s.urgent, from:s.from_staff, to:s.to_staff, status:s.status, at:s.created_at }));
+  if(!fresh()) return false;
   srv.saved = {};
   months.forEach(mk => { srv.saved[mk] = srvSnapshot(mk); });
   if(srv.meRow && srv.meRow.role === 'coordinator') await srvLoadCoord();          // (what only the coordinator may read: personal flags, open items, vacation requests)
@@ -6107,35 +6172,55 @@ function srvRenderSchedule(body){
     ${fb ? `<details class="pfold" data-fold="fb"${openFold('fb') ? ' open' : ''}><summary><span>איך הלכו הבקשות שלך</span></summary><div class="pfold-body"><div class="pfb">${pEsc(fb.text)}</div></div></details>` : ''}
     <details class="pfold" data-fold="mine"${openFold('mine') ? ' open' : ''}>
       <summary><span>המשמרות שלי</span><span class="pcount">${mine.length}</span></summary>
-      <div class="pfold-body"><div class="pmine">${mine.length ? mine.map(r => {
+      <div class="pfold-body">${isInstr && mine.length ? `<div class="pchange"><button type="button" class="btn ghost small" id="want-change">רוצה שינוי</button></div>` : ''}<div class="pmine">${mine.length ? mine.map(r => {
         const upcoming = r.day >= today, isNext = next && next.id === r.id, req = openByAid[r.id];
-        const canAct = isInstr && upcoming && r.shift !== 'L' && st.assignmentIds[r.id];
         return `<div class="pmine-row${upcoming ? '' : ' past'}${isNext ? ' next' : ''}">
           <div class="pmine-main">${isNext ? '<span class="pnext-badge">המשמרת הבאה שלך</span>' : ''}${srvRowLine(r)}</div>
-          ${req ? `<em class="pst pst-${req.status}">${SWAP_STATUS[req.status]}</em>` : canAct ? `<span class="pmine-actions"><button type="button" class="btn ghost small" data-said="${r.id}">בקשת החלפה</button><button type="button" class="btn ghost small" data-cant="${r.id}">לא יכול/ה להגיע</button></span>` : ''}
+          ${req ? `<em class="pst pst-${req.status}">${SWAP_STATUS[req.status]}</em>` : ''}
         </div>`; }).join('') : `<div class="pnote">${tx('sch_none')}</div>`}</div>
         ${isInstr ? `<div class="pnote">${tx('sch_help')}</div>` : ''}</div>
     </details>
     <details class="pfold" data-fold="team"${openFold('team') ? ' open' : ''}>
       <summary><span>הצוות כולו</span></summary>
-      <div class="pfold-body">${boardHtml(ctx, m.assignments, { me:me.id, nextDate:next ? next.day : null })}</div>
-    </details>`}`;
+      <div class="pfold-body">${weekCalHtml(ctx, m.assignments, { me:me.id, week:portalUi.weekMonth === mk ? portalUi.week : null, ahmash:srv.ahmash })}</div>
+    </details>
+    ${isInstr ? `<details class="pfold" data-fold="openshifts"${openFold('openshifts') ? ' open' : ''}>
+      <summary><span>משמרות פתוחות</span><span class="pcount" id="open-count"></span></summary>
+      <div class="pfold-body" id="open-fold-body"><div class="pnote">רק רגע...</div></div>
+    </details>` : ''}`}`;
+  if(portalUi.weekMonth !== mk){ portalUi.weekMonth = mk; portalUi.week = null; }
+  body.querySelectorAll('[data-wkgo]').forEach(b => b.addEventListener('click', () => { if(!b.dataset.wkgo) return; portalUi.week = b.dataset.wkgo; portalUi.weekMonth = mk; srvRenderSchedule(body); }));
   wireMonthNav(body); wireFolds(body);
+  if(isInstr && m.published) srvFillOpenFold(body, mk); else { const ob = document.getElementById('open-fold-body'); if(ob) ob.innerHTML = `<div class="pnote">${tx('open_none')}</div>`; }
   body.querySelectorAll('[data-notice-ok]').forEach(b => b.addEventListener('click', () => { const n = st.notices.find(x => x.id === b.dataset.noticeOk); if(n) n.seen = true; portalSave(); srvRenderSchedule(body); }));
-  body.querySelectorAll('[data-said]').forEach(b => b.addEventListener('click', async () => {
-    const r = st.rows.find(x => x.id === b.dataset.said); if(!r) return;
-    const cand = await srvSwapCandidates(r.id);
-    if(!(await confirmSheet({ title:'לבקש החלפה?', text:tx('swap_confirm', dayLabel(r.day), SRV_SHIFT_WORD[r.shift], srvCandidatesText(cand)), okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
-    try { await srvSwapAction('request_swap', { p_assignment:r.id }); toast(tx('swap_posted')); } catch(e){ toast(tx('swap_fail')); }
-    srvRenderSchedule(body);
-  }));
-  body.querySelectorAll('[data-cant]').forEach(b => b.addEventListener('click', async () => {
-    const r = st.rows.find(x => x.id === b.dataset.cant); if(!r) return;
-    const cand = await srvSwapCandidates(r.id);
-    if(!(await confirmSheet({ title:tx('cant_title'), text:tx('cant_text', dayLabel(r.day), SRV_SHIFT_WORD[r.shift], srvCandidatesText(cand)), okLabel:'כן, לדווח', cancelLabel:'חזרה' }))) return;
-    try { await srvSwapAction('report_cannot_come', { p_assignment:r.id, p_note:null }); toast(tx('cant_done')); } catch(e){ toast(tx('cant_fail')); }
-    srvRenderSchedule(body);
-  }));
+  // "רוצה שינוי": one button, then the kind of change, then the question "which shift?" with the person's own upcoming shifts
+  const wantBtn = document.getElementById('want-change');
+  if(wantBtn) wantBtn.addEventListener('click', () => {
+    const fem = !(srv.profile && srv.profile.female === false);
+    const sh = portalSheet(`<h2>${tx('change_title')}</h2>
+      <div class="pchange-opts"><button type="button" class="btn" data-change="swap"><b>בקשת החלפה</b><small>${tx('change_swap_sub')}</small></button>
+      <button type="button" class="btn ghost" data-change="cant"><b>${fem ? 'לא יכולה להגיע' : 'לא יכול להגיע'}</b><small>${tx('change_cant_sub')}</small></button></div>
+      <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>חזרה</button></div>`);
+    sh.querySelectorAll('[data-change]').forEach(opt => opt.addEventListener('click', () => {
+      const kind = opt.dataset.change; sh.close();
+      const cur = portalLoad(), pickable = cur.rows.filter(r => r.staff === me.id && r.day >= today && r.shift !== 'L' && cur.assignmentIds[r.id] && !cur.swaps.some(s => s.aid === r.id && ['open', 'offered'].includes(s.status))).sort((a, b) => (a.day + (a.from || '')).localeCompare(b.day + (b.from || '')));
+      const q = tx(kind === 'swap' ? 'pick_swap_q' : 'pick_cant_q', fem);
+      const ps = portalSheet(`<h2>${q}</h2>${pickable.length ? `<div class="pchange-list">${pickable.map(r => `<button type="button" class="pmine-row pick" data-pick-shift="${r.id}" data-day="${r.day}"><div class="pmine-main">${srvRowLine(r)}</div></button>`).join('')}</div>` : `<div class="pnote">${tx('change_none')}</div>`}
+        <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>חזרה</button></div>`);
+      ps.querySelectorAll('[data-pick-shift]').forEach(pb => pb.addEventListener('click', async () => {
+        const r = cur.rows.find(x => x.id === pb.dataset.pickShift); ps.close(); if(!r) return;
+        const cand = await srvSwapCandidates(r.id);
+        if(kind === 'swap'){
+          if(!(await confirmSheet({ title:'לבקש החלפה?', text:tx('swap_confirm', dayLabel(r.day), SRV_SHIFT_WORD[r.shift], srvCandidatesText(cand)), okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
+          try { await srvSwapAction('request_swap', { p_assignment:r.id }); toast(tx('swap_posted')); } catch(e){ toast(tx('swap_fail')); }
+        } else {
+          if(!(await confirmSheet({ title:tx('cant_title'), text:tx('cant_text', dayLabel(r.day), SRV_SHIFT_WORD[r.shift], srvCandidatesText(cand)), okLabel:'כן, לדווח', cancelLabel:'חזרה' }))) return;
+          try { await srvSwapAction('report_cannot_come', { p_assignment:r.id, p_note:null }); toast(tx('cant_done')); } catch(e){ toast(tx('cant_fail')); }
+        }
+        srvRenderSchedule(body);
+      }));
+    }));
+  });
 }
 
 // ---------------------------------------------------------------- long vacation requests (instructors and service girls)
@@ -6232,24 +6317,50 @@ async function srvRenderTeacherHours(body){
   });
 }
 
-// ---------------------------------------------------------------- the instructors who are not scheduled automatically: open shifts they can take
+// ---------------------------------------------------------------- open shifts: shifts that are still below the minimum after the publishing.
+// The database offers each instructor only the ones she could fill; she sends a request, and she is placed only after the coordinator approves.
+async function srvOpenShiftList(mk){
+  try { const r = await sbPersonal.rpc('open_shifts', { p_month:firstOf(mk) }); return r.error || !r.data ? [] : r.data; } catch(e){ return []; }
+}
+function srvOpenShiftsHtml(list){
+  return list.length ? list.map(o => `<div class="pmine-row"><span><b>${dayLabel(o.day)}</b> · ${SRV_SHIFT_WORD[o.shift]} <small>(חסר/ים ${o.need - o.have})</small></span>${o.req
+    ? `<span class="pmine-actions"><em class="pst pst-offered">${tx('open_waiting')}</em><button type="button" class="btn ghost small" data-ocancel="${o.req}">ביטול</button></span>`
+    : `<button type="button" class="btn small" data-ojoin="${o.day}|${o.shift}">אשמח להצטרף</button>`}</div>`).join('') : `<div class="pnote">${tx('open_none')}</div>`;
+}
+function srvWireOpenShifts(root, refresh){
+  root.querySelectorAll('[data-ojoin]').forEach(b => b.addEventListener('click', async () => {
+    const [day, shift] = b.dataset.ojoin.split('|');
+    if(!(await confirmSheet({ title:tx('open_confirm_title'), text:tx('open_confirm', dayLabel(day), SRV_SHIFT_WORD[shift]), okLabel:'כן, לשלוח', cancelLabel:'חזרה' }))) return;
+    const r = await sbPersonal.rpc('request_open_shift', { p_day:day, p_shift:shift });
+    toast(r.error ? tx('open_fail') : tx('open_ok')); refresh();
+  }));
+  root.querySelectorAll('[data-ocancel]').forEach(b => b.addEventListener('click', async () => {
+    const r = await sbPersonal.rpc('cancel_open_request', { p_id:b.dataset.ocancel });
+    toast(r.error ? tx('cancel_fail') : tx('cancel_ok')); refresh();
+  }));
+}
+// the fold in the schedule screen (filled after the screen is drawn, because the list comes from the database)
+async function srvFillOpenFold(body, mk){
+  const list = await srvOpenShiftList(mk), box = document.getElementById('open-fold-body');
+  if(!box || !body.isConnected || !portalServerOn || portalUi.month !== mk) return;
+  box.innerHTML = `<div class="pnote">${tx('open_intro')}</div>${srvOpenShiftsHtml(list)}`;
+  const cnt = document.getElementById('open-count'); if(cnt) cnt.textContent = list.length;
+  srvWireOpenShifts(box, async () => { await srvReloadSafe(); srvFillOpenFold(body, mk); });
+}
+// the same list as a screen of its own (for an instructor who is not scheduled automatically)
 async function srvRenderOpenShifts(body){
   body.innerHTML = '<div class="pnote">רק רגע...</div>';
-  const st = portalLoad(), cur = monthKeyOf(srvToday()), months = [cur, addMonths(cur, 1)].filter(mk => st.months[mk] && ['sent', 'published'].includes(st.months[mk].status));
+  const st = portalLoad(), cur = monthKeyOf(srvToday()), months = [cur, addMonths(cur, 1)].filter(mk => st.months[mk] && st.months[mk].status === 'published');
   const lists = [];
-  for(const mk of months){ try { const r = await sbPersonal.rpc('open_shifts', { p_month:firstOf(mk) }); if(!r.error && r.data) lists.push(...r.data); } catch(e){} }
-  if(!body.isConnected) return;
+  for(const mk of months) lists.push(...(await srvOpenShiftList(mk)));
+  if(!body.isConnected || !portalServerOn) return;
   body.innerHTML = `
     <h2 class="psec">משמרות שמחכות לעזרה שלך</h2>
     <div class="pnote">${tx('open_intro')}</div>
-    ${lists.length ? lists.map(o => `<div class="pmine-row"><span><b>${dayLabel(o.day)}</b> · ${SRV_SHIFT_WORD[o.shift]} <small>(חסר/ים ${o.need - o.have})</small></span><button type="button" class="btn small" data-take="${o.day}|${o.shift}">אשמח לקחת</button></div>`).join('') : `<div class="pnote">${tx('open_none')}</div>`}`;
-  body.querySelectorAll('[data-take]').forEach(b => b.addEventListener('click', async () => {
-    const [day, shift] = b.dataset.take.split('|');
-    if(!(await confirmSheet({ title:'למלא את המשמרת?', text:`נשבץ אותך למשמרת ${dayLabel(day)} (${SRV_SHIFT_WORD[shift]}). תודה על העזרה!`, okLabel:'כן, אשמח', cancelLabel:'חזרה' }))) return;
-    const r = await sbPersonal.rpc('take_open_shift', { p_day:day, p_shift:shift });
-    toast(r.error ? tx('open_fail') : tx('open_ok')); await srvReloadSafe(); srvRenderOpenShifts(body);
-  }));
+    ${srvOpenShiftsHtml(lists)}`;
+  srvWireOpenShifts(body, async () => { await srvReloadSafe(); srvRenderOpenShifts(body); });
 }
+
 // ---------- THE PORTAL ON THE SERVER: the coordinator's schedule (the board, editing a shift, publishing, what needs her attention) ----------
 // The schedule is built by the system once a month (the 25th, at night). From then on the coordinator edits it by hand; there is no "build" button.
 const SRV_STATUS_WORD = { collecting:'בהגשת העדפות', draft:'טיוטה', sent:'נשלח אלייך', published:'פורסם' };
@@ -6317,6 +6428,17 @@ async function srvLoadCoord(){
   st.priv = {}; priv.forEach(r => { st.priv[r.staff_id] = r; });
   st.voices = {}; try { const sv = await sbPersonal.from('staff_settings').select('staff_id,voice'); (sv.data || []).forEach(r => { if(r.voice) st.voices[r.staff_id] = r.voice; }); } catch(e){}          // (each person's chosen voice, so that her feedback is written in it)
   st.flags = flags; st.vacations = vac;
+  st.openReqs = []; try { const r = await sbPersonal.from('open_shift_requests').select('id,staff_id,day,shift,created_at').eq('status', 'pending').order('created_at'); st.openReqs = r.error ? [] : (r.data || []); } catch(e){}          // (the requests to join an open shift; they come with scheduling-v11.sql)
+}
+
+// the shifts that are below the minimum number of instructors (the same standard numbers as the database): after publishing they are offered to the instructors who could fill them
+function srvOpenShiftsOf(mk){
+  const st = portalLoad(), isInstr = id => { const p = st.instructors.find(x => x.id === id); return p && p.role === 'instructor'; };
+  const need = (d, sh) => sh === 'M' ? ([5, 6].includes(dowOf(d)) ? 5 : 1) : sh === 'A' ? ([4, 5, 6].includes(dowOf(d)) ? 5 : 4) : 2;
+  const have = (d, sh) => st.rows.filter(r => isInstr(r.staff) && ((r.shift !== 'L' && r.day === d && (r.shift === 'S' ? 'M' : r.shift) === sh) || (r.shift === 'L' && ((r.day === d && sh === 'A') || (addDays(r.day, 1) === d && ['M', 'A'].includes(sh)))))).length;
+  const out = [];
+  daysOfMonth(mk).forEach(d => ['M', 'A', 'N'].forEach(sh => { const h = have(d, sh), n = need(d, sh); if(h < n) out.push({ day:d, shift:sh, missing:n - h }); }));
+  return out;
 }
 
 // ---- the screen
@@ -6357,12 +6479,12 @@ function srvRenderCoordSchedule(body){
   const pub = document.getElementById('cs-publish');
   if(pub) pub.addEventListener('click', async () => {
     const open = (st.flags || []).filter(f => f.month && f.month.slice(0, 7) === mk && !['service_absent', 'service'].includes(f.kind)).length;
-    if(!(await confirmSheet({ title:'לפרסם את הסידור?', text:`מרגע הפרסום כל המדריכים רואים אותו, וכל אחד מקבל הודעה אישית על איך הלכו הבקשות שלו${open ? ` (עדיין יש ${open} דברים שדורשים תשומת לב)` : ''}. כל שינוי אחר כך שולח הודעה ומייל למי שהושפע.`, okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
+    const openShifts = srvOpenShiftsOf(mk);
+    if(!(await confirmSheet({ title:'לפרסם את הסידור?', text:`מרגע הפרסום כל המדריכים רואים אותו, ובכל מסך אישי מופיע הסעיף "איך הלכו הבקשות שלך"${open ? ` (עדיין יש ${open} דברים שדורשים תשומת לב)` : ''}.${openShifts.length ? ` יש ${openShifts.length} משמרות שעדיין לא הושלמו (חסרים בהן מדריכים). אחרי הפרסום הן יופיעו למדריכים כמשמרות פתוחות: רק מי שיכול לאייש אותן (לפי המנוחה, המקסימום של מי שאינם מובילים ועוד) יוכל לבקש להצטרף, וכל בקשה תגיע אלייך לאישור. מדריך ישובץ רק אחרי שתאשרי.` : ''} כל שינוי אחר כך שולח הודעה ומייל למי שהושפע.`, okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
     const u = await sbPersonal.from('schedule').update({ status:'published', published_at:new Date().toISOString() }).eq('month', firstOf(mk));
     if(u.error){ toast('הפרסום נכשל. נסו שוב.'); return; }
     await srvReloadSafe();
-    const sent = await srvSendFeedback(mk).catch(() => ({ ok:0, failed:1 }));              // every instructor gets a personal, warm message about how the requests went
-    toast(sent.ok ? `הסידור פורסם, וכל מדריך/ה קיבל/ה הודעה אישית על איך הלכו הבקשות` : 'הסידור פורסם. ההודעות האישיות על הבקשות עוד לא נשלחו, נטפל בזה'); srvRenderCoordSchedule(body);
+    toast(openShifts.length ? `הסידור פורסם. ${openShifts.length} משמרות פתוחות הופיעו למדריכים, ובקשות להצטרף יגיעו אלייך לאישור` : 'הסידור פורסם', openShifts.length ? 6000 : 0); srvRenderCoordSchedule(body);          // (each person sees how her requests went in her own schedule screen, so no separate message is sent)
   });
   document.getElementById('cs-xlsx').addEventListener('click', () => { downloadScheduleXlsx(ctx, m.assignments); toast('קובץ האקסל נוצר'); });
   document.getElementById('cs-print').addEventListener('click', () => printSchedule(ctx, m.assignments));
@@ -6475,11 +6597,20 @@ function srvRenderCoordSwaps(body){
   if(!body.isConnected) return;                                   // (a screen that finished loading after the person left it must not draw)
   const st = portalLoad();
   const agreed = st.swaps.filter(s => s.status === 'offered'), waiting = st.swaps.filter(s => s.status === 'open');
+  const oreqs = st.openReqs || [];
   body.innerHTML = `
+    ${oreqs.length ? `<h2 class="psec">בקשות להצטרף למשמרות פתוחות</h2>${oreqs.map(o => `<div class="preq"><div><b>${pEsc(nameOf(o.staff_id))}</b> מבקש/ת להצטרף למשמרת<br>${dayLabel(o.day)} · ${SRV_SHIFT_WORD[o.shift]}</div><div class="preq-actions"><button type="button" class="btn" data-oapprove="${o.id}">אישור</button><button type="button" class="btn ghost" data-oreject="${o.id}">דחייה</button></div></div>`).join('')}` : ''}
     <h2 class="psec">ממתינות לאישורך</h2>
     ${agreed.length ? agreed.map(s => `<div class="preq">${s.urgent ? '<span class="pchip missing">⚠ דחוף</span> ' : ''}<div><b>${pEsc(nameOf(s.from))}</b> מבקש/ת החלפה, <b>${pEsc(nameOf(s.to))}</b> מוכן/ה להחליף<br>${slotLabel(s.key)}</div><div class="preq-actions"><button type="button" class="btn" data-approve="${s.id}">אישור</button><button type="button" class="btn ghost" data-reject="${s.id}">דחייה</button></div></div>`).join('') : '<div class="pnote">אין החלפות שממתינות לאישור.</div>'}
     <h2 class="psec">בקשות פתוחות (עדיין אין מחליף/ה)</h2>
     ${waiting.length ? waiting.map(s => `<div class="pmine-row"><span>${s.urgent ? '<span class="pchip missing">⚠ דחוף</span> ' : ''}${pEsc(nameOf(s.from))} · ${slotLabel(s.key)}</span><em class="pst pst-open">${SWAP_STATUS.open}</em></div>`).join('') : '<div class="pnote">אין.</div>'}`;
+  body.querySelectorAll('[data-oapprove], [data-oreject]').forEach(b => b.addEventListener('click', async () => {
+    const approve = !!b.dataset.oapprove, id = b.dataset.oapprove || b.dataset.oreject;
+    const r = await sbPersonal.rpc('decide_open_shift', { p_id:id, p_approve:approve });
+    if(r.error){ toast(/covered/.test(r.error.message || '') ? 'המשמרת כבר מלאה, אי אפשר לאשר' : /already working/.test(r.error.message || '') ? 'המדריך כבר משובץ באותו יום' : 'הפעולה לא הצליחה. נסו שוב.'); }
+    else toast(approve ? 'אושר. המדריך שובץ למשמרת וקיבל עדכון.' : 'נדחה. המדריך קיבל עדכון.');
+    await srvReloadSafe(); srvRenderCoordSwaps(body);
+  }));
   body.querySelectorAll('[data-approve], [data-reject]').forEach(b => b.addEventListener('click', async () => {
     const approve = !!b.dataset.approve, s = st.swaps.find(x => x.id === (b.dataset.approve || b.dataset.reject));
     if(approve && s){                                              // a rest problem only warns; the answer stays hers
@@ -6757,7 +6888,13 @@ const VOICES = {
   // ---- the schedule tab
   sch_unpub:  { warm:() => 'הסידור לחודש הזה עוד בהכנה. ברגע שהוא יפורסם נעדכן אותך כאן ובמייל.', light:() => 'הסידור עוד בתנור. כשהוא יצא נעדכן כאן ובמייל.', brief:() => 'הסידור טרם פורסם.' },
   sch_none:   { warm:() => 'בחודש הזה עדיין לא שובצו לך משמרות. אם זה לא מה שציפיתם, נשמח לשמוע ולעזור.', light:() => 'החודש אין לך משמרות (בינתיים). אם זה לא מה שציפית, תגיד לנו ונבדוק.', brief:() => 'אין משמרות החודש.' },
-  sch_help:   { warm:() => 'צריך להחליף משמרת? "בקשת החלפה" מפרסמת אותה בלוח ההחלפות, ועמיתים יכולים להציע לעזור. אם קרה משהו ולא תוכלו להגיע, "לא יכול/ה להגיע" מעדכן את הרכזת ופותח את המשמרת להחלפה מיד. אנחנו כאן בשבילכם.', light:() => 'צריך להחליף משמרת? "בקשת החלפה" מעלה אותה ללוח, ועמיתים יוכלו להציל את המצב. ואם קרה משהו והפעם אי אפשר להגיע, "לא יכול/ה להגיע" מעדכן את הרכזת ופותח את המשמרת מיד. קורה לכולם.', brief:() => 'החלפה: "בקשת החלפה". אי הגעה: "לא יכול/ה להגיע".' },
+  sch_help:   { warm:() => 'צריך לשנות משהו? לחצו על "רוצה שינוי" ובחרו בקשת החלפה, או "לא יכול/ה להגיע" אם קרה משהו. בקשת החלפה מפרסמת את המשמרת בלוח ההחלפות, ועמיתים יכולים להציע לעזור. אי הגעה מעדכנת את הרכזת ופותחת את המשמרת להחלפה מיד. אנחנו כאן בשבילכם.', light:() => 'צריך שינוי? "רוצה שינוי" מציע החלפה (עמיתים יוכלו להציל את המצב) או דיווח שהפעם אי אפשר להגיע (הרכזת מקבלת הודעה והמשמרת נפתחת מיד). קורה לכולם.', brief:() => 'שינוי: "רוצה שינוי".' },
+  change_title:{ warm:() => 'מה נוכל לעשות בשבילך?', light:() => 'מה משנים?', brief:() => 'סוג השינוי' },
+  change_swap_sub:{ warm:() => 'מפרסמים את המשמרת בלוח ההחלפות, ועמיתים יכולים להציע לעזור', light:() => 'המשמרת עולה ללוח, ומישהו מציל את המצב', brief:() => 'פרסום בלוח ההחלפות' },
+  change_cant_sub:{ warm:() => 'מעדכנים את הרכזת ופותחים את המשמרת להחלפה מיד', light:() => 'הרכזת מקבלת הודעה והמשמרת נפתחת מיד. קורה לכולם', brief:() => 'הרכזת מעודכנת, המשמרת נפתחת' },
+  pick_swap_q:{ warm:(f) => f ? 'איזו משמרת תרצי להחליף?' : 'איזו משמרת תרצה להחליף?', light:(f) => f ? 'איזו משמרת תרצי להעביר הלאה?' : 'איזו משמרת תרצה להעביר הלאה?', brief:() => 'איזו משמרת להחליף?' },
+  pick_cant_q:{ warm:(f) => f ? 'לאיזו משמרת לא תוכלי להגיע?' : 'לאיזו משמרת לא תוכל להגיע?', light:(f) => f ? 'לאיזו משמרת לא תוכלי להגיע?' : 'לאיזו משמרת לא תוכל להגיע?', brief:() => 'לאיזו משמרת אי אפשר להגיע?' },
+  change_none:{ warm:() => 'כרגע אין משמרות עתידיות שאפשר לשנות מכאן. אם צריך, אפשר לפנות לרכזת.', light:() => 'אין משמרות עתידיות לשנות. ואם יש בכל זאת בעיה, הרכזת תעזור.', brief:() => 'אין משמרות לשינוי.' },
   swap_confirm:{ warm:(d, s, c) => `נפרסם את המשמרת ${d} (${s}) בלוח ההחלפות, ועמיתים יוכלו להציע לעזור.${c}`, light:(d, s, c) => `נעלה את המשמרת ${d} (${s}) ללוח ההחלפות, ומי שיכול ירים יד.${c}`, brief:(d, s, c) => `המשמרת ${d} (${s}) תפורסם בלוח ההחלפות.${c}` },
   swap_posted:{ warm:() => 'פרסמנו את המשמרת בלוח ההחלפות, ונעדכן אותך כשיימצא מחליף/ה', light:() => 'המשמרת בלוח. כשמישהו ירים יד, נעדכן', brief:() => 'פורסם בלוח ההחלפות' },
   swap_fail:  { warm:() => 'לא הצלחנו לפרסם כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'לא הצלחנו להעלות עכשיו. עוד ניסיון בעוד רגע?', brief:() => 'הפרסום נכשל. נסו שוב' },
@@ -6780,10 +6917,13 @@ const VOICES = {
   vac_fail:   { warm:() => 'לא הצלחנו לשלוח כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'הבקשה לא יצאה. עוד ניסיון בעוד רגע?', brief:() => 'השליחה נכשלה. נסו שוב' },
   vac_none:   { warm:() => 'עדיין לא שלחתם בקשות.', light:() => 'עוד לא שלחתם בקשות. החופשה מחכה!', brief:() => 'אין בקשות.' },
   // ---- open shifts, availability, teachers
-  open_intro: { warm:() => 'כאן מופיעות משמרות שעדיין חסר בהן מישהו. תודה שאכפת לך מהצוות! אפשר לקחת מה שנוח לך, והרכזת תקבל על זה הודעה.', light:() => 'כאן משמרות שעדיין מחפשות מישהו. כל משמרת שתקחו מקבלת תודה אישית. הרכזת תקבל הודעה.', brief:() => 'משמרות חסרות. בחירה מעדכנת את הרכזת.' },
+  open_intro: { warm:() => 'כאן מופיעות משמרות שעדיין חסר בהן מישהו, ורק אלה שאפשר לשבץ אליהן אתכם. תודה שאכפת לכם מהצוות! אפשר לבקש להצטרף למשמרת שנוחה לכם, הבקשה עוברת לרכזת, ותשובצו אחרי שתאשר.', light:() => 'כאן משמרות שעדיין מחפשות מישהו, ורק כאלה שמתאימות לכם. מבקשים להצטרף, הרכזת מאשרת, ורק אז אתם משובצים. כל משמרת שתיקחו מקבלת תודה אישית.', brief:() => 'משמרות חסרות שמתאימות לכם. בקשה עוברת לרכזת, ושיבוץ רק אחרי אישורה.' },
+  open_waiting:{ warm:() => 'ממתין לאישור הרכזת', light:() => 'אצל הרכזת, מחכים לתשובה', brief:() => 'ממתין לאישור' },
+  open_confirm_title:{ warm:() => 'לבקש להצטרף למשמרת?', light:() => 'מצטרפים?', brief:() => 'לבקש להצטרף?' },
+  open_confirm:{ warm:(d, s) => `נשלח לרכזת בקשה שתצטרפו למשמרת ${d} (${s}). תשובצו אליה רק אחרי שתאשר, ונעדכן אתכם. תודה על העזרה!`, light:(d, s) => `הבקשה למשמרת ${d} (${s}) עוברת לרכזת. אחרי שתאשר, אתם בפנים, ונעדכן.`, brief:(d, s) => `בקשה למשמרת ${d} (${s}) תישלח לרכזת. שיבוץ רק אחרי אישורה.` },
   open_none:  { warm:() => 'כרגע אין משמרות חסרות. תודה שבדקת!', light:() => 'אין משמרות חסרות כרגע. הצוות מסודר!', brief:() => 'אין משמרות חסרות.' },
-  open_ok:    { warm:() => 'שיבצנו אותך, תודה רבה!', light:() => 'שובצת, ותודה על ההצלה!', brief:() => 'שובצת' },
-  open_fail:  { warm:() => 'לא הצלחנו לשבץ כרגע, ייתכן שמישהו כבר מילא את המשמרת. תודה על הנכונות!', light:() => 'מישהו הקדים אותך. תודה על הנכונות!', brief:() => 'לא הצליח. ייתכן שמולאה' },
+  open_ok:    { warm:() => 'הבקשה נשלחה לרכזת, ונעדכן אותך ברגע שתאשר. תודה על הרצון לעזור!', light:() => 'הבקשה אצל הרכזת. תודה, גיבורים!', brief:() => 'הבקשה נשלחה לרכזת' },
+  open_fail:  { warm:() => 'לא הצלחנו לשלוח את הבקשה כרגע, ייתכן שהמשמרת כבר נתפסה. תודה על הנכונות!', light:() => 'מישהו הקדים אותך, או שהמערכת התבלבלה. תודה על הנכונות!', brief:() => 'השליחה נכשלה. ייתכן שנתפסה' },
   avail_ok:   { warm:() => 'תודה! הזמינות שלכן הוגשה ✓', light:() => 'הוגש! תודה ✓', brief:() => 'הוגש ✓' },
   retry:      { warm:() => 'לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'השמירה נתקעה. עוד ניסיון בעוד רגע?', brief:() => 'השמירה נכשלה. נסו שוב' },
   // ---- inbox
