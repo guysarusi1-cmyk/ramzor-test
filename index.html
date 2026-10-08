@@ -1371,26 +1371,24 @@
   .pchange-opts .btn small{ font-weight:400; opacity:.85; font-size:12.5px; }
   .pchange-list{ display:flex; flex-direction:column; gap:6px; margin:8px 0 12px; max-height:52vh; overflow-y:auto; }
   .pmine-row.pick{ width:100%; cursor:pointer; font-family:inherit; color:var(--p-text); text-align:start; }
-  /* the team as a weekly calendar: days across, shifts down; scrolls sideways on a phone */
-  .pweek{ display:flex; align-items:center; justify-content:center; gap:14px; margin:4px 0 10px; font-size:15px; }
-  .pweek button{ width:40px; height:40px; border-radius:50%; border:1px solid var(--p-line); background:var(--p-panel2); color:var(--p-text); font-size:20px; cursor:pointer; }
-  .pweek button:disabled{ opacity:.35; cursor:default; }
-  .wcal-scroll{ overflow-x:auto; padding-bottom:4px; }
-  .wcal{ display:grid; grid-template-columns:72px repeat(7, minmax(104px, 1fr)); gap:4px; min-width:800px; direction:rtl; }
-  .wcal-dayhead, .wcal-rowhead{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:6px 2px; background:var(--p-panel2); border-radius:8px; font-size:13px; }
-  .wcal-dayhead small, .wcal-rowhead small{ color:var(--p-muted); font-size:11px; }
-  .wcal-dayhead span{ color:var(--p-muted); font-size:12px; }
-  .wcal-dayhead.today{ background:var(--gold); color:#1b1b1b; } .wcal-dayhead.today span{ color:#1b1b1b; }
-  .wcal-dayhead.weekend{ background:rgba(128,128,128,.18); }
-  .wcal-cell{ display:flex; flex-direction:column; align-items:stretch; gap:3px; padding:4px; min-height:64px; background:var(--p-panel); border:1px solid var(--p-line); border-radius:8px; }
-  .wcal-cell.weekend{ background:rgba(128,128,128,.08); } .wcal-cell.today{ border-color:var(--gold); }
-  .wcal-cell.off{ align-items:center; justify-content:center; color:var(--p-muted); background:transparent; border-style:dashed; }
-  .wcal-cell .pchip{ display:block; text-align:center; font-size:12.5px; line-height:1.3; padding:3px 4px; }
-  .wcal-cell .pchip small{ color:var(--p-muted); font-size:10px; }
-  .pchip.ahm{ border:1.5px solid var(--gold); background:rgba(232,185,74,.14); font-weight:800; }
-  .pchip .ahm-tag{ display:block; color:var(--gold) !important; font-weight:800; font-size:10px; letter-spacing:.3px; }
-  .ahm-star{ color:var(--gold); font-style:normal; margin-inline-end:3px; }
+  /* the team as a monthly calendar: a rectangle for each day (morning, noon, night inside), seven columns, no sideways scrolling */
+  .mcal{ display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:3px; direction:rtl; }
+  .mcal-head{ text-align:center; font-size:11px; font-weight:700; color:var(--p-muted); padding:2px 0; }
+  .mcal-day{ display:flex; flex-direction:column; gap:2px; min-width:0; padding:3px 2px; background:var(--p-panel); border:1px solid var(--p-line); border-radius:8px; }
+  .mcal-day.blank{ background:transparent; border:none; }
+  .mcal-day.weekend{ background:rgba(128,128,128,.10); }
+  .mcal-day.today{ border-color:var(--gold); }
+  .mcal-num{ font-size:11px; font-weight:800; color:var(--p-text); padding-inline:2px; }
+  .mcal-shift{ display:flex; align-items:flex-start; gap:2px; min-width:0; padding-top:2px; border-top:1px dashed var(--p-line); }
+  .mcal-shift > i{ flex:none; width:9px; font-style:normal; font-size:8.5px; font-weight:800; color:var(--p-muted); line-height:1.5; }
+  .mcal-names{ display:flex; flex-direction:column; gap:1px; min-width:0; flex:1; }
+  .mcal-name{ display:block; min-width:0; font-size:9.5px; line-height:1.25; padding:1px 2px; border-radius:4px; background:var(--p-panel2); color:var(--p-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mcal-name small{ display:block; font-size:8px; line-height:1.15; color:var(--p-muted); font-weight:400; }
+  .mcal-name.ahm{ font-weight:800; }
+  .mcal-name.me{ background:var(--gold); color:#1b1b1b; font-weight:800; } .mcal-name.me small{ color:#3a3000; }
+  .mcal-missing{ font-size:8.5px; color:var(--p-no, #ff8a80); font-weight:700; }
   .wcal-legend{ margin-top:8px; }
+  @media (min-width:700px){ .mcal{ gap:5px; } .mcal-head{ font-size:14px; } .mcal-day{ padding:6px 5px; gap:4px; } .mcal-num{ font-size:14px; } .mcal-shift > i{ width:14px; font-size:12px; } .mcal-name{ font-size:13px; padding:2px 5px; } .mcal-name small{ font-size:10.5px; } .mcal-missing{ font-size:12px; } }
   /* the gear next to the theme button, and the large-text option */
   .portal-top-actions{ display:flex; gap:8px; align-items:center; }
   body.portal-big .portal-shell{ zoom:1.14; }
@@ -5199,6 +5197,24 @@ function portalSheet(html){
   return wrap;
 }
 
+// Who is THE ahmash of a shift (the one that is marked): in the afternoon shifts, and on Friday and Saturday mornings. Only one is marked, even when several ahmash are on the shift.
+// The choice goes through the month in order: a main ahmash (rank 1) before a second-rank one (who is chosen only when no main one is on the shift); then somebody who was NOT the
+// ahmash the day before; then the one who has been the ahmash the fewest times so far this month; then by id, so that everybody sees the same.  rank = { staff id: 1 | 2 }
+function ahmashInCharge(id, date){ return id === 'e' || ([5, 6].includes(dowOf(date)) && id === 'm'); }
+function ahmashPicks(table, ctx, rank){
+  const picks = {}, count = {}, was = {};
+  table.forEach(r => r.cells.forEach((c, i) => {
+    const s = ctx.shiftTypes[i]; if(!c.slot || !s || !ahmashInCharge(s.id, r.date)) return;
+    const cand = c.people.filter(p => (rank[p.iid] || 0) > 0); if(!cand.length) return;
+    const best = Math.min(...cand.map(p => rank[p.iid]));
+    let pool = cand.filter(p => rank[p.iid] === best);
+    const fresh = pool.filter(p => !(was[p.iid] && was[p.iid].has(addDays(r.date, -1)))); if(fresh.length) pool = fresh;
+    pool.sort((a, b) => (count[a.iid] || 0) - (count[b.iid] || 0) || String(a.iid).localeCompare(String(b.iid)));
+    const pick = pool[0]; picks[c.slot.key] = pick.iid; count[pick.iid] = (count[pick.iid] || 0) + 1; (was[pick.iid] = was[pick.iid] || new Set()).add(r.date);
+  }));
+  return picks;
+}
+
 // the schedule table: one row per day, one column per shift. In the coordinator's view every name is coloured by how
 // well the wish was kept; instructors see the whole team's schedule with only their own name highlighted.
 function boardHtml(ctx, assignments, opts){
@@ -5206,7 +5222,7 @@ function boardHtml(ctx, assignments, opts){
   const byId = {}; ctx.instructors.forEach(p => { byId[p.id] = p; });
   const table = scheduleTable(ctx, assignments), today = isoDate(new Date());
   const head = `<tr><th></th>${ctx.shiftTypes.map(s => `<th>${pEsc(s.label)}<small>${rangeHtml(s.start, s.end)}</small></th>`).join('')}</tr>`;
-  const approvals = (portalMonth(ctx.month).approvals) || {};
+  const approvals = (portalMonth(ctx.month).approvals) || {}, picks = opts.ahmash ? ahmashPicks(table, ctx, opts.ahmash) : {};
   const body = table.map(r => `<tr class="${r.date === today ? 'today' : ''}${opts.nextDate === r.date ? ' next-row' : ''}${[5, 6].includes(dowOf(r.date)) ? ' weekend' : ''}"><th scope="row"><b>${DOW_SHORT[dowOf(r.date)]}</b> ${parseIso(r.date).getDate()}</th>${r.cells.map((c, i) => {
     if(!c.slot) return '<td class="off">—</td>';
     const chips = c.people.map(p => {
@@ -5215,7 +5231,8 @@ function boardHtml(ctx, assignments, opts){
       const cls = opts.colour ? 'lv-' + p.level : 'lv-neutral';
       const pending = approvals[c.slot.key + '|' + pid] === 'pending';
       const ann = ctx.annot && ctx.annot[c.slot.key + '|' + pid];
-      return `<span class="pchip ${cls}${mine ? ' me' : ''}${pending ? ' pending' : ''}">${pEsc(p.name)}${ann ? ` <small>${pEsc(ann)}</small>` : ''}${pending ? ' ⏳' : ''}</span>`;
+      const lead = picks[c.slot.key] === pid;
+      return `<span class="pchip ${cls}${mine ? ' me' : ''}${pending ? ' pending' : ''}${lead ? ' ahm' : ''}">${pEsc(p.name)}${lead ? '<small class="ahm-tag">אחמ"ש</small>' : ''}${ann ? ` <small>${pEsc(ann)}</small>` : ''}${pending ? ' ⏳' : ''}</span>`;
     }).join('');
     const miss = c.missing ? `<span class="pchip missing">חסר ${c.missing}</span>` : '';
     return `<td${opts.edit ? ` class="editable" data-key="${c.slot.key}" tabindex="0" role="button" aria-label="עריכת משמרת"` : ''}>${chips}${miss}</td>`;
@@ -5223,32 +5240,30 @@ function boardHtml(ctx, assignments, opts){
   return `<div class="board-scroll"><table class="pboard"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
 }
 
-// the whole team as a weekly calendar: seven days across, one row per shift. In the afternoon shifts and on Friday and Saturday mornings the ahmash
-// (who is in charge of the shift) is shown first, with a star and the word אחמ"ש. opts: me, week (the Sunday that is shown), ahmash ({ staff id: rank })
-function weekCalHtml(ctx, assignments, opts){
+// the whole team as a monthly calendar (the same structure as the paper schedule): a rectangle for every day, with the morning, noon and night of that day inside,
+// the days of the week above. Everything fits the width of the screen (no sideways scrolling). In the afternoon shifts, and on Friday and Saturday mornings,
+// the ahmash is written first and marked אחמ"ש (one per shift, see ahmashPicks); the person herself is highlighted.  opts: me, ahmash ({ staff id: rank })
+function monthCalHtml(ctx, assignments, opts){
   opts = opts || {};
-  const table = scheduleTable(ctx, assignments), today = isoDate(new Date()), rowOf = {}, weeks = [];
-  table.forEach(r => { rowOf[r.date] = r; const ws = addDays(r.date, -dowOf(r.date)); if(!weeks.includes(ws)) weeks.push(ws); });
-  if(!weeks.length) return '';
-  let wi = weeks.indexOf(opts.week); if(wi < 0) wi = Math.max(0, weeks.indexOf(addDays(today, -dowOf(today))));
-  const ws = weeks[wi], dates = [0, 1, 2, 3, 4, 5, 6].map(k => addDays(ws, k)), rank = opts.ahmash || {};
-  const dm = iso => { const d = parseIso(iso); return d.getDate() + '/' + (d.getMonth() + 1); };
-  const inCharge = (id, date) => id === 'e' || ([5, 6].includes(dowOf(date)) && id === 'm');
-  const cell = (s, date) => {
-    const r = rowOf[date], c = r && r.cells[ctx.shiftTypes.indexOf(s)];
-    if(!c || !c.slot) return `<div class="wcal-cell off${[5, 6].includes(dowOf(date)) ? ' weekend' : ''}">${r ? '—' : ''}</div>`;
-    const ranks = inCharge(s.id, date) ? c.people.map(p => rank[p.iid] || 0).filter(x => x > 0) : [], best = ranks.length ? Math.min(...ranks) : 0;
-    const chip = (p, lead) => {
-      const mine = opts.me && p.iid === opts.me, ann = ctx.annot && ctx.annot[c.slot.key + '|' + p.iid];
-      return `<span class="pchip lv-neutral${mine ? ' me' : ''}${lead ? ' ahm' : ''}">${lead ? '<i class="ahm-star" aria-hidden="true">★</i>' : ''}${pEsc(p.name)}${ann ? ` <small>${pEsc(ann)}</small>` : ''}${lead ? '<small class="ahm-tag">אחמ"ש</small>' : ''}</span>`;
-    };
-    const lead = best ? c.people.filter(p => rank[p.iid] === best) : [], rest = c.people.filter(p => !lead.includes(p));
-    return `<div class="wcal-cell${[5, 6].includes(dowOf(date)) ? ' weekend' : ''}${date === today ? ' today' : ''}">${lead.map(p => chip(p, true)).join('')}${rest.map(p => chip(p, false)).join('')}${c.missing ? `<span class="pchip missing">חסר ${c.missing}</span>` : ''}</div>`;
+  const table = scheduleTable(ctx, assignments), today = isoDate(new Date()), picks = ahmashPicks(table, ctx, opts.ahmash || {});
+  if(!table.length) return '';
+  const letters = { m:'ב', e:'צ', n:'ל' };
+  const cell = r => {
+    const dow = dowOf(r.date), shifts = r.cells.map((c, i) => {
+      const s = ctx.shiftTypes[i];
+      if(!c.slot) return '';
+      const lead = c.people.filter(p => picks[c.slot.key] === p.iid), rest = c.people.filter(p => !lead.includes(p));
+      const name = (p, isLead) => {
+        const mine = opts.me && p.iid === opts.me, ann = ctx.annot && ctx.annot[c.slot.key + '|' + p.iid];
+        return `<span class="mcal-name${mine ? ' me' : ''}${isLead ? ' ahm' : ''}">${pEsc(p.name)}${isLead ? '<small class="ahm-tag">אחמ"ש</small>' : ''}${ann ? `<small>${pEsc(ann)}</small>` : ''}</span>`;
+      };
+      return `<div class="mcal-shift" title="${pEsc(s.label)}"><i aria-hidden="true">${letters[s.id] || pEsc(s.label.charAt(0))}</i><div class="mcal-names">${lead.map(p => name(p, true)).join('')}${rest.map(p => name(p, false)).join('')}${c.missing ? `<span class="mcal-missing">חסר ${c.missing}</span>` : ''}</div></div>`;
+    }).join('');
+    return `<div class="mcal-day${[5, 6].includes(dow) ? ' weekend' : ''}${r.date === today ? ' today' : ''}"><b class="mcal-num">${parseIso(r.date).getDate()}</b>${shifts}</div>`;
   };
-  const nav = `<div class="pweek"><button type="button" data-wkgo="${weeks[wi - 1] || ''}"${wi === 0 ? ' disabled' : ''} aria-label="שבוע קודם"><bdi dir="ltr">›</bdi></button><b>שבוע ${dm(ws)} – ${dm(addDays(ws, 6))}</b><button type="button" data-wkgo="${weeks[wi + 1] || ''}"${wi === weeks.length - 1 ? ' disabled' : ''} aria-label="שבוע הבא"><bdi dir="ltr">‹</bdi></button></div>`;
-  const head = `<div class="wcal-corner"></div>${dates.map(d => `<div class="wcal-dayhead${d === today ? ' today' : ''}${[5, 6].includes(dowOf(d)) ? ' weekend' : ''}"><b>${DOW_SHORT[dowOf(d)]}</b><span>${dm(d)}</span></div>`).join('')}`;
-  const rows = ctx.shiftTypes.map(s => `<div class="wcal-rowhead"><b>${pEsc(s.label)}</b><small>${rangeHtml(s.start, s.end)}</small></div>${dates.map(d => cell(s, d)).join('')}`).join('');
-  return `${nav}<div class="wcal-scroll"><div class="wcal">${head}${rows}</div></div><div class="pnote wcal-legend"><i class="ahm-star" aria-hidden="true">★</i> אחמ"ש: מי שאחראי/ת על המשמרת (בצהריים, ובשישי ובשבת גם בבוקר)</div>`;
+  const lead = dowOf(table[0].date);
+  const cells = '<div class="mcal-day blank"></div>'.repeat(lead) + table.map(cell).join('');
+  return `<div class="mcal">${DOW_SHORT.map(d => `<div class="mcal-head">${d}</div>`).join('')}${cells}</div><div class="pnote wcal-legend">ב = בוקר, צ = צהריים, ל = לילה. אחמ"ש: מי שאחראי/ת על המשמרת (בצהריים, ובשישי ובשבת גם בבוקר).</div>`;
 }
 
 // ---------- THE INSTRUCTOR PORTAL: what an instructor sees (schedule, preferences, swaps, messages) ----------
@@ -6182,14 +6197,12 @@ function srvRenderSchedule(body){
     </details>
     <details class="pfold" data-fold="team"${openFold('team') ? ' open' : ''}>
       <summary><span>הצוות כולו</span></summary>
-      <div class="pfold-body">${weekCalHtml(ctx, m.assignments, { me:me.id, week:portalUi.weekMonth === mk ? portalUi.week : null, ahmash:srv.ahmash })}</div>
+      <div class="pfold-body">${monthCalHtml(ctx, m.assignments, { me:me.id, ahmash:srv.ahmash })}</div>
     </details>
     ${isInstr ? `<details class="pfold" data-fold="openshifts"${openFold('openshifts') ? ' open' : ''}>
       <summary><span>משמרות פתוחות</span><span class="pcount" id="open-count"></span></summary>
       <div class="pfold-body" id="open-fold-body"><div class="pnote">רק רגע...</div></div>
     </details>` : ''}`}`;
-  if(portalUi.weekMonth !== mk){ portalUi.weekMonth = mk; portalUi.week = null; }
-  body.querySelectorAll('[data-wkgo]').forEach(b => b.addEventListener('click', () => { if(!b.dataset.wkgo) return; portalUi.week = b.dataset.wkgo; portalUi.weekMonth = mk; srvRenderSchedule(body); }));
   wireMonthNav(body); wireFolds(body);
   if(isInstr && m.published) srvFillOpenFold(body, mk); else { const ob = document.getElementById('open-fold-body'); if(ob) ob.innerHTML = `<div class="pnote">${tx('open_none')}</div>`; }
   body.querySelectorAll('[data-notice-ok]').forEach(b => b.addEventListener('click', () => { const n = st.notices.find(x => x.id === b.dataset.noticeOk); if(n) n.seen = true; portalSave(); srvRenderSchedule(body); }));
@@ -6464,7 +6477,7 @@ function srvRenderCoordSchedule(body){
     ${needLook.length ? `<details class="pissues" open><summary>${needLook.length} דברים שדורשים תשומת לב</summary>${needLook.map(f => `<div class="pflag"><span><b>${SRV_FLAG_KIND[f.kind] || f.kind}</b> · ${pEsc(f.text)}</span><button type="button" class="btn ghost small" data-flag-done="${f.id}">טופל</button></div>`).join('')}</details>` : '<div class="pstatus ok">אין דברים שדורשים תשומת לב ✓</div>'}
     ${info.length ? `<details class="pissues"><summary>${info.length} הודעות על בנות שירות</summary>${info.map(f => `<div class="pflag"><span>${pEsc(f.text)}</span></div>`).join('')}</details>` : ''}
     <div class="pnote">לחיצה על משמרת בטבלה פותחת עריכה. בנות שירות ומורות מופיעות ברשימת המשמרות בעריכה, ולא בטבלה.</div>
-    ${boardHtml(ctx, m.assignments, { edit:true, colour:true })}` : ''}`;
+    ${boardHtml(ctx, m.assignments, { edit:true, colour:true, ahmash:srv.ahmash })}` : ''}`;
   wireMonthNav(body);
   if(!has) return;
   body.querySelectorAll('td.editable').forEach(td => {
