@@ -1284,6 +1284,7 @@
 
   @media (min-width:900px){
     .portal-shell{ max-width:980px; margin:0 auto; }
+    .portal-shell.wide{ max-width:1700px; }          /* the coordinator works on a computer: her screens use the width (only inside the portal, only for her; nothing else on the site changes) */
     .pcal .pday{ min-height:96px; }
     .plevelbar{ max-width:560px; left:50%; right:auto; transform:translateX(-50%); border-radius:16px 16px 0 0; }
   }
@@ -1389,6 +1390,7 @@
   .mcal-name.ahm{ font-weight:800; }
   .mcal-name.me{ background:var(--gold); color:#1b1b1b; font-weight:800; } .mcal-name.me small{ color:#3a3000; }
   .mcal-cell.editable{ cursor:pointer; min-height:34px; } .mcal-cell.editable:hover, .mcal-cell.editable:focus-visible{ background:rgba(232,185,74,.12); outline:none; }
+  .mcal-name.wish-yes{ background:var(--p-yes-bg, #123322); color:var(--p-yes, #7be0a0); box-shadow:inset 0 0 0 1px var(--p-yes, #7be0a0); }
   .mcal-name.wish-can{ background:var(--p-avoid-bg, #3A3314); color:var(--p-avoid, #f0c239); box-shadow:inset 0 0 0 1px var(--p-avoid, #f0c239); }
   .mcal-name.wish-no{ background:var(--p-no-bg, #3a1a18); color:var(--p-no, #ff8a80); box-shadow:inset 0 0 0 1px var(--p-no, #ff8a80); }
   .mcal-name.wish-none{ background:rgba(110,168,254,.16); color:#8ec0ff; box-shadow:inset 0 0 0 1px #8ec0ff; }
@@ -5148,7 +5150,7 @@ function showPortal(tab){
   if(!portalUi.month) portalUi.month = today;
   const view = document.getElementById('view-portal');
   view.innerHTML = `
-    <div class="portal-shell" data-ptheme="${st.settings.theme}">
+    <div class="portal-shell${portalServerOn && me.role === 'coordinator' ? ' wide' : ''}" data-ptheme="${st.settings.theme}">
       <div class="portal-top">
         <button type="button" class="back-btn portal-back" id="portal-home">${portalServerOn ? 'יציאה' : '→ מסך ראשי'}</button>
         <h1 class="portal-title">פורטל המדריך</h1>
@@ -5267,7 +5269,7 @@ function monthCalHtml(ctx, assignments, opts){
       if(!opts.colour) return '';
       const pr = (ctx.prefs && ctx.prefs[p.iid]) || { slots:{} }, ann = ctx.annot && ctx.annot[c.slot.key + '|' + p.iid];
       const key = ann === 'סופ"ש ארוך' ? `${dowOf(c.slot.date) === 5 ? c.slot.date : addDays(c.slot.date, -1)}|l` : c.slot.key, lv = (pr.slots || {})[key];
-      return lv === 'avoid' ? ' wish-can' : lv === 'no' ? ' wish-no' : lv === 'yes' ? '' : ' wish-none';
+      return lv === 'avoid' ? ' wish-can' : lv === 'no' ? ' wish-no' : lv === 'yes' ? ' wish-yes' : ' wish-none';
     };
     const lead = c.people.filter(p => picks[c.slot.key] === p.iid), rest = c.people.filter(p => !lead.includes(p));
     const name = (p, isLead) => {
@@ -5282,7 +5284,7 @@ function monthCalHtml(ctx, assignments, opts){
     out += `<div class="mcal-corner"></div>` + week.map(r => r ? `<div class="mcal-num${[5, 6].includes(dowOf(r.date)) ? ' weekend' : ''}${r.date === today ? ' today' : ''}">${parseIso(r.date).getDate()}</div>` : blank).join('');
     ctx.shiftTypes.forEach((s, i) => { out += `<div class="mcal-label"><b>${pEsc(s.label)}</b><small>${hours(s)}</small></div>` + week.map(r => r ? shiftCell(r, i) : blank).join(''); });
   }
-  return `<div class="mcal">${out}</div>${opts.colour ? '<div class="pnote mcal-key"><span class="mcal-name wish-can">יכול</span> <span class="mcal-name wish-no">לא</span> <span class="mcal-name wish-none">לא בחר/ה</span> שובץ/ה במשמרת שסימן/ה כך. בלי צבע: שובץ/ה איפה שרצה.</div>' : ''}`;
+  return `<div class="mcal">${out}</div>${opts.colour ? '<div class="pnote mcal-key"><span class="mcal-name wish-yes">כן</span> <span class="mcal-name wish-can">יכול</span> <span class="mcal-name wish-no">לא</span> <span class="mcal-name wish-none">לא סומן</span> שובץ/ה במשמרת שסימן/ה כך.</div>' : ''}`;
 }
 
 // ---------- THE INSTRUCTOR PORTAL: what an instructor sees (schedule, preferences, swaps, messages) ----------
@@ -6588,19 +6590,23 @@ function srvRenderSubmissions(body){
   const st = portalLoad();
   if(!portalUi.smonth) portalUi.smonth = addMonths(monthKeyOf(srvToday()), 1);
   const mk = portalUi.smonth, m = portalMonth(mk), people = st.instructors.filter(p => p.active && p.role !== 'coordinator');
-  const missing = people.filter(p => !m.submitted[p.id]);
+  const missing = people.filter(p => !m.submitted[p.id]), done = people.filter(p => m.submitted[p.id]);
+  const subRow = p => { const pr = m.prefs[p.id] || { slots:{}, absent:[], hours:{} }, c = { avoid:0, no:0 }; Object.values(pr.slots).forEach(v => { if(c[v] !== undefined) c[v]++; });
+    const note = m.notes && m.notes[p.id];
+    return `<div class="psub-row ${m.submitted[p.id] ? 'ok' : 'bad'}"><img src="${p.photo}" alt=""><b>${pEsc(instrName(p, st.instructors))}</b><span>${m.submitted[p.id] ? 'הוגש ✓' : 'לא הוגש'}</span><small>${KIND_WORD[p.role] || ''}${p.role === 'instructor' ? ` · יכול ${c.avoid} · לא ${c.no} · היעדרות ${(pr.absent || []).length}${Object.keys(pr.hours || {}).length ? ' · שעות אחרות ' + Object.keys(pr.hours).length : ''}${pr.consent && pr.consent.extend ? ' · מסכים להארכה' : ''}${pr.consent && pr.consent.pull ? ' · מסכים למשיכה' : ''}` : ''}</small>${note ? `<div class="psub-note">הערה: ${pEsc(note)}</div>` : ''}</div>`; };
   const away = people.map(p => { const pr = m.prefs[p.id] || {}; const fx = (pr.fixed || []).filter(f => daysOfMonth(mk).includes(f.day)); return { p, fx, self:(pr.absent || []) }; }).filter(x => x.fx.length || x.self.length);
   body.innerHTML = `
     ${monthNavHtml(mk)}
     <div class="pnote">ההגשה נסגרת ב-24 בחודש הקודם בשעה 22:30. עד ה-23 נשלחת אלייך רשימה של מי שעוד לא הגיש.</div>
     <div class="pstatus ${missing.length ? 'bad' : 'ok'}">${missing.length ? `${missing.length} מתוך ${people.length} עוד לא הגישו` : 'כולם הגישו ✓'}</div>
-    <div class="psubs">${people.map(p => { const pr = m.prefs[p.id] || { slots:{}, absent:[], hours:{} }, c = { avoid:0, no:0 }; Object.values(pr.slots).forEach(v => { if(c[v] !== undefined) c[v]++; });
-      const note = m.notes && m.notes[p.id];
-      return `<div class="psub-row ${m.submitted[p.id] ? 'ok' : 'bad'}"><img src="${p.photo}" alt=""><b>${pEsc(instrName(p, st.instructors))}</b><span>${m.submitted[p.id] ? 'הוגש ✓' : 'לא הוגש'}</span><small>${KIND_WORD[p.role] || ''}${p.role === 'instructor' ? ` · יכול ${c.avoid} · לא ${c.no} · היעדרות ${(pr.absent || []).length}${Object.keys(pr.hours || {}).length ? ' · שעות אחרות ' + Object.keys(pr.hours).length : ''}${pr.consent && pr.consent.extend ? ' · מסכים להארכה' : ''}${pr.consent && pr.consent.pull ? ' · מסכים למשיכה' : ''}` : ''}</small>${note ? `<div class="psub-note">הערה: ${pEsc(note)}</div>` : ''}</div>`; }).join('')}</div>
+    ${[['sdone', 'הגישו', done], ['smiss', 'לא הגישו', missing]].map(([key, title, list]) => `<details class="pfold" data-fold="${key}"${openFold(key) ? ' open' : ''}>
+      <summary><span>${title}</span><span class="pcount">${list.length}</span></summary>
+      <div class="pfold-body"><div class="psubs">${list.length ? list.map(subRow).join('') : '<div class="pnote">אין.</div>'}</div></div>
+    </details>`).join('')}
     <h2 class="psec">מי נעדר החודש</h2>
     ${away.length ? away.map(x => `<div class="pmine-row"><span><b>${pEsc(instrName(x.p, st.instructors))}</b><br><small>${[...new Set(x.fx.map(f => FIXED_REASON[f.reason] || 'היעדרות'))].join(', ')}${x.fx.length ? ': ' + dayRanges(x.fx.map(f => f.day)) : ''}${x.self.length ? (x.fx.length ? ' · ' : '') + 'סומן על ידו/ה: ' + dayRanges(x.self) : ''}</small></span></div>`).join('') : '<div class="pnote">אין היעדרויות החודש.</div>'}
     <button type="button" class="btn ghost" id="abs-add">הוספת היעדרות (מחלה, מילואים, לידה...)</button>`;
-  wireMonthNav(body, 'smonth');
+  wireMonthNav(body, 'smonth'); wireFolds(body);
   document.getElementById('abs-add').addEventListener('click', () => srvAbsenceSheet(body));
 }
 function srvAbsenceSheet(body){
