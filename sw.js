@@ -1,6 +1,6 @@
 // Service worker: keeps the app (the single page + icons) available offline, and picks up new releases.
 // The data (children, stars, bonuses) always comes live from Supabase and is NEVER cached here.
-const VERSION = '5e9cffa91dfc';
+const VERSION = '5fcdd5d19b8f';
 const CACHE = 'ramzor-' + VERSION;
 const SHELL = ['./', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 

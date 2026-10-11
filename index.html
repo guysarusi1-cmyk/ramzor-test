@@ -1488,6 +1488,7 @@
   .adm-weights{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:6px 14px; }
   .adm-weight{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 8px; border-radius:8px; font-size:13.5px; }
   .adm-weight input{ width:90px; text-align:center; } .adm-weight.changed{ background:rgba(232,185,74,.14); }
+  .pnotices-top{ display:flex; justify-content:flex-start; margin-bottom:8px; }          /* "mark all as read" at the top of the new messages */
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -6542,8 +6543,9 @@ function srvRenderSchedule(body){
   const fb = (isInstr && m.published && !(srv.profile && srv.profile.manual_only)) ? srvFeedbackFor(me, mk, { prefs:srvPrefsOf(m, me.id), rows:st.rows.filter(r => r.staff === me.id), profile:srv.profile, goal:(m.goals || {})[me.id] || null }) : null;
   body.innerHTML = `
     ${notices.length ? `<details class="pfold pnotices" data-fold="notices"${openFold('notices') ? ' open' : ''}><summary><span>הודעות חדשות</span><span class="pcount">${notices.length}</span></summary><div class="pfold-body">
+      ${notices.length > 1 ? '<div class="pnotices-top"><button type="button" class="btn ghost small" id="notices-all-ok">סימון של כולן כנקראו</button></div>' : ''}
       ${notices.map(n => `<div class="pnotice ${n.kind}" role="status"><span>${pEsc(n.text)}</span><button type="button" class="btn small" data-notice-ok="${n.id}">הבנתי, תודה</button></div>`).join('')}
-      ${notices.length > 1 ? '<button type="button" class="btn ghost small" id="notices-all-ok">סימון של כולן כנקראו</button>' : ''}</div></details>` : ''}
+      </div></details>` : ''}
     ${monthNavHtml(mk)}
     ${!m.published ? `<div class="pnote">${tx('sch_unpub')}</div>` : `
     <details class="pfold" data-fold="mine"${openFold('mine') ? ' open' : ''}>
