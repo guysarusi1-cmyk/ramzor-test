@@ -1471,6 +1471,11 @@
   [data-fold="team"] .mcal-name.me{ cursor:pointer; }          /* one's own name in the team calendar opens the swap / cannot-come choice */
   [data-fold="team"] .mcal-name.me:hover{ outline:2px solid var(--gold); outline-offset:1px; }
   .pday-fixed{ display:block; text-align:center; font-size:11px; font-weight:700; color:var(--p-no, #ff8a80); margin:-2px 0 2px; }          /* a locked day (vacation, sick leave...): the reason written on the day itself */
+  /* the staff login: "or" and the personal sign-in under the password */
+  .login-or{ display:flex; align-items:center; gap:10px; margin:16px 0 12px; color:var(--muted); font-size:13px; }
+  .login-or::before, .login-or::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .apphome-hello{ font-weight:700; font-size:17px; margin-bottom:2px; }
+  .home-portal{ left:58px; }          /* next to "יציאה" on the Ramzor home, only after the personal sign-in */
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -1503,6 +1508,93 @@
   .char-option.selected{ border-color:var(--gold); box-shadow:0 0 0 2px var(--gold); }
   .char-option.taken{ opacity:.35; cursor:not-allowed; }
   .char-none{ min-height:44px; }
+
+/* ---------- the ahmash control (בקרת אחמ"ש) ---------- */
+  .home-control{ display:block; margin:14px auto 0; padding:8px 16px; border:1px solid var(--line); border-radius:20px; background:transparent; color:var(--muted); font:inherit; font-size:13.5px; font-weight:700; cursor:pointer; }
+  .home-control:hover{ color:var(--text); border-color:var(--gold); }
+  .ctl{ padding-bottom:40px; }
+  .ctl-top{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .ctl-top .back-btn{ margin:0; }
+  .ctl-title{ margin:0; font-size:20px; flex:1; }
+  .ctl-date{ color:var(--muted); font-size:13px; }
+  .ctl-fold summary{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .ctl-sub{ color:var(--muted); font-weight:400; font-size:12px; }
+  .ctl-shift{ margin:12px 0; }
+  .ctl-shift-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .ctl-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .ctl-chip{ display:inline-flex; align-items:center; gap:6px; padding:3px 4px 3px 10px; border:1px solid var(--line); border-radius:20px; background:var(--panel-2); font-size:14px; }
+  .ctl-chip.added{ border-color:var(--green, #7be0a0); }
+  .ctl-chip.removed{ opacity:.55; text-decoration:line-through; border-style:dashed; }
+  .ctl-face{ width:26px; height:26px; border-radius:50%; object-fit:cover; flex:none; }
+  .ctl-face-emoji{ display:inline-grid; place-items:center; font-size:18px; background:var(--panel); }
+  .ctl-x{ border:none; background:transparent; color:var(--muted); font-size:15px; padding:4px 8px; cursor:pointer; border-radius:12px; }
+  .ctl-x:hover{ color:var(--text); background:rgba(255,255,255,.06); }
+  .ctl-search{ width:100%; min-height:44px; margin-bottom:8px; background:var(--panel-2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:8px 10px; font:inherit; font-size:16px; }
+  .ctl-pick{ display:flex; flex-direction:column; gap:4px; max-height:55vh; overflow-y:auto; }
+  .ctl-pick-item{ display:flex; align-items:center; gap:10px; padding:6px 8px; border:1px solid transparent; border-radius:10px; background:var(--panel-2); color:var(--text); font:inherit; text-align:start; cursor:pointer; }
+  .ctl-pick-item:hover{ border-color:var(--gold); }
+  .ctl-pick-item img{ width:32px; height:32px; border-radius:50%; object-fit:cover; }
+  .ctl-pick-item small{ margin-inline-start:auto; color:var(--muted); }
+  .ctl-tt{ display:flex; flex-direction:column; gap:6px; margin:8px 0; }
+  .ctl-tt-row{ display:grid; grid-template-columns:96px 46px 1fr auto; gap:6px; align-items:center; }
+  .ctl-tt-row input, .ctl-sp-add input{ min-height:42px; background:var(--panel-2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:6px 8px; font:inherit; font-size:15px; min-width:0; }
+  .ctl-tt-icon{ min-height:42px; font-size:22px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); cursor:pointer; }
+  .ctl-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .ctl-fixed-pick{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:14px; padding-top:10px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+  .ctl-icons{ display:grid; grid-template-columns:repeat(auto-fill, minmax(76px, 1fr)); gap:6px; max-height:60vh; overflow-y:auto; }
+  .ctl-icon-opt{ display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 4px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); color:var(--text); cursor:pointer; font:inherit; }
+  .ctl-icon-opt span{ font-size:28px; } .ctl-icon-opt small{ font-size:11.5px; color:var(--muted); }
+  .ctl-icon-opt.on, .ctl-icon-opt:hover{ border-color:var(--gold); }
+  .ctl-bonus{ display:flex; align-items:center; gap:8px; padding:6px 8px; margin:4px 0; border:1px solid var(--line); border-radius:10px; }
+  .ctl-bonus.hidden-today{ opacity:.6; } .ctl-bonus.hidden-today em{ color:var(--red); font-style:normal; font-size:12px; }
+  .ctl-bonus.special{ border-color:var(--gold); }
+  .ctl-bonus-icon{ font-size:22px; } .ctl-bonus-text{ flex:1; min-width:0; } .ctl-bonus-text small{ color:var(--muted); }
+  .ctl-bonus-btns{ display:inline-flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; }
+  .ctl-sp-add{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 4px; }
+  .ctl-sp-add #sp-name{ flex:1 1 160px; }
+  .ctl-sp-add label{ display:inline-flex; align-items:center; gap:4px; color:var(--muted); font-size:13px; }
+  .ctl-sp-add .ctl-tt-icon{ width:46px; }
+
+/* ---------- the kids' TV from the database: who is on shift (three rows), today's timetable, the night and morning screens ---------- */
+  .tv-instructors.tvs{ display:flex; flex-direction:column; gap:1.6vmin; padding:1vmin 2vmin; }
+  .tvs-band{ flex:1; min-height:0; display:flex; align-items:center; gap:3vmin; padding:1.2vmin 2.4vmin; border-radius:2.6vmin; background:rgba(255,255,255,.045); transition:opacity .4s; }
+  .tvs-band.now{ background:rgba(232,185,74,.12); animation:bonus-glow-pulse 4s ease-in-out infinite; }
+  .tvs-band.past{ opacity:.35; filter:grayscale(.5); }
+  .tvs-art{ flex:none; height:100%; max-height:17vmin; aspect-ratio:1; }
+  .tvs-art svg{ width:100%; height:100%; display:block; }
+  .tvs-people{ display:flex; flex-wrap:wrap; align-items:center; gap:1.4vmin 2.6vmin; min-width:0; }
+  .tvs-person{ display:flex; flex-direction:column; align-items:center; gap:.6vmin; width:calc(var(--tvs-size, 14vh) + 2vmin); }
+  .tvs-photo{ width:var(--tvs-size, 14vh); height:var(--tvs-size, 14vh); border-radius:50%; object-fit:cover; border:.5vmin solid rgba(255,255,255,.85); box-shadow:0 .8vmin 2vmin rgba(0,0,0,.35); background:#2a3157; }
+  .tvs-face{ display:grid; place-items:center; font-size:calc(var(--tvs-size, 14vh) * .62); line-height:1; }
+  .tvs-name{ font-family:'Rubik', sans-serif; font-weight:700; font-size:2.8vmin; color:#fff; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .tvs-band.now .tvs-name{ color:#ffe9ad; }
+  .tvs-none{ color:rgba(255,255,255,.35); font-size:5vmin; }
+
+  .tv-timetable.tvt2{ display:flex; flex-direction:column; gap:2vmin; justify-content:center; }
+  .tvt2-title{ text-align:center; font-family:'Rubik', sans-serif; font-weight:800; font-size:5vmin; color:var(--gold); }
+  .tvt2-grid{ display:grid; grid-template-columns:repeat(var(--tvt-cols, 6), minmax(0, 1fr)); gap:2vmin; }
+  .tvt2-item{ display:flex; flex-direction:column; align-items:center; gap:.8vmin; padding:1.6vmin 1vmin; border-radius:2.4vmin; background:rgba(255,255,255,.05); }
+  .tvt2-item.past{ opacity:.4; }
+  .tvt2-item.now{ background:rgba(232,185,74,.16); transform:scale(1.06); animation:bonus-glow-pulse 4s ease-in-out infinite; }
+  .tvt2-time{ font-family:'Rubik', sans-serif; font-weight:700; font-size:2.6vmin; color:rgba(255,255,255,.75); direction:ltr; }
+  .tvt2-icon{ width:16vmin; height:16vmin; display:grid; place-items:center; }
+  .tvt2-icon svg{ width:100%; height:100%; display:block; }
+  .tvt2-emoji{ font-size:11vmin; line-height:1; }
+  .tvt2-name{ font-family:'Rubik', sans-serif; font-weight:700; font-size:2.7vmin; color:#fff; text-align:center; }
+  .tvt2-item.now .tvt2-name{ color:#ffe9ad; }
+
+  #tv-quiet{ position:fixed; inset:0; z-index:40; }
+  .tvq{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3vmin; overflow:hidden; font-family:'Rubik', sans-serif; color:#fff; text-align:center; }
+  .tvq-night{ background:radial-gradient(ellipse at 50% 30%, #2b3a7a 0%, #141b3d 60%, #0b0f26 100%); }
+  .tvq-morning{ background:linear-gradient(180deg, #ffd9a8 0%, #ffeccb 45%, #bfe6ff 100%); color:#5a3410; }
+  .tvq-moon{ font-size:24vmin; line-height:1; animation:kid-bob 6s ease-in-out infinite; }
+  .tvq-sun{ font-size:22vmin; line-height:1; animation:kid-bob 5s ease-in-out infinite; }
+  .tvq-title{ font-weight:800; font-size:12vmin; text-shadow:0 1vmin 3vmin rgba(0,0,0,.25); }
+  .tvq-row{ font-size:9vmin; letter-spacing:2vmin; }
+  .tvq-stars i{ position:absolute; width:.7vmin; height:.7vmin; border-radius:50%; background:#fff6c9; animation:star-twinkle 3s ease-in-out infinite; }
+  .tvq-steps{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:3vmin; width:min(90vw, 1600px); }
+  .tvq-steps div{ display:flex; flex-direction:column; align-items:center; gap:1vmin; padding:2.4vmin; border-radius:3vmin; background:rgba(255,255,255,.6); font-weight:700; font-size:3.6vmin; }
+  .tvq-steps span{ font-size:11vmin; line-height:1; }
 </style>
 </head>
 <body>
@@ -1529,6 +1621,10 @@
         style="width:100%; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:12px; color:var(--text); font-size:16px; font-family:inherit; margin-bottom:12px;">
       <button class="btn" id="login-submit-btn" style="width:100%;">כניסה</button>
       <div id="login-error" style="color:var(--red); font-size:13px; margin-top:10px; display:none;"></div>
+      <div class="login-personal" id="login-personal" hidden>
+        <div class="login-or"><span>או</span></div>
+        <button type="button" class="btn ghost" id="login-personal-btn" style="width:100%;">כניסה אישית (מייל וקוד)</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1565,6 +1661,7 @@
   <!-- ============ APP HOME + INSTRUCTOR PORTAL (only when "portal" is on in the config) ============ -->
   <section class="view" id="view-apphome"></section>
   <section class="view" id="view-portal"></section>
+  <section class="view" id="view-control"></section>
 
   <!-- ============ HUB (post-login landing page) ============ -->
   <section class="view active" id="view-hub">
@@ -1576,6 +1673,7 @@
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="7.2" r="1.3"/><path d="M7 10.2l5 1 5-1M12 11.2v3.6M9.5 19l2.5-4.2 2.5 4.2"/></svg>
       </button>
       <button type="button" class="home-text-btn home-logout" id="hub-logout-link">יציאה</button>
+      <button type="button" class="home-text-btn home-portal" id="hub-portal-link" hidden>👥 לפורטל</button>
       <h1 class="home-title">תכנית הרמזור</h1>
       <p class="home-slogan">"אני יכול לחשוב מה שאני רוצה, אני יכול להרגיש מה שאני רוצה, אבל לא תמיד כדאי שאתנהג איך שאני רוצה"</p>
     </div>
@@ -1600,6 +1698,7 @@
         <span class="home-secondary-sub">לומדים את העקרונות והכלים של התכנית</span>
       </span>
     </button>
+    <button type="button" class="home-control" id="hub-control-btn" hidden>🎛️ בקרת אחמ"ש</button>
     <button type="button" class="home-link" id="hub-install-link" hidden>התקנה כאפליקציה על מסך הבית</button>
   </section>
 
@@ -1935,7 +2034,8 @@ const APP_ENV = 'test';   // 'live' (what staff use) or 'test' (the safe sandbox
 const SUPABASE_URL = 'https://anxisgqhaxhbfffmtcrc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFueGlzZ3FoYXhoYmZmZm10Y3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NjIyMDMsImV4cCI6MjEwNjUzODIwM30.G9SlMmctJ2wJtho3_93KT7E-hAzH0u3QPNgY4sYlusY';
 const STAFF_EMAIL = 'staff@merkaz-cherum.local';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);          // the Ramzor's connection: the shared staff login; after a personal sign-in it becomes the personal one (see personalEnter)
+const sbShared = sb;
 
 // The manager has a login of his own (see supabase/roles.sql). Management screens write through this second
 // connection, which holds the manager's session only in memory for a few minutes — instructors can never
@@ -2524,6 +2624,23 @@ async function setMiniList(key, list){
   return !error;
 }
 
+// today's changes of the bonuses (scheduling-v15.sql, made in the ahmash control): a bonus hidden for today, a special bonus for some hours
+let bonusDay = [];
+async function loadBonusDay(){
+  try {
+    const r = await sb.from('bonus_day').select('id,kind,bonus_id,name,from_time,to_time,icon').eq('day', isoDate(new Date())).order('at');
+    const next = r.error ? [] : (r.data || []), changed = JSON.stringify(next) !== JSON.stringify(bonusDay);
+    bonusDay = next; return changed;
+  } catch(e){ return false; }
+}
+// the bonuses of today as the kids' TV and the staff phones show them: without the ones hidden today; the special ones join the daily list
+function bonusesForToday(list, weekly){
+  const hidden = new Set(bonusDay.filter(x => x.kind === 'hide').map(x => x.bonus_id));
+  const out = list.filter(bonusAppliesToday).filter(b => !hidden.has(b.id));
+  if(!weekly) bonusDay.filter(x => x.kind === 'special').forEach(x => out.push({ id:'sp-' + x.id, text:x.name, icon:x.icon || undefined, special:true,
+    startTime:x.from_time ? x.from_time.slice(0, 5) : undefined, endTime:x.to_time ? x.to_time.slice(0, 5) : undefined }));
+  return out;
+}
 let bonusesDaily = [];
 let bonusesWeekly = [];
 let dutyRoster = [];
@@ -2653,6 +2770,7 @@ function wireBonusEditor(containerId, getList, setListFn, inputId, addBtnId){
 let renderBonusesDailyList, renderBonusesWeeklyList, renderDutyRosterList;
 
 async function initMiniLists(){
+  await loadBonusDay();
   bonusesDaily = await getMiniList('bonusesDaily');
   bonusesWeekly = await getMiniList('bonusesWeekly');
   dutyRoster = await getMiniList('dutyRoster');
@@ -3165,7 +3283,7 @@ function renderYellowScreen(ids){
 
   // The bonuses that can be revoked at this hour gently blink (like the active bonuses on the kids' TV),
   // and the blinking moves on after each revocation. Bonuses already revoked for this child are shown as revoked.
-  const todaysBonuses = () => [...bonusesDaily, ...bonusesWeekly].filter(bonusAppliesToday);
+  const todaysBonuses = () => [...bonusesForToday(bonusesDaily, false), ...bonusesForToday(bonusesWeekly, true)];
   const chipEls = () => [...document.querySelectorAll(`#${ids.dailyList} .bonus-chip, #${ids.weeklyList} .bonus-chip`)];
   function updateNextBonus(){
     const revokedIds = new Set(chipEls().filter(c => c.classList.contains('revoked')).map(c => c.dataset.id));
@@ -3206,10 +3324,14 @@ function renderYellowScreen(ids){
       });
     });
   }
-  renderBonusChips(ids.dailyList, bonusesDaily, 'אין בונוסים יומיים מוגדרים (הוסיפו במסך הניהול)');
-  renderBonusChips(ids.weeklyList, bonusesWeekly, 'אין בונוסים שבועיים מוגדרים (הוסיפו במסך הניהול)');
-  updateNextBonus();
-  markAlreadyRevoked();
+  const drawBonusChips = () => {
+    renderBonusChips(ids.dailyList, bonusesForToday(bonusesDaily, false), 'אין בונוסים יומיים מוגדרים (הוסיפו במסך הניהול)');
+    renderBonusChips(ids.weeklyList, bonusesForToday(bonusesWeekly, true), 'אין בונוסים שבועיים מוגדרים (הוסיפו במסך הניהול)');
+    updateNextBonus();
+    markAlreadyRevoked();
+  };
+  drawBonusChips();
+  loadBonusDay().then(changed => { if(changed && selectedStaffChild === child.id) drawBonusChips(); });          // (a bonus hidden or added today in the ahmash control)
   const dutyEl = document.getElementById(ids.dutyList);
   if(!dutyRoster.length){ dutyEl.innerHTML = '<div class="empty">אין תורנויות מוגדרות (הוסיפו במסך הניהול)</div>'; }
   else{
@@ -4281,8 +4403,9 @@ function bonusBoardSection(title, list, revocationsByBonus){
 }
 async function renderBonusesSlide(){
   const el = document.getElementById('bonuses-slide-content');
-  const todayDaily = bonusesDaily.filter(bonusAppliesToday);
-  const todayWeekly = bonusesWeekly.filter(bonusAppliesToday);
+  await loadBonusDay();          // (the ahmash control may have hidden or added a bonus a moment ago)
+  const todayDaily = bonusesForToday(bonusesDaily, false);
+  const todayWeekly = bonusesForToday(bonusesWeekly, true);
   if(!todayDaily.length && !todayWeekly.length){ el.innerHTML = '<div class="empty">אין בונוסים מוגדרים להיום</div>'; return; }
   const revocationsByBonus = groupRevocationsByBonus(await getActiveBonusRevocations());
   // few bonuses are shown big in one column; more than 4 switch to two columns so they all fit on the screen
@@ -4449,6 +4572,7 @@ function startCarousel(){
   resumeRotation();
   startFeedbackListener();
   startTvControlListener();
+  if(typeof startTvQuiet === 'function') startTvQuiet();          // (the "good night" and "good morning" screens)
 }
 function stopCarousel(){
   pauseRotation();
@@ -4456,6 +4580,7 @@ function stopCarousel(){
   clearTimeout(interruptTimer);
   preInterruptIndex = null;
   stopFeedbackListener();
+  if(typeof stopTvQuiet === 'function') stopTvQuiet();
 }
 
 
@@ -4660,9 +4785,19 @@ document.getElementById('login-password').addEventListener('keydown', (e)=>{
 });
 
 document.getElementById('logout-btn').addEventListener('click', async ()=>{
-  await sb.auth.signOut();
+  if(typeof ramzorPersonal !== 'undefined' && ramzorPersonal) await personalLeave();          // (the personal sign-in: out of the portal and the Ramzor together)
+  else await sb.auth.signOut();
   await checkAuth();
 });
+// the personal sign-in (e-mail + code), next to the staff password; one sign-in opens the portal and the Ramzor
+if(PORTAL_ENABLED){
+  document.getElementById('login-personal').hidden = false;
+  document.getElementById('login-personal-btn').addEventListener('click', () => {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('protected-app').style.display = '';
+    srvShowLogin('email');
+  });
+}
 
 function activateDisplayView(){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
@@ -4674,6 +4809,8 @@ function activateDisplayView(){
 function showHub(){
   document.body.classList.remove('portal-mode');
   stopCarousel();
+  const pl = document.getElementById('hub-portal-link'); if(pl) pl.hidden = !(typeof ramzorPersonal !== 'undefined' && ramzorPersonal);
+  const cb = document.getElementById('hub-control-btn'); if(cb) cb.hidden = !(typeof canControl === 'function' && canControl());          // (the ahmash control: ahmash, coordinator, admin)
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-hub').classList.add('active');
 }
@@ -4684,6 +4821,8 @@ document.getElementById('hub-daily-btn').addEventListener('click', ()=>{
   selectedStaffChild = null;
   showStaffScreen('pick');
 });
+document.getElementById('hub-portal-link').addEventListener('click', () => { if(typeof srvOpenPortal === 'function') srvOpenPortal(); });
+document.getElementById('hub-control-btn').addEventListener('click', () => { if(typeof showControl === 'function') showControl(); });
 document.getElementById('hub-learn-btn').addEventListener('click', ()=>{
   toast('לומדת הרמזור בקרוב! 🎓');
 });
@@ -4692,7 +4831,8 @@ document.getElementById('hub-manage-gear').addEventListener('click', openManagem
 // home screen's quiet "logout" link just triggers the existing logout button (hidden on this screen)
 document.getElementById('hub-logout-link').addEventListener('click', async ()=>{
   // signing out means typing the password again, which nobody wants in the middle of an incident
-  if(await confirmSheet({ title:'לצאת מהמערכת?', text:'כדי להיכנס שוב יהיה צריך להקליד את הסיסמה.', okLabel:'כן, לצאת', cancelLabel:'להישאר' })) document.getElementById('logout-btn').click();
+  const personal = typeof ramzorPersonal !== 'undefined' && ramzorPersonal;
+  if(await confirmSheet({ title:'לצאת מהמערכת?', text:personal ? 'כדי להיכנס שוב יישלח אלייך קוד חדש למייל.' : 'כדי להיכנס שוב יהיה צריך להקליד את הסיסמה.', okLabel:'כן, לצאת', cancelLabel:'להישאר' })) document.getElementById('logout-btn').click();
 });
 document.getElementById('manage-back-to-hub').addEventListener('click', ()=>{
   location.hash = '';
@@ -5072,7 +5212,7 @@ function todayGroups(nowMs){
 }
 
 // the real data for the TV: who works today (first name + photo only), read with the one function that a visitor may call (supabase/scheduling-v2.sql: tv_today)
-const PORTAL_TV_LIVE = 'False' === 'True';
+let PORTAL_TV_LIVE = 'True' === 'True';          // (let: the checks of the demo screens switch it off for a moment)
 let tvLive = null, tvLiveAt = 0;
 async function loadTvLive(){ try { const r = await sb.rpc('tv_today'); tvLive = r.error ? null : r.data; } catch(e){ tvLive = null; } if(typeof refreshPortalSlides === 'function') refreshPortalSlides(); }
 const TV_GROUPS = [['M', 'בוקר'], ['A', 'צהריים'], ['N', 'לילה'], ['L', 'סופ"ש ארוך']];
@@ -5080,7 +5220,8 @@ const tvPhoto = p => p.photo_url ? `<img class="tvi-photo" src="${p.photo_url}" 
 function tvLiveGroups(){ return TV_GROUPS.map(([code, label]) => ({ code, label, people:(tvLive || []).filter(p => p.kind === 'instructor' && (p.shift === code || (code === 'M' && p.shift === 'S'))) })).filter(g => g.people.length); }
 async function renderInstructorsToday(){
   const el = document.getElementById('tv-instructors'), st = portalLoad();
-  if(PORTAL_TV_LIVE){
+  if(PORTAL_TV_LIVE){ await loadTvToday(); renderShiftsLive(); return; }          // (the database: three rows, sunrise / sun / moon, with today's changes of the ahmash control — 14o-tv-today.js)
+  if(false){
     const gs = tvLiveGroups();
     if(!gs.length){ el.innerHTML = '<div class="empty">אין מדריכים משובצים להיום</div>'; return; }
     el.style.setProperty('--tvi-cols', gs.length);
@@ -5098,6 +5239,7 @@ async function renderInstructorsToday(){
 }
 
 async function renderTimetableToday(){
+  if(PORTAL_TV_LIVE){ await loadTvToday(); renderTimetableLive(); return; }
   const el = document.getElementById('tv-timetable'), list = timetableFor(isoDate(new Date()));
   if(!list.length){ el.innerHTML = '<div class="empty">אין לו"ז להיום</div>'; return; }
   const now = nowHHMM();
@@ -5134,10 +5276,16 @@ async function renderBirthdaysToday(){
 function refreshPortalSlides(){
   if(!PORTAL_ENABLED || !SLIDES[9]) return;
   const st = portalLoad(), today = isoDate(new Date());
-  if(PORTAL_TV_LIVE && Date.now() - tvLiveAt > 5 * 60 * 1000){ tvLiveAt = Date.now(); loadTvLive(); }          // (the TV asks again every five minutes)
-  SLIDES[9].hidden = PORTAL_TV_LIVE ? !tvLiveGroups().length : !todayGroups().some(g => g.people.length);
-  SLIDES[10].hidden = timetableFor(today).length === 0;
-  SLIDES[11].hidden = !st.timetable[monthKeyOf(today)];
+  if(PORTAL_TV_LIVE){          // (the database: who is on shift and the timetable of today; asked again every minute at most)
+    if(Date.now() - tvTodayAt > 60 * 1000) loadTvToday(true).then(() => { if(SLIDES[9].hidden || SLIDES[10].hidden) refreshPortalSlides(); });
+    SLIDES[9].hidden = !(tvShifts && (tvShifts.rows || []).length + (tvShifts.changes || []).length);
+    SLIDES[10].hidden = !(tvTimetable && (tvTimetable.items || []).length);
+    SLIDES[11].hidden = true;          // (the week ahead stays in the demo only)
+  } else {
+    SLIDES[9].hidden = !todayGroups().some(g => g.people.length);
+    SLIDES[10].hidden = timetableFor(today).length === 0;
+    SLIDES[11].hidden = !st.timetable[monthKeyOf(today)];
+  }
   SLIDES[12].hidden = !(typeof roster !== 'undefined' && roster.length && birthdaysToday().length);
 }
 
@@ -5185,6 +5333,7 @@ function showAppHome(){
       <div class="eyebrow-gold">מרכז חירום</div>
       <h1 class="apphome-title">מה תרצו לפתוח?</h1>
       <div class="apphome-cards">
+        ${portalServerOn ? `<div class="apphome-hello">שלום ${pEsc((portalMe() || {}).first || '')}</div>` : ''}
         <button type="button" class="home-card" id="apphome-ramzor">
           <span class="apphome-emoji" aria-hidden="true">🚦</span>
           <span class="home-card-title">הרמזור</span>
@@ -5192,14 +5341,14 @@ function showAppHome(){
         </button>
         <button type="button" class="home-card" id="apphome-portal">
           <span class="apphome-emoji" aria-hidden="true">👥</span>
-          <span class="home-card-title">פורטל המדריך</span>
+          <span class="home-card-title">${portalServerOn && (portalMe() || {}).role === 'coordinator' ? 'פורטל הרכזת' : 'פורטל המדריך'}</span>
           <span class="home-card-sub">משמרות, העדפות והודעות</span>
         </button>
       </div>
-      <div class="apphome-demo">גרסת דמו של הפורטל: הנתונים בו לדוגמה בלבד ונשמרים במכשיר הזה.</div>
+      ${portalServerOn ? '' : '<div class="apphome-demo">גרסת דמו של הפורטל: הנתונים בו לדוגמה בלבד ונשמרים במכשיר הזה.</div>'}
     </div>`;
   document.getElementById('apphome-ramzor').addEventListener('click', showHub);
-  document.getElementById('apphome-portal').addEventListener('click', showPortal);
+  document.getElementById('apphome-portal').addEventListener('click', () => portalServerOn ? srvOpenPortal() : showPortal());
   document.getElementById('apphome-logout').addEventListener('click', () => document.getElementById('hub-logout-link').click());
 }
 
@@ -5222,7 +5371,7 @@ function showPortal(tab){
   view.innerHTML = `
     <div class="portal-shell${portalServerOn && me.role === 'coordinator' ? ' wide' : ''}" data-ptheme="${st.settings.theme}">
       <div class="portal-top">
-        <button type="button" class="back-btn portal-back" id="portal-home">${portalServerOn ? 'יציאה' : '→ מסך ראשי'}</button>
+        <button type="button" class="back-btn portal-back" id="portal-home">${portalServerOn && !ramzorPersonal ? 'יציאה' : '→ מסך ראשי'}</button>
         <h1 class="portal-title">פורטל המדריך</h1>
         <span class="portal-top-actions">${portalServerOn ? '<button type="button" class="portal-theme" id="portal-gear" aria-label="העדפות מערכת" title="העדפות מערכת">⚙️</button>' : ''}<button type="button" class="portal-theme" id="portal-theme" aria-label="החלפה בין מצב כהה לבהיר">${st.settings.theme === 'dark' ? '☀️' : '🌙'}</button></span>
       </div>
@@ -5233,7 +5382,7 @@ function showPortal(tab){
       <nav class="portal-tabs" role="tablist">${tabs.map(t => `<button type="button" role="tab" data-ptab="${t[0]}" class="${t[0] === portalUi.tab ? 'active' : ''}">${t[1]}</button>`).join('')}</nav>
       <div id="portal-body"></div>
     </div>`;
-  document.getElementById('portal-home').addEventListener('click', portalServerOn ? srvSignOut : showAppHome);
+  document.getElementById('portal-home').addEventListener('click', portalServerOn && !ramzorPersonal ? srvSignOut : showAppHome);          // (after the one personal sign-in: back to the two cards; leaving is there)
   const gear = document.getElementById('portal-gear'); if(gear) gear.addEventListener('click', openPortalSettings);
   document.getElementById('portal-theme').addEventListener('click', () => { st.settings.theme = st.settings.theme === 'dark' ? 'light' : 'dark'; if(portalServerOn){ try { localStorage.setItem('ramzor-portal-theme', st.settings.theme); } catch(e){} } else portalSave(); showPortal(); });
   if(!portalServerOn) document.getElementById('portal-persona').addEventListener('change', e => { portalUi.persona = e.target.value; portalUi.tab = null; showPortal(); });
@@ -5995,7 +6144,7 @@ async function srvLoad(){
     srvAll(() => sbPersonal.from('prefs_consent').select('staff_id,month,extend_morning,pull_to_sunday').gte('month', from).lte('month', to))
   ]);
   const st = {
-    version:2, serverMode:true, instructors:staff.map((s, i) => ({ id:s.id, first:s.display_name, last:'', role:s.kind, active:s.active, photo:(srv.photos && srv.photos[s.id]) || letterPhoto(s.display_name, i) })),
+    version:2, serverMode:true, instructors:staff.map((s, i) => ({ id:s.id, first:s.display_name, last:'', role:s.kind === 'admin' ? 'coordinator' : s.kind, admin:s.kind === 'admin', active:s.active, photo:(srv.photos && srv.photos[s.id]) || letterPhoto(s.display_name, i) })),
     shiftTypes:JSON.parse(JSON.stringify(SRV_SHIFTS)), rules:Object.assign({}, RULES_DEFAULT), months:{}, swaps:[], assignmentIds:{}, announcements:[], timetable:{}, birthdays:{}, outbox:[],
     notices:notices.map(n => ({ id:n.id, to:meId, at:n.created_at, text:n.text, kind:n.kind, seen:n.seen, sent:!!n.seen, fromServer:true })),
     settings:{ theme:(function(){ try { return localStorage.getItem('ramzor-portal-theme') || 'dark'; } catch(e){ return 'dark'; } })() }
@@ -6178,12 +6327,13 @@ async function srvSwapAction(fn, args){
 }
 // ---- sign in
 function srvLoginHtml(step, email){
-  return `<div class="plogin"><div class="eyebrow-gold">מרכז חירום</div><h1 class="apphome-title">פורטל המדריך</h1>
+  return `<div class="plogin"><div class="eyebrow-gold">מרכז חירום</div><h1 class="apphome-title">כניסה אישית</h1>
     <div class="card">
       ${step === 'email' ? `
         <h2>ברוכים הבאים</h2><div class="pnote">נשלח אליכם קוד כניסה קצר למייל, בלי סיסמאות להיזכר בהן.</div>
         <label class="pfield">כתובת מייל<input type="email" id="plogin-email" autocomplete="email" inputmode="email" dir="ltr"></label>
         <button type="button" class="btn" id="plogin-send">שלחו לי קוד</button>
+        ${location.hash === '#portal' ? '' : '<button type="button" class="home-text-btn" id="plogin-staff">כניסה עם סיסמת צוות</button>'}
         
         <label class="pfield">סיסמה (בדיקות בלבד)<input type="password" id="plogin-pw" autocomplete="current-password" dir="ltr"></label>
         <button type="button" class="btn ghost" id="plogin-pwbtn">כניסה עם סיסמה</button>
@@ -6202,7 +6352,9 @@ function srvShowLogin(step, email){
   view.innerHTML = srvLoginHtml(step || 'email', email);
   const err = msg => { document.getElementById('plogin-error').textContent = msg || ''; };
   const guard = async (btn, work) => { btn.disabled = true; err(''); try { await work(); } catch(e){ err('משהו קטן השתבש. אפשר לנסות שוב בעוד רגע.'); } btn.disabled = false; };
-  const enter = async () => { if(await srvStart()) return; err('עוד לא חיברנו את הכתובת הזו לרשימת הצוות. הרכזת תשמח לעזור לכם להיכנס.'); await sbPersonal.auth.signOut(); };
+  const enter = async () => { if(await personalEnter()) return; err('עוד לא חיברנו את הכתובת הזו לרשימת הצוות. הרכזת תשמח לעזור לכם להיכנס.'); await sbPersonal.auth.signOut(); };
+  const staffBtn = document.getElementById('plogin-staff');
+  if(staffBtn) staffBtn.addEventListener('click', () => { document.getElementById('protected-app').style.display = 'none'; document.getElementById('login-screen').style.display = 'block'; });
   if(step === 'code'){
     document.getElementById('plogin-verify').addEventListener('click', ev => guard(ev.target, async () => {
       const code = document.getElementById('plogin-code').value.trim();
@@ -6235,6 +6387,27 @@ async function srvStart(){
   portalUi.persona = srv.me; portalUi.tab = null; portalUi.pmonth = null;
   showPortal();
   return true;
+}
+// ---- one personal sign-in for the portal AND the Ramzor: after it, the Ramzor reads its data with the personal session
+// (supabase/scheduling-v15.sql lets an active instructor / coordinator / admin read and work with the Ramzor's data)
+let ramzorPersonal = false;
+const personalRamzorKind = () => !!(srv.profile && ['instructor', 'coordinator', 'admin'].includes(srv.profile.kind)) || ['instructor', 'coordinator'].includes((portalMe() || {}).role);
+async function personalEnter(){
+  portalServerOn = true;
+  if(!(await srvLoad())){ portalServerOn = false; return false; }
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('protected-app').style.display = '';
+  if(!personalRamzorKind()){ srvOpenPortal(); return true; }          // (service girls and teachers: only the portal)
+  sb = sbPersonal; ramzorPersonal = true;
+  try { await initRoster(); await initMiniLists(); renderManageRoster(); } catch(e){ /* the Ramzor data loads again on the next screen */ }
+  showAppHome();
+  return true;
+}
+function srvOpenPortal(){ portalUi.persona = srv.me; portalUi.tab = null; portalUi.pmonth = null; showPortal(); }
+async function personalLeave(){
+  try { await srvFlush(); } catch(e){}
+  await sbPersonal.auth.signOut();
+  sb = sbShared; ramzorPersonal = false; portalServerOn = false; portalState = null; srv.me = null; srv.profile = null; srv.profileFor = null;
 }
 async function srvSignOut(){
   await srvFlush();
@@ -7356,6 +7529,351 @@ function applyPortalSize(){
   document.body.classList.toggle('portal-big', big);
 }
 
+// ---------- THE AHMASH CONTROL (בקרת אחמ"ש): who the kids' TV shows today, today's timetable, today's bonuses, a log ----------
+// Only after the personal sign-in, for an ahmash (rank 1 or 2), the coordinator and the admin (supabase/scheduling-v15.sql: can_control()).
+// Nothing here changes the real schedule: the people changes are for the kids' TV of today only.
+const ctl = { fold:{ shifts:true }, shifts:null, tt:null, ttEdit:null, ttFixedDay:null, log:null };
+const canControl = () => typeof ramzorPersonal !== 'undefined' && ramzorPersonal && !!(srv.profile && srv.profile.control);
+const ctlIsCoord = () => !!(srv.profile && (srv.profile.kind === 'coordinator' || srv.profile.admin));
+const CTL_SHIFTS = [['M', 'בוקר'], ['A', 'צהריים'], ['N', 'לילה']];
+const WEEKDAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const ctlToday = () => isoDate(new Date());
+
+// the activities of the timetable: an id (the picture on the kids' TV), a word and an emoji for the staff screens
+const TT_ICON_LIST = [
+  ['wake', 'השכמה', '⏰'], ['wash', 'התארגנות', '🪥'], ['breakfast', 'ארוחת בוקר', '🥣'], ['school', 'גן / בית ספר', '🎒'], ['lunch', 'ארוחת צהריים', '🍽️'],
+  ['rest', 'מנוחה', '😴'], ['snack', 'ארוחת ארבע', '🍎'], ['yard', 'חצר ומשחק', '🛝'], ['art', 'יצירה', '🎨'], ['music', 'מוזיקה', '🎵'], ['sport', 'ספורט', '⚽'],
+  ['class', 'חוג', '🧩'], ['park', 'טיול', '🌳'], ['movie', 'סרט', '📺'], ['shower', 'מקלחות', '🛁'], ['dinner', 'ארוחת ערב', '🍲'], ['story', 'סיפור', '📖'],
+  ['cleanup', 'סידור החדר', '🧹'], ['candles', 'קבלת שבת', '🕯️'], ['meeting', 'מפגש', '🫶'], ['bedtime', 'השכבה', '🌙']
+];
+const ttIcon = id => TT_ICON_LIST.find(x => x[0] === id) || ['other', 'פעילות', '⭐'];
+
+// who is on which of today's shifts: the schedule's rows, then today's changes (removed / added); the order: teachers first, then the instructors
+// with the (best) ahmash in the first place, the service girls last. Used by the control and by the kids' TV.
+function shiftPeople(data){
+  const byId = {}; (data.people || []).forEach(p => { byId[p.id] = p; });
+  const codesOf = r => r.shift === 'M' || r.shift === 'S' ? ['M'] : r.shift === 'A' ? ['A'] : r.shift === 'N' ? ['N'] : r.shift === 'D' ? ['M', 'A'] : r.shift === 'L' ? (r.day === data.day ? ['A', 'N'] : ['M', 'A']) : [];
+  const out = { M:new Map(), A:new Map(), N:new Map() };
+  (data.rows || []).forEach(r => codesOf(r).forEach(c => { if(byId[r.staff] && !out[c].has(r.staff)) out[c].set(r.staff, Object.assign({}, byId[r.staff], { scheduled:true })); }));
+  (data.changes || []).forEach(ch => {
+    const m = out[ch.shift]; if(!m) return;
+    if(ch.action === 'remove' && m.has(ch.staff)) m.get(ch.staff).removed = true;
+    if(ch.action === 'add' && byId[ch.staff] && !m.has(ch.staff)) m.set(ch.staff, Object.assign({}, byId[ch.staff], { added:true }));
+  });
+  const order = list => {
+    const rank = p => p.kind === 'teacher' ? 0 : p.kind === 'service' ? 3 : 1;
+    const sorted = list.slice().sort((a, b) => rank(a) - rank(b) || String(a.label).localeCompare(String(b.label), 'he'));
+    const ahm = sorted.filter(p => !p.removed && p.kind !== 'teacher' && p.kind !== 'service' && p.ahmash > 0).sort((a, b) => a.ahmash - b.ahmash)[0];
+    if(!ahm) return sorted;
+    const rest = sorted.filter(p => p !== ahm), firstNonTeacher = rest.findIndex(p => p.kind !== 'teacher');
+    rest.splice(firstNonTeacher < 0 ? rest.length : firstNonTeacher, 0, ahm);
+    return rest;
+  };
+  return { M:order([...out.M.values()]), A:order([...out.A.values()]), N:order([...out.N.values()]) };
+}
+
+// ---- the screen
+function showControl(){
+  if(!canControl()){ showHub(); return; }
+  stopCarousel();
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-control').classList.add('active');
+  document.body.classList.remove('portal-mode');
+  window.scrollTo(0, 0);
+  renderControl();
+}
+function renderControl(){
+  const view = document.getElementById('view-control'), today = ctlToday();
+  const fold = (id, title, sub) => `<details class="pfold ctl-fold" data-cfold="${id}"${ctl.fold[id] ? ' open' : ''}><summary><span>${title}</span>${sub ? `<small class="ctl-sub">${sub}</small>` : ''}</summary><div class="pfold-body" data-cbody="${id}"><div class="pnote">רק רגע...</div></div></details>`;
+  view.innerHTML = `<div class="ctl">
+    <div class="ctl-top"><button type="button" class="back-btn" id="ctl-back">→ חזרה</button><h1 class="ctl-title">בקרת אחמ"ש</h1><div class="ctl-date">${dayLabel(today)}</div></div>
+    ${fold('shifts', 'מי מוצג היום במסך הילדים', 'רק במסך הילדים, ורק להיום')}
+    ${fold('tt', 'הלו"ז של היום')}
+    ${fold('bonus', 'בונוסים היום')}
+    ${fold('log', 'יומן שינויים')}
+  </div>`;
+  document.getElementById('ctl-back').addEventListener('click', showHub);
+  view.querySelectorAll('details[data-cfold]').forEach(d => d.addEventListener('toggle', () => { ctl.fold[d.dataset.cfold] = d.open; if(d.open) ctlFill(d.dataset.cfold); }));
+  Object.keys(ctl.fold).forEach(id => { if(ctl.fold[id]) ctlFill(id); });
+}
+async function ctlFill(id){
+  const box = document.querySelector(`[data-cbody="${id}"]`); if(!box) return;
+  try {
+    if(id === 'shifts') await ctlShifts(box);
+    if(id === 'tt') await ctlTimetable(box);
+    if(id === 'bonus') await ctlBonuses(box);
+    if(id === 'log') await ctlLog(box);
+  } catch(e){ box.innerHTML = '<div class="pnote">הטעינה נכשלה. נסו לפתוח שוב.</div>'; }
+}
+
+// ---- 1. who the kids' TV shows today
+async function ctlShifts(box){
+  const r = await sb.rpc('tv_shifts_today'); if(r.error) throw r.error;
+  ctl.shifts = r.data;
+  const groups = shiftPeople(r.data), st = portalLoad();
+  const chip = (p, code) => `<span class="ctl-chip${p.removed ? ' removed' : ''}${p.added ? ' added' : ''}">${ctlFace(p)}<span>${pEsc(p.label)}</span>${p.removed
+      ? `<button type="button" class="ctl-x" data-restore="${p.id}|${code}" title="להחזיר">↺</button>`
+      : `<button type="button" class="ctl-x" data-remove="${p.id}|${code}" title="להסיר מהמסך היום" aria-label="להסיר את ${pEsc(p.label)}">✕</button>`}</span>`;
+  box.innerHTML = `<div class="pnote">השינויים כאן משנים רק את מה שמסך הילדים מציג היום. הסידור עצמו לא משתנה, ומחר הכול חוזר לפי הסידור.</div>
+    ${CTL_SHIFTS.map(([code, word]) => `<div class="ctl-shift"><div class="ctl-shift-head"><b>${word}</b><button type="button" class="btn ghost small" data-add="${code}">+ הוספה</button></div>
+      <div class="ctl-chips">${groups[code].map(p => chip(p, code)).join('') || '<span class="pnote">אין אף אחד</span>'}</div></div>`).join('')}`;
+  const day = r.data.day, changes = r.data.changes || [];
+  const has = (sid, code, action) => changes.some(c => c.staff === sid && c.shift === code && c.action === action);
+  const done = async q => { const res = await q; if(res.error){ toast('השינוי לא נשמר. נסו שוב.'); } ctlShifts(box); };
+  box.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => {
+    const [sid, code] = b.dataset.remove.split('|');
+    done(has(sid, code, 'add') ? sb.from('tv_day_changes').delete().eq('day', day).eq('staff_id', sid).eq('shift', code)
+                               : sb.from('tv_day_changes').upsert({ day, staff_id:sid, shift:code, action:'remove' }));
+  }));
+  box.querySelectorAll('[data-restore]').forEach(b => b.addEventListener('click', () => {
+    const [sid, code] = b.dataset.restore.split('|');
+    done(sb.from('tv_day_changes').delete().eq('day', day).eq('staff_id', sid).eq('shift', code));
+  }));
+  box.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+    const code = b.dataset.add, here = new Set(groups[code].filter(p => !p.removed).map(p => p.id));
+    const people = st.instructors.filter(p => p.active && p.role !== 'coordinator' && !here.has(p.id)).sort((a, c) => String(a.first).localeCompare(String(c.first), 'he'));
+    const sh = portalSheet(`<h2>הוספה למשמרת ה${CTL_SHIFTS.find(x => x[0] === code)[1]}</h2>
+      <input type="search" class="ctl-search" id="ctl-search" placeholder="חיפוש שם" autocomplete="off">
+      <div class="ctl-pick">${people.map(p => `<button type="button" class="ctl-pick-item" data-pick="${p.id}" data-name="${pEsc(p.first)}"><img src="${p.photo}" alt=""><span>${pEsc(instrName(p, st.instructors))}</span><small>${KIND_WORD[p.role] || ''}</small></button>`).join('')}</div>
+      <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>סגירה</button></div>`);
+    const search = sh.querySelector('#ctl-search');
+    search.addEventListener('input', () => { const q = search.value.trim(); sh.querySelectorAll('[data-pick]').forEach(x => { x.hidden = !!q && !x.dataset.name.includes(q); }); });
+    sh.querySelectorAll('[data-pick]').forEach(x => x.addEventListener('click', () => {
+      const sid = x.dataset.pick; sh.close();
+      done(has(sid, code, 'remove') ? sb.from('tv_day_changes').delete().eq('day', day).eq('staff_id', sid).eq('shift', code)
+                                    : sb.from('tv_day_changes').upsert({ day, staff_id:sid, shift:code, action:'add' }));
+    }));
+  }));
+}
+// a face for a person without a photo: a gentle character by gender, a different one for each person
+const CTL_FACES = { f:['👩', '👩‍🦰', '👩‍🦱', '👱‍♀️', '👩‍🦳', '🧕'], m:['👨', '👨‍🦰', '👨‍🦱', '👱‍♂️', '🧔', '👨‍🦳'] };
+function personFace(p){
+  const set = CTL_FACES[p.female === false ? 'm' : 'f'];
+  let h = 0; String(p.id).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; });
+  return set[h % set.length];
+}
+const ctlFace = p => p.photo ? `<img class="ctl-face" src="${p.photo}" alt="">` : `<span class="ctl-face ctl-face-emoji" aria-hidden="true">${personFace(p)}</span>`;
+
+// ---- 2. today's timetable (and, for the coordinator, the fixed timetable of each weekday)
+async function ctlTimetable(box){
+  const r = await sb.rpc('tv_timetable_today'); if(r.error) throw r.error;
+  ctl.tt = r.data;
+  if(!ctl.ttEdit || ctl.ttEdit.day !== r.data.day) ctl.ttEdit = { day:r.data.day, items:(r.data.items || []).map(x => Object.assign({}, x)) };
+  ctlTimetableDraw(box);
+}
+function ctlTimetableDraw(box){
+  const tt = ctl.tt, coord = ctlIsCoord(), fixedDay = ctl.ttFixedDay;
+  const editing = fixedDay != null ? ctl.ttFixed : ctl.ttEdit;
+  const rows = editing.items.map((x, i) => `<div class="ctl-tt-row" data-row="${i}">
+      <input type="time" value="${pEsc(x.t || '')}" data-tt-time="${i}" aria-label="שעה">
+      <button type="button" class="ctl-tt-icon" data-tt-icon="${i}" title="${pEsc(ttIcon(x.i)[1])}">${ttIcon(x.i)[2]}</button>
+      <input type="text" value="${pEsc(x.n || '')}" data-tt-name="${i}" placeholder="שם הפעילות" maxlength="40">
+      <button type="button" class="ctl-x" data-tt-del="${i}" aria-label="מחיקה">✕</button></div>`).join('');
+  box.innerHTML = `
+    ${fixedDay == null ? `<div class="pnote">${tt.title ? `<b>${pEsc(tt.title)}</b> · ` : ''}${tt.changed ? 'הלו"ז של היום שונה מהלו"ז הקבוע.' : `זה הלו"ז הקבוע של יום ${WEEKDAY_NAMES[tt.weekday]}. שינוי כאן ישנה רק את היום.`}</div>`
+                       : `<div class="pnote">עריכת <b>הלו"ז הקבוע של יום ${WEEKDAY_NAMES[fixedDay]}</b>. השינוי יחול מהשבוע הזה והלאה.</div>`}
+    <div class="ctl-tt">${rows || '<div class="pnote">אין פעילויות.</div>'}</div>
+    <button type="button" class="btn ghost small" id="tt-add">+ פעילות</button>
+    <div class="ctl-actions">${fixedDay == null
+      ? `<button type="button" class="btn" id="tt-save">שמירה להיום</button>${tt.changed ? '<button type="button" class="btn ghost" id="tt-reset">חזרה ללו"ז הקבוע</button>' : ''}${coord ? `<button type="button" class="btn ghost" id="tt-save-fixed">שמירה גם כקבוע של יום ${WEEKDAY_NAMES[tt.weekday]}</button>` : ''}`
+      : `<button type="button" class="btn" id="tt-fixed-save">שמירת הלו"ז הקבוע</button><button type="button" class="btn ghost" id="tt-fixed-close">חזרה להיום</button>`}</div>
+    ${coord && fixedDay == null ? `<div class="ctl-fixed-pick"><span>עריכת הלו"ז הקבוע של:</span>${WEEKDAY_NAMES.map((n, i) => `<button type="button" class="btn ghost small" data-fixed="${i}">${n}</button>`).join('')}</div>` : ''}`;
+  const sync = () => box.querySelectorAll('[data-row]').forEach(row => { const i = +row.dataset.row; editing.items[i].t = row.querySelector('[data-tt-time]').value; editing.items[i].n = row.querySelector('[data-tt-name]').value.trim(); });
+  const clean = () => { sync(); return editing.items.filter(x => x.t && x.n).sort((a, b) => a.t.localeCompare(b.t)).map(x => ({ t:x.t, n:x.n, i:x.i || 'other' })); };
+  box.querySelectorAll('[data-tt-del]').forEach(b => b.addEventListener('click', () => { sync(); editing.items.splice(+b.dataset.ttDel, 1); ctlTimetableDraw(box); }));
+  box.querySelector('#tt-add').addEventListener('click', () => { sync(); editing.items.push({ t:'', n:'', i:'other' }); ctlTimetableDraw(box); const last = box.querySelector('.ctl-tt-row:last-child input[type=time]'); if(last) last.focus(); });
+  box.querySelectorAll('[data-tt-icon]').forEach(b => b.addEventListener('click', () => {
+    sync(); const i = +b.dataset.ttIcon;
+    const sh = portalSheet(`<h2>תמונה לפעילות</h2><div class="ctl-icons">${TT_ICON_LIST.map(([id, word, e]) => `<button type="button" class="ctl-icon-opt${editing.items[i].i === id ? ' on' : ''}" data-icon="${id}"><span>${e}</span><small>${word}</small></button>`).join('')}</div>
+      <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>סגירה</button></div>`);
+    sh.querySelectorAll('[data-icon]').forEach(o => o.addEventListener('click', () => {
+      const it = editing.items[i]; it.i = o.dataset.icon; if(!it.n) it.n = ttIcon(it.i)[1]; sh.close(); ctlTimetableDraw(box);
+    }));
+  }));
+  const saved = (res, msg) => { if(res.error){ toast('השמירה נכשלה. נסו שוב.'); return false; } toast(msg); return true; };
+  const on = (id, fn) => { const b = box.querySelector('#' + id); if(b) b.addEventListener('click', fn); };
+  on('tt-save', async () => { const items = clean(); if(saved(await sb.from('timetable_day').upsert({ day:ctl.tt.day, items }), 'נשמר. מסך הילדים יתעדכן תוך רגע.')){ ctl.ttEdit = null; ctlTimetable(box); } });
+  on('tt-reset', async () => { if(saved(await sb.from('timetable_day').delete().eq('day', ctl.tt.day), 'חזרנו ללו"ז הקבוע של היום.')){ ctl.ttEdit = null; ctlTimetable(box); } });
+  on('tt-save-fixed', async () => {
+    const items = clean();
+    if(!(await confirmSheet({ title:`לשמור כלו"ז הקבוע של יום ${WEEKDAY_NAMES[ctl.tt.weekday]}?`, text:'מעכשיו כל יום כזה יתחיל מהלו"ז הזה.', okLabel:'כן, לשמור', cancelLabel:'חזרה' }))) return;
+    if(saved(await sb.from('timetable_fixed').upsert({ weekday:ctl.tt.weekday, items }), 'נשמר כלו"ז הקבוע.')){ await sb.from('timetable_day').delete().eq('day', ctl.tt.day); ctl.ttEdit = null; ctlTimetable(box); }
+  });
+  box.querySelectorAll('[data-fixed]').forEach(b => b.addEventListener('click', async () => {
+    const wd = +b.dataset.fixed, r = await sb.from('timetable_fixed').select('items').eq('weekday', wd).maybeSingle();
+    ctl.ttFixedDay = wd; ctl.ttFixed = { items:((r.data && r.data.items) || []).map(x => Object.assign({}, x)) }; ctlTimetableDraw(box);
+  }));
+  on('tt-fixed-save', async () => { const items = clean(); if(saved(await sb.from('timetable_fixed').upsert({ weekday:ctl.ttFixedDay, items }), 'הלו"ז הקבוע נשמר.')){ ctl.ttFixedDay = null; ctlTimetable(box); } });
+  on('tt-fixed-close', () => { ctl.ttFixedDay = null; ctlTimetableDraw(box); });
+}
+
+// ---- 3. today's bonuses: hide one for today, add a special one with hours; the coordinator can make a special one permanent or delete a permanent one
+async function ctlBonuses(box){
+  await loadBonusDay();
+  const coord = ctlIsCoord(), wd = new Date().getDay();
+  const hidden = new Set(bonusDay.filter(x => x.kind === 'hide').map(x => x.bonus_id));
+  const hours = b => b.startTime && b.endTime ? ` <small>${b.startTime}–${b.endTime}</small>` : '';
+  const row = (b, key) => `<div class="ctl-bonus${hidden.has(b.id) ? ' hidden-today' : ''}"><span class="ctl-bonus-icon">${bonusIcon(b)}</span><span class="ctl-bonus-text">${pEsc(b.text)}${hours(b)}${hidden.has(b.id) ? ' <em>מוסתר היום</em>' : ''}</span>
+      <span class="ctl-bonus-btns"><button type="button" class="btn ghost small" data-${hidden.has(b.id) ? 'show' : 'hide'}="${b.id}">${hidden.has(b.id) ? 'החזרה' : 'הסתרה להיום'}</button>${coord ? `<button type="button" class="btn ghost small" data-perm-del="${key}|${b.id}" title="מחיקה מהרשימה הקבועה">🗑</button>` : ''}</span></div>`;
+  const daily = bonusesDaily.filter(bonusAppliesToday), weekly = bonusesWeekly.filter(bonusAppliesToday), specials = bonusDay.filter(x => x.kind === 'special');
+  box.innerHTML = `
+    <h3 class="psec">הבונוסים של היום</h3>
+    ${daily.map(b => row(b, 'bonusesDaily')).join('') || '<div class="pnote">אין בונוסים יומיים להיום.</div>'}
+    ${weekly.length ? '<h3 class="psec">שבועיים</h3>' + weekly.map(b => row(b, 'bonusesWeekly')).join('') : ''}
+    <h3 class="psec">בונוסים מיוחדים להיום</h3>
+    ${specials.map(x => `<div class="ctl-bonus special"><span class="ctl-bonus-icon">${x.icon || '🎁'}</span><span class="ctl-bonus-text">${pEsc(x.name)}${x.from_time ? ` <small>${x.from_time.slice(0, 5)}–${(x.to_time || '').slice(0, 5)}</small>` : ''}</span>
+        <span class="ctl-bonus-btns">${coord ? `<button type="button" class="btn ghost small" data-perm="${x.id}">להפוך לקבוע</button>` : ''}<button type="button" class="btn ghost small" data-sp-del="${x.id}" aria-label="מחיקה">✕</button></span></div>`).join('') || '<div class="pnote">אין בונוסים מיוחדים היום.</div>'}
+    <div class="ctl-sp-add">
+      <button type="button" class="ctl-tt-icon" id="sp-icon">🎁</button>
+      <input type="text" id="sp-name" placeholder="שם הבונוס" maxlength="40">
+      <label>משעה <input type="time" id="sp-from"></label><label>עד <input type="time" id="sp-to"></label>
+      <button type="button" class="btn small" id="sp-go">הוספה</button>
+    </div>
+    <div class="pnote">בונוס מיוחד מופיע מיד במסך הילדים ובמסך הבונוסים של הצוות, ונעלם לבד בסוף היום.</div>`;
+  const today = ctlToday(), redo = () => ctlBonuses(box);
+  const ok = (res, msg) => { if(res.error){ toast('השינוי לא נשמר. נסו שוב.'); return false; } if(msg) toast(msg); return true; };
+  box.querySelectorAll('[data-hide]').forEach(b => b.addEventListener('click', async () => { if(ok(await sb.from('bonus_day').insert({ day:today, kind:'hide', bonus_id:b.dataset.hide }), 'הבונוס מוסתר להיום.')) redo(); }));
+  box.querySelectorAll('[data-show]').forEach(b => b.addEventListener('click', async () => { if(ok(await sb.from('bonus_day').delete().eq('day', today).eq('kind', 'hide').eq('bonus_id', b.dataset.show))) redo(); }));
+  box.querySelectorAll('[data-sp-del]').forEach(b => b.addEventListener('click', async () => { if(ok(await sb.from('bonus_day').delete().eq('id', b.dataset.spDel))) redo(); }));
+  let icon = '🎁';
+  box.querySelector('#sp-icon').addEventListener('click', () => {
+    const sh = portalSheet(`<h2>תמונה לבונוס</h2><div class="ctl-icons">${BONUS_ICONS.map(e => `<button type="button" class="ctl-icon-opt" data-bicon="${e}"><span>${e}</span></button>`).join('')}</div>
+      <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>סגירה</button></div>`);
+    sh.querySelectorAll('[data-bicon]').forEach(o => o.addEventListener('click', () => { icon = o.dataset.bicon; box.querySelector('#sp-icon').textContent = icon; sh.close(); }));
+  });
+  box.querySelector('#sp-go').addEventListener('click', async () => {
+    const name = box.querySelector('#sp-name').value.trim(), from = box.querySelector('#sp-from').value || null, to = box.querySelector('#sp-to').value || null;
+    if(!name){ toast('כתבו שם לבונוס'); return; }
+    if((from && !to) || (!from && to) || (from && to && to <= from)){ toast('בדקו את השעות'); return; }
+    if(ok(await sb.from('bonus_day').insert({ day:today, kind:'special', name, from_time:from, to_time:to, icon }), 'הבונוס נוסף להיום.')) redo();
+  });
+  box.querySelectorAll('[data-perm]').forEach(b => b.addEventListener('click', async () => {
+    const x = specials.find(s => s.id === b.dataset.perm); if(!x) return;
+    const sh = portalSheet(`<h2>להפוך לבונוס קבוע</h2><div class="pnote">${pEsc(x.name)}</div>
+      <div class="pchange-opts"><button type="button" class="btn" data-perm-kind="daily"><b>כל יום</b><small>יופיע ברשימת הבונוסים היומיים</small></button>
+      <button type="button" class="btn ghost" data-perm-kind="weekly"><b>פעם בשבוע, ביום ${WEEKDAY_NAMES[wd]}</b><small>יופיע ברשימת הבונוסים השבועיים</small></button></div>
+      <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>חזרה</button></div>`);
+    sh.querySelectorAll('[data-perm-kind]').forEach(o => o.addEventListener('click', async () => {
+      sh.close();
+      const weeklyKind = o.dataset.permKind === 'weekly', key = weeklyKind ? 'bonusesWeekly' : 'bonusesDaily', list = (weeklyKind ? bonusesWeekly : bonusesDaily).slice();
+      const item = { id:'b' + Date.now().toString(36), text:x.name, icon:x.icon || undefined };
+      if(x.from_time && x.to_time){ item.startTime = x.from_time.slice(0, 5); item.endTime = x.to_time.slice(0, 5); }
+      if(weeklyKind) item.days = [wd];
+      list.push(item);
+      if(!(await ctlSaveList(key, list))) return;
+      await sb.from('bonus_day').delete().eq('id', x.id);
+      toast('הבונוס נוסף לרשימה הקבועה.'); redo();
+    }));
+  }));
+  box.querySelectorAll('[data-perm-del]').forEach(b => b.addEventListener('click', async () => {
+    const [key, id] = b.dataset.permDel.split('|'), list = (key === 'bonusesWeekly' ? bonusesWeekly : bonusesDaily), it = list.find(x => x.id === id);
+    if(!it || !(await confirmSheet({ title:'למחוק מהרשימה הקבועה?', text:`"${it.text}" לא יופיע יותר בימים הבאים.`, okLabel:'כן, למחוק', cancelLabel:'חזרה', danger:true }))) return;
+    if(await ctlSaveList(key, list.filter(x => x.id !== id))){ toast('נמחק מהרשימה הקבועה.'); redo(); }
+  }));
+}
+// the coordinator / admin save a bonus list directly (scheduling-v15.sql lets them); the shared logins keep using the manager code
+async function ctlSaveList(key, list){
+  const r = await sb.from('mini_lists').upsert({ key, items:list });
+  if(r.error){ toast('השמירה נכשלה. נסו שוב.'); return false; }
+  if(key === 'bonusesDaily') bonusesDaily = list; else bonusesWeekly = list;
+  return true;
+}
+
+// ---- 4. the log
+async function ctlLog(box){
+  const r = await sb.from('control_log').select('at,by_staff,what,detail').order('at', { ascending:false }).limit(60); if(r.error) throw r.error;
+  const who = id => { const p = id && portalPerson(id); return p ? p.first : 'המערכת'; };
+  const words = l => {
+    const n = (l.detail && (l.detail.new || l.detail.old)) || {}, [table, op] = l.what.split(' ');
+    if(table === 'tv_day_changes') return `${op === 'delete' ? 'ביטל/ה שינוי: ' : ''}${n.action === 'add' ? 'הוספה' : 'הסרה'} של ${who(n.staff_id)} ממשמרת ה${(CTL_SHIFTS.find(x => x[0] === n.shift) || [0, ''])[1]} במסך הילדים`;
+    if(table === 'timetable_day') return op === 'delete' ? 'החזיר/ה את הלו"ז הקבוע להיום' : 'שינה/תה את הלו"ז של היום';
+    if(table === 'timetable_fixed') return `שינה/תה את הלו"ז הקבוע של יום ${WEEKDAY_NAMES[n.weekday] || ''}`;
+    if(table === 'bonus_day') return n.kind === 'hide' ? (op === 'delete' ? 'החזיר/ה בונוס שהוסתר' : 'הסתיר/ה בונוס להיום') : (op === 'delete' ? `מחק/ה את הבונוס המיוחד "${n.name}"` : `הוסיף/ה בונוס מיוחד: "${n.name}"`);
+    return l.what;
+  };
+  box.innerHTML = (r.data || []).map(l => `<div class="pmine-row"><span><small>${new Date(l.at).toLocaleString('he-IL')} · ${pEsc(who(l.by_staff))}</small><br>${pEsc(words(l))}</span></div>`).join('') || '<div class="pnote">עוד אין שינויים.</div>';
+}
+
+// ---------- THE KIDS' TV, from the database (config "portalTv"): who is on shift today, today's timetable, the night and morning screens ----------
+// Read without signing in (scheduling-v15.sql: tv_shifts_today, tv_timetable_today). The ahmash control's changes of today are already applied.
+var tvShifts = null, tvTimetable = null, tvTodayAt = 0;          // (var: the TV screens of 14d-portal-tv.js ask for them while the page is still starting)
+async function loadTvToday(force){
+  if(!force && Date.now() - tvTodayAt < 60 * 1000) return;
+  tvTodayAt = Date.now();
+  try { const r = await sb.rpc('tv_shifts_today'); if(!r.error) tvShifts = r.data; } catch(e){ /* keep the last one */ }
+  try { const r = await sb.rpc('tv_timetable_today'); if(!r.error) tvTimetable = r.data; } catch(e){ /* keep the last one */ }
+}
+const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+const hm = t => { const [h, m] = String(t || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+
+// the three pictures of the shifts, top to bottom: sunrise, sun, moon (no words: the children see the time of day)
+const TV_SHIFT_ART = {
+  M:`<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="tvsSkyM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3a7"/><stop offset=".6" stop-color="#ffd59e"/><stop offset="1" stop-color="#fff1c9"/></linearGradient></defs>
+      <rect x="4" y="4" width="112" height="112" rx="26" fill="url(#tvsSkyM)"/><g stroke="#ff9a3c" stroke-width="5" stroke-linecap="round"><path d="M60 30v-12M34 40l-8-8M86 40l8-8M22 64h-10M98 64h10"/></g>
+      <path d="M28 76a32 32 0 0 1 64 0z" fill="#ffb02e"/><path d="M8 76h104v36a8 8 0 0 1-8 8H16a8 8 0 0 1-8-8z" fill="#7cc576"/><path d="M8 76c22-8 40 6 58-2s30 4 46 0v6H8z" fill="#5fae5c"/></svg>`,
+  A:`<svg viewBox="0 0 120 120" aria-hidden="true"><rect x="4" y="4" width="112" height="112" rx="26" fill="#8fd3ff"/>
+      <g stroke="#ffc928" stroke-width="6" stroke-linecap="round"><path d="M60 14v12M60 94v12M14 60h12M94 60h12M27 27l8 8M85 85l8 8M93 27l-8 8M35 85l-8 8"/></g>
+      <circle cx="60" cy="60" r="24" fill="#ffd93b"/><circle cx="52" cy="56" r="3" fill="#7a4a00"/><circle cx="68" cy="56" r="3" fill="#7a4a00"/><path d="M50 66q10 9 20 0" stroke="#7a4a00" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
+  N:`<svg viewBox="0 0 120 120" aria-hidden="true"><rect x="4" y="4" width="112" height="112" rx="26" fill="#22306b"/>
+      <path d="M74 26a34 34 0 1 0 20 58 28 28 0 1 1-20-58z" fill="#ffe9a8"/><g fill="#fff6c9"><circle cx="30" cy="30" r="3"/><circle cx="92" cy="26" r="2.4"/><circle cx="24" cy="78" r="2.2"/><circle cx="96" cy="96" r="3"/>
+      <path d="M40 52l2.4 5 5 .7-3.7 3.5.9 5-4.6-2.4-4.6 2.4.9-5-3.7-3.5 5-.7z"/></g></svg>`
+};
+// which of today's shifts is now, and which are over (the night is "now" from 22:00 until the morning)
+function tvShiftPhase(code){
+  const n = nowMin();
+  const cur = n >= hm('22:00') || n < hm('07:00') ? 'N' : n >= hm('14:00') ? 'A' : 'M';
+  if(code === cur) return 'now';
+  if(code === 'M' && (cur === 'A' || (cur === 'N' && n >= hm('22:00')))) return 'past';
+  if(code === 'A' && cur === 'N' && n >= hm('22:00')) return 'past';
+  return '';
+}
+function renderShiftsLive(){
+  const el = document.getElementById('tv-instructors');
+  if(!tvShifts){ el.innerHTML = '<div class="empty">רק רגע...</div>'; return; }
+  const g = shiftPeople(tvShifts), shown = code => g[code].filter(p => !p.removed);
+  const most = Math.max(1, ...['M', 'A', 'N'].map(c => shown(c).length));
+  el.className = 'tv-instructors tvs';
+  el.style.setProperty('--tvs-size', most <= 5 ? '15vh' : most <= 7 ? '12.5vh' : most <= 9 ? '10.5vh' : '9vh');
+  el.innerHTML = ['M', 'A', 'N'].map(code => `<div class="tvs-band ${tvShiftPhase(code)}"><div class="tvs-art">${TV_SHIFT_ART[code]}</div>
+      <div class="tvs-people">${shown(code).map(p => `<div class="tvs-person">${p.photo ? `<img class="tvs-photo" src="${p.photo}" alt="">` : `<div class="tvs-photo tvs-face" aria-hidden="true">${personFace(p)}</div>`}<div class="tvs-name">${escapeHtml(p.label)}</div></div>`).join('') || '<div class="tvs-none">·</div>'}</div></div>`).join('');
+}
+function renderTimetableLive(){
+  const el = document.getElementById('tv-timetable'), list = (tvTimetable && tvTimetable.items) || [];
+  if(!list.length){ el.innerHTML = '<div class="empty">אין לו"ז להיום</div>'; return; }
+  const n = nowMin(); let current = -1; list.forEach((a, i) => { if(hm(a.t) <= n) current = i; });
+  el.className = 'tv-timetable tvt2';
+  el.style.setProperty('--tvt-cols', list.length > 8 ? 6 : list.length > 4 ? 4 : list.length);
+  el.innerHTML = `${tvTimetable.title ? `<div class="tvt2-title">${escapeHtml(tvTimetable.title)}</div>` : ''}<div class="tvt2-grid">${list.map((a, i) => `<div class="tvt2-item${i === current ? ' now' : i < current ? ' past' : ''}">
+      <div class="tvt2-time">${escapeHtml(a.t)}</div><div class="tvt2-icon">${ttArt(a.i)}</div><div class="tvt2-name">${escapeHtml(a.n)}</div></div>`).join('')}</div>`;
+}
+// the picture of an activity (the drawings of 14p-timetable-art.js when there is one, else the emoji)
+const ttArt = id => (typeof TT_ART !== 'undefined' && TT_ART[id]) || `<span class="tvt2-emoji">${ttIcon(id)[2]}</span>`;
+
+// ---- the quiet hours: after bedtime a "good night" screen until 05:00, then the morning routine until 07:30
+function tvQuietNow(){
+  const n = nowMin(), bed = ((tvTimetable && tvTimetable.items) || []).filter(a => a.i === 'bedtime').map(a => hm(a.t)).sort((a, b) => b - a)[0];
+  if(n >= hm('05:00') && n < hm('07:30')) return 'morning';
+  if(n < hm('05:00') || (bed != null && n >= bed + 15)) return 'night';
+  return null;
+}
+const TV_QUIET_HTML = {
+  night:`<div class="tvq tvq-night"><div class="tvq-stars" aria-hidden="true">${Array.from({ length:40 }, (_, i) => `<i style="left:${(i * 47) % 100}%; top:${(i * 29) % 100}%; animation-delay:${(i % 7) * -0.6}s"></i>`).join('')}</div>
+      <div class="tvq-moon" aria-hidden="true">🌙</div><div class="tvq-title">לילה טוב</div><div class="tvq-row" aria-hidden="true">😴 🧸 ⭐ 💤</div></div>`,
+  morning:`<div class="tvq tvq-morning"><div class="tvq-sun" aria-hidden="true">🌞</div><div class="tvq-title">בוקר טוב!</div>
+      <div class="tvq-steps"><div><span>💦</span>שוטפים פנים</div><div><span>🪥</span>מצחצחים שיניים</div><div><span>👕</span>מחליפים בגדים</div><div><span>👟</span>נועלים נעליים</div></div></div>`
+};
+let tvQuietTimer = null, tvQuietShown = null;
+function tvQuietTick(){
+  if(!PORTAL_TV_LIVE) return;
+  const view = document.getElementById('view-display'); if(!view) return;
+  let el = document.getElementById('tv-quiet');
+  if(!el){ el = document.createElement('div'); el.id = 'tv-quiet'; el.hidden = true; view.appendChild(el); }
+  const mode = tvQuietNow();
+  if(mode !== tvQuietShown){ tvQuietShown = mode; el.innerHTML = mode ? TV_QUIET_HTML[mode] : ''; el.hidden = !mode; }
+}
+function startTvQuiet(){ stopTvQuiet(); if(!PORTAL_TV_LIVE) return; loadTvToday(true).then(tvQuietTick); tvQuietTimer = setInterval(() => { loadTvToday().then(tvQuietTick); }, 60 * 1000); }
+function stopTvQuiet(){ clearInterval(tvQuietTimer); tvQuietTimer = null; }
+
 // ---------- bottom navigation bar (phones) ----------
 // "בית" = the home screen, "שליטה במסך הילדים" = the kids-screen control area. Both just trigger the
 // same things the home screen's own buttons do, so there is a single behaviour for each.
@@ -7740,6 +8258,12 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
 (async function init(){
   if(location.hash === '#diag'){ showDiagnostics(); return; }   // device / TV check page, no login needed
   if(location.hash === '#portal' && PORTAL_ENABLED){ portalServerBoot(); return; }      // the personal sign-in of the portal (its own login, not the staff password)
+  if(PORTAL_ENABLED && location.hash !== '#tv'){                                          // somebody signed in personally on this device: straight in (the portal and the Ramzor), no password
+    try {
+      const { data:{ session } } = await sbPersonal.auth.getSession();
+      if(session && await personalEnter()){ maybeShowManageFromHash(); return; }
+    } catch(e){ /* the staff password screen, as usual */ }
+  }
   const authed = await checkAuth();
   if(authed){
     await loadApp();
