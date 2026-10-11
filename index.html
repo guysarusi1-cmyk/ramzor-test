@@ -1338,7 +1338,8 @@
   .psvc-row.empty{ border-color:var(--gold); }
   .pchoice.wrap{ flex-wrap:wrap; }
   .an-actions{ display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:14px; margin:14px 0; }          /* the three ways to send, in a row, with the send button at their left; the group is centred */
-  .an-actions .pchoice button{ flex:0 0 auto; padding:10px 22px; }
+  .an-actions .pchoice{ flex-wrap:wrap; width:min(100%, 420px); }          /* in-portal and by-mail side by side, 'both' under them at their full width */
+  .an-actions .pchoice button{ flex:1 1 40%; }
   .pchoice.wrap button{ flex:1 1 40%; }
   .pstaff-row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--p-line); }
   .pstaff-name{ flex:1 1 90px; font-weight:700; }
@@ -6991,7 +6992,7 @@ function srvRenderCoordSettings(body){
       const ann = await sbPersonal.from('announcements').select('created_at,text,via').order('created_at', { ascending:false }).limit(8);
       const html = `
       <label class="pfield">הודעה<textarea id="an-text" rows="3" maxlength="800"></textarea></label>
-      <div class="an-actions"><div class="pchoice" id="an-via"><button type="button" class="on" data-via="portal">בפורטל</button><button type="button" data-via="email">במייל</button><button type="button" data-via="both">בשניהם</button></div>
+      <div class="an-actions"><div class="pchoice wrap" id="an-via"><button type="button" class="on" data-via="portal">בפורטל</button><button type="button" data-via="email">במייל</button><button type="button" data-via="both">בשניהם</button></div>
       <button type="button" class="btn" id="an-send">שליחה</button></div>
       <h3 class="psec">הודעות אחרונות</h3>
       ${(ann.data || []).map(a => `<div class="pannounce"><small>${new Date(a.created_at).toLocaleString('he-IL')} · ${a.via === 'portal' ? 'בפורטל' : a.via === 'email' ? 'במייל' : 'בפורטל ובמייל'}</small><div>${pEsc(a.text)}</div></div>`).join('') || '<div class="pnote">עוד לא נשלחו הודעות.</div>'}`;
