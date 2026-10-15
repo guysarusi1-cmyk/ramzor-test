@@ -1061,6 +1061,10 @@
   }
   .mini-wall-card.done{ box-shadow:0 0 0 .5vmin #f2cf6a, 0 0 3vmin rgba(242,207,106,.8); animation:star-twinkle 3.4s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce){ .brick.new, .wall-done, .wall-strength, .mini-wall-card.done{ animation:none; } }
+  /* the strength the brick was built with, carved into its face (the number moves to the corner) */
+  .brick.engraved span{ position:absolute; top:.18em; left:.28em; font-size:.42em; opacity:.8; }
+  .brick em{ position:relative; z-index:3; font-style:normal; font-weight:900; font-size:.66em; line-height:1.02; text-align:center; direction:rtl; max-width:96%; overflow-wrap:anywhere;
+    font-family:'Assistant', 'Rubik', Arial, sans-serif; color:#2e1c05; text-shadow:0 .07em 0 rgba(255,246,220,.95), 0 0 .25em rgba(255,244,214,.9); }
 
 /* ---- kids' TV: the instructor / timetable / week / birthday screens (children cannot read yet: big pictures first) ---- */
   .tv-instructors, .tv-timetable, .tv-week, .tv-birthdays{ width:min(96vw, 1900px); height:var(--tv-main-h); box-sizing:border-box; padding:2vmin; position:relative; }
@@ -1528,6 +1532,7 @@
   .od-count{ font-weight:700; } .od-count.full{ color:var(--p-yes, #7be0a0); } .od-count.low{ color:var(--p-no, #ff8a80); }
   .od-hours{ display:grid; grid-template-columns:1fr 1fr; gap:8px; } .od-hours[hidden]{ display:none; } .od-nums{ grid-template-columns:1fr 1fr; }
   body.lang-ar .portal-tabs{ flex-wrap:wrap; justify-content:center; }          /* (Arabic words are longer: the tabs go to a second row instead of being cut) */
+  .plogin-staff-link{ display:block; margin:26px auto 0; background:none; border:0; padding:8px 12px; font:inherit; font-size:13px; color:var(--muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }          /* the staff password: a quiet link under the personal sign-in */
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -2346,7 +2351,7 @@ const MOON_DAILY_LIMIT_ENABLED = (APP_ENV === 'live');
 const emptyChildState = () => ({ stars:0, moonSteps:0, moonGifts:0, mercurySteps:0, moonDayDate:null, moonDayStatus:null });
 // bricks (the wall project) is a newer column: while a project's database does not have it yet, it stays undefined
 // (read it as (s.bricks || 0)) and is never written, so nothing breaks before supabase\roles.sql was run there
-const childStateFromRow = d => ({ stars:d.stars, moonSteps:d.moon_steps, moonGifts:d.moon_gifts, mercurySteps:d.mercury_steps||0, moonDayDate:d.moon_day_date, moonDayStatus:d.moon_day_status, bricks: ('bricks' in d) ? (d.bricks || 0) : undefined });
+const childStateFromRow = d => ({ stars:d.stars, moonSteps:d.moon_steps, moonGifts:d.moon_gifts, mercurySteps:d.mercury_steps||0, moonDayDate:d.moon_day_date, moonDayStatus:d.moon_day_status, bricks: ('bricks' in d) ? (d.bricks || 0) : undefined, brickWhy: ('brick_why' in d) ? (d.brick_why || []) : undefined });          // (brickWhy: the strength of every brick, scheduling-v27.sql)
 
 // For changing a child's data: null when the read FAILED (never pretend the child is at zero and then
 // write that back over the real numbers); a child with no row yet starts from zero.
@@ -2361,7 +2366,8 @@ async function getChildState(id){
 }
 // Everyone at once, in one request (the boards use this). null when the read failed — keep what is on screen.
 async function getAllChildStates(){
-  const { data, error } = await sb.from('child_state').select('*');
+  const ids = (roster || []).map(c => c.id);          // (only the children on the list: a read returns at most 1000 rows, and leftovers of removed children must not push real ones out)
+  const { data, error } = ids.length ? await sb.from('child_state').select('*').in('child_id', ids) : { data:[], error:null };
   if(error || !data){ console.error(error); return null; }
   const byId = {};
   data.forEach(d => { byId[d.child_id] = childStateFromRow(d); });
@@ -2372,7 +2378,7 @@ async function getAllChildStates(){
 // it is read again and redone — so no star or step is ever lost to a simultaneous change.
 //   compute(before) -> { set:{ stars: 5, ... }, guard:['stars', ...] }   or null to stop (nothing to do)
 //   resolves to { ok:true, before, after } | { ok:false, reason:'network'|'declined'|'busy' }
-const STATE_COLUMNS = { stars:'stars', moonSteps:'moon_steps', moonGifts:'moon_gifts', mercurySteps:'mercury_steps', moonDayDate:'moon_day_date', moonDayStatus:'moon_day_status', bricks:'bricks' };
+const STATE_COLUMNS = { stars:'stars', moonSteps:'moon_steps', moonGifts:'moon_gifts', mercurySteps:'mercury_steps', moonDayDate:'moon_day_date', moonDayStatus:'moon_day_status', bricks:'bricks', brickWhy:'brick_why' };
 async function updateChildState(childId, compute){
   for(let attempt = 0; attempt < 8; attempt++){
     const { data: row, error } = await sb.from('child_state').select('*').eq('child_id', childId).maybeSingle();
@@ -2404,7 +2410,8 @@ async function setChildState(id, state){
     child_id:id, stars:state.stars||0, moon_steps:state.moonSteps||0, moon_gifts:state.moonGifts||0,
     mercury_steps:state.mercurySteps||0,
     moon_day_date:state.moonDayDate||null, moon_day_status:state.moonDayStatus||null,
-    ...(state.bricks !== undefined ? { bricks: state.bricks } : {})        // only where the database has the column
+    ...(state.bricks !== undefined ? { bricks: state.bricks } : {}),        // only where the database has the column
+    ...(Array.isArray(state.brickWhy) ? { brick_why: state.brickWhy.slice(0, state.bricks || 0) } : {})          // (the strengths of the bricks: as many as the bricks; scheduling-v27.sql)
   });
   if(error) console.error(error);
   return !error;     // callers tell staff when a change did NOT reach the database
@@ -3481,11 +3488,16 @@ async function giveStar(childId){
 // A brick for the child's wall (the wall project): one at a time, up to WALL_BRICKS; the kids' TV celebrates it.
 async function giveBrick(childId, strength){
   const child = roster.find(c=>c.id===childId);
-  const r = await updateChildState(childId, s => (s.bricks || 0) >= WALL_BRICKS ? null : { set:{ bricks:(s.bricks || 0) + 1 }, guard:['bricks'] });
+  const why = cleanStrength(strength);                     // the strength the instructor saw (engraved on the brick, shown on the TV, kept in the log)
+  const r = await updateChildState(childId, s => {
+    if((s.bricks || 0) >= WALL_BRICKS) return null;
+    const set = { bricks:(s.bricks || 0) + 1 };
+    if(Array.isArray(s.brickWhy)){ const list = s.brickWhy.slice(0, s.bricks || 0); while(list.length < (s.bricks || 0)) list.unshift(''); set.brickWhy = list.concat(why || ''); }          // (one strength per brick, in the order of the bricks)
+    return { set, guard:['bricks'] };
+  });
   if(r.reason === 'declined'){ toast(`המקדש של ${displayName(child)} כבר הושלם — 100 לבנים 🎉`); return false; }
   if(!r.ok){ toast('⚠ הלבנה לא נשמרה — בדקו חיבור ונסו שוב'); return false; }
   const n = r.after.bricks || 0;
-  const why = cleanStrength(strength);                     // the strength the instructor saw (shown on the TV, kept in the log)
   const msg = (n >= WALL_BRICKS ? `🧱🎉 המקדש של ${displayName(child)} הושלם!` : `🧱 לבנה נוספה ל${displayName(child)} — ${n} מתוך ${WALL_BRICKS}`) + (why ? ` · כוח: ${why}` : '');
   logFeedbackEvent(child.id, 'bricks', msg);
   toast(msg);
@@ -3646,11 +3658,12 @@ const WALL_BRICKS = 100;
 
 // the big wall (a limestone wall with a golden frieze, columns at the sides, blue sky) — built bricks are
 // tinted with the child's colour, the ones still to come are dark empty slots; `newBrick` is the one just added
-function bigWallHtml(child, count, newBrick, strength){
+function bigWallHtml(child, count, newBrick, strength, why){
   let bricks = '';
   for(let i = 1; i <= WALL_BRICKS; i++){
     const cls = i <= count ? (i === newBrick ? 'built new' : 'built') : '';
-    bricks += `<div class="brick ${cls}"><span>${i}</span></div>`;
+    const w = i <= count ? ((why || [])[i - 1] || (i === newBrick ? strength : '') || '') : '';          // (the strength it was built with, engraved on it)
+    bricks += `<div class="brick ${cls}${w ? ' engraved' : ''}"><span>${i}</span>${w ? `<em>${escapeHtml(w)}</em>` : ''}</div>`;
   }
   return `<div class="wall-scene" style="--h:${nameHue(child.firstName)};">
       <div class="wall-col wall-col-l"></div><div class="wall-col wall-col-r"></div>
@@ -4231,8 +4244,8 @@ function celebrationSparkles(n){
   return html;
 }
 
-function celebrationBody(kind, child, now, extra){
-  if(kind === 'bricks') return bigWallHtml(child, now, now, extra);      // (finishing the wall adds the message inside the wall)
+function celebrationBody(kind, child, now, extra, why){
+  if(kind === 'bricks') return bigWallHtml(child, now, now, extra, why);      // (finishing the wall adds the message inside the wall)
   const milestone = kind !== 'star' && now >= CELEBRATION_TRACK_STEPS;
   const name = `<div class="cel-name">${kind === 'star' ? escapeHtml(displayName(child)) : nameTagHtml(child)}</div>`;      // (the star moment already shows the character above the name)
   if(kind === 'star'){
@@ -4262,12 +4275,12 @@ function celebrationBody(kind, child, now, extra){
     </div>${milestone ? `<div class="cel-extra cel-milestone">${goal}</div>` : ''}`;
 }
 
-async function playCelebration(kind, child, now, extra){
+async function playCelebration(kind, child, now, extra, why){
   const host = document.getElementById('celebration');
   if(!host || !child) return;
   const wallDone = kind === 'bricks' && now >= WALL_BRICKS;
   const milestone = (kind === 'moon' || kind === 'mercury') && now >= CELEBRATION_TRACK_STEPS;
-  host.innerHTML = `<div class="cel-glow"></div>${celebrationSparkles(milestone || wallDone ? 34 : 18)}<div class="cel-inner${kind === 'bricks' ? ' cel-wall' : ''}">${celebrationBody(kind, child, now, extra)}</div>`;
+  host.innerHTML = `<div class="cel-glow"></div>${celebrationSparkles(milestone || wallDone ? 34 : 18)}<div class="cel-inner${kind === 'bricks' ? ' cel-wall' : ''}">${celebrationBody(kind, child, now, extra, why)}</div>`;
   host.classList.remove('leaving');
   host.classList.add('show');
   host.setAttribute('aria-hidden', 'false');
@@ -4644,7 +4657,7 @@ function celebrateFeedbackEvent(ev){
     const state = await getChildState(childId);
     const now = type === 'star' ? (state.stars || 0) : type === 'bricks' ? (state.bricks || 0) : type === 'moon' ? (state.moonSteps || 0) : (state.mercurySteps || 0);
     const why = type === 'bricks' ? ((ev.message || '').match(/ · כוח: (.+)$/) || [])[1] || '' : '';        // the strength the instructor named
-    await playCelebration(type, child, now, why);
+    await playCelebration(type, child, now, why, type === 'bricks' ? state.brickWhy : undefined);
     if(type === 'star') interruptToSlide(EVENT_TYPE_SLIDE.star, renderStarBoard);
     else if(type === 'bricks') interruptToSlide(EVENT_TYPE_SLIDE.bricks, renderWallsBoard);
     else if(type === 'moon') interruptToSlide(EVENT_TYPE_SLIDE.moon,
@@ -4652,13 +4665,39 @@ function celebrateFeedbackEvent(ev){
     else interruptToSlide(EVENT_TYPE_SLIDE.mercury,
       () => flyMarkerStunt(childId, document.getElementById('mercury-board'), renderMercuryBoard, now - 1), STUNT_BOARD_MS);  });
 }
+// Every star / step / brick is shown once. The live updates of the database bring it at once; a check of the database every few seconds
+// catches whatever they missed (a moment when the connection rejoins: a sign-in or sign-out on this device, an hourly renewal of the session).
+const seenFeedback = new Set();
+let feedbackClient = null, feedbackSince = null, feedbackCatchUp = null;
+function celebrateOnce(ev){
+  if(!ev || !ev.id || seenFeedback.has(ev.id)) return;
+  seenFeedback.add(ev.id);
+  if(ev.created_at && (!feedbackSince || ev.created_at > feedbackSince)) feedbackSince = ev.created_at;
+  celebrateFeedbackEvent(ev);
+}
+async function catchUpFeedback(){
+  if(!feedbackSince) return;
+  const showing = document.getElementById('view-display').classList.contains('active');
+  try {
+    const { data, error } = await sb.from('feedback_events').select('id,child_id,type,message,created_at').gt('created_at', feedbackSince).order('created_at').limit(20);
+    if(error) return;
+    (data || []).forEach(ev => { if(showing) celebrateOnce(ev); else { seenFeedback.add(ev.id); if(ev.created_at > feedbackSince) feedbackSince = ev.created_at; } });          // (while the kids' screen is not shown: noted, not replayed later)
+  } catch(e){ /* the next check tries again */ }
+}
 function startFeedbackListener(){
   if(feedbackChannel) return;
+  feedbackClient = sb;
   feedbackChannel = sb.channel('feedback_live')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'feedback_events' }, payload => {
-      celebrateFeedbackEvent(payload.new);
+      celebrateOnce(payload.new);
     })
     .subscribe();
+  // from now on: the newest event in the database is the starting point (the clock of the database, not of this screen)
+  sb.from('feedback_events').select('id,created_at').order('created_at', { ascending:false }).limit(1).then(({ data }) => {
+    if(data && data[0]){ seenFeedback.add(data[0].id); if(!feedbackSince || data[0].created_at > feedbackSince) feedbackSince = data[0].created_at; }
+    else if(!feedbackSince) feedbackSince = new Date(0).toISOString();
+  }, () => {});
+  clearInterval(feedbackCatchUp); feedbackCatchUp = setInterval(catchUpFeedback, 8000);
   bonusRevocationChannel = sb.channel('bonus_revocations_live')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bonus_revocations' }, () => {
       // client decided (2026-10-02) revocation SHOULD interrupt the carousel too, same as the celebratory
@@ -4668,8 +4707,10 @@ function startFeedbackListener(){
     .subscribe();
 }
 function stopFeedbackListener(){
-  if(feedbackChannel){ sb.removeChannel(feedbackChannel); feedbackChannel = null; }
-  if(bonusRevocationChannel){ sb.removeChannel(bonusRevocationChannel); bonusRevocationChannel = null; }
+  const c = feedbackClient || sb;          // (the connection it was opened on: this device may have signed in or out since)
+  if(feedbackChannel){ c.removeChannel(feedbackChannel); feedbackChannel = null; }
+  if(bonusRevocationChannel){ c.removeChannel(bonusRevocationChannel); bonusRevocationChannel = null; }
+  clearInterval(feedbackCatchUp); feedbackCatchUp = null;
 }
 
 function startCarousel(){
@@ -4855,7 +4896,16 @@ async function checkAuth(){
   const authed = !!session;
   document.getElementById('login-screen').style.display = authed ? 'none' : 'block';
   document.getElementById('protected-app').style.display = authed ? '' : 'none';
+  if(!authed) showFirstLogin();
   return authed;
+}
+// the first screen for somebody who is not signed in: the personal sign-in. The staff password (a device of the center, the kids' TV)
+// stays, behind a small link at the bottom of that screen.
+function showFirstLogin(){
+  if(!PORTAL_ENABLED || location.hash === '#tv' || typeof srvShowLogin !== 'function') return;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('protected-app').style.display = '';
+  srvShowLogin('email');
 }
 
 async function loadApp(){
@@ -5734,7 +5784,11 @@ const SRV_LEVEL_BUTTONS = [['yes', 'כן'], ['avoid', 'יכול'], ['no', 'לא'
 const SRV_LONG = { id:'l', label:'סופ"ש ארוך', letter:'🕯️', sub:'שישי לפני כניסת שבת, לינה במרכז החירום, שבת בוקר עד צאת שבת' };            // the long weekend: ONE button across the Friday and the Saturday (under them), kept on the Friday; it has nothing to do with what is chosen for the Friday or Saturday shifts
 const prefShiftsFor = date => portalLoad().shiftTypes;
 const prefKeyOf = key => key;
-const prefNoNight = key => portalServerOn && /\|n$/.test(key) && !!(srv.profile && srv.profile.no_nights);          // somebody who does not do nights: her nights start as "no" (she may still change them)
+// fixed preferences (the gear: "does not do mornings / afternoons / nights"; and the admin's "does not do nights"): those shifts start as "no".
+// She can still change one of them by pressing that shift; pressing the whole day leaves them as they are.
+const prefFixedKinds = () => { const k = new Set(portalServerOn ? (srv.fixedNo || []) : []); if(portalServerOn && srv.profile && srv.profile.no_nights) k.add('n'); return k; };
+const prefFixedNo = key => portalServerOn && prefFixedKinds().has(String(key).split('|')[1]);
+const prefNoNight = prefFixedNo;
 const prefLevelOf = (prefs, key) => prefs.slots[key] || (portalServerOn ? (prefNoNight(key) ? 'no' : 'neutral') : 'yes');          // (on the server a shift nobody marked is "neutral": the person did not say)
 const DEFAULT_SHIFT_LEGEND = types => types.map(s => (s.letter || s.label.charAt(0)) + ' = ' + s.label);
 const FIXED_REASON = { vacation:'חופשה', sick:'מחלה', reserve:'מילואים', leave:'חופשה מיוחדת', other:'היעדרות', self:'היעדרות' };
@@ -5787,7 +5841,7 @@ function renderInstructorPrefs(body){
     ${locked ? `<div class="pnote">${tx('locked')}</div>` : ''}
     ${fixedList.length ? `<div class="pnote">הימים שאושרו לך או שהרכזת סימנה: ${fixedList.map(f => dayLabel(f.day) + ' (' + (FIXED_REASON[f.reason] || 'היעדרות') + ')').join(', ')}.</div>` : ''}
     <details class="pfold" data-fold="prefhelp"${openFold('prefhelp') ? ' open' : ''}><summary><span>איך ממלאים? (לחצו להסבר)</span></summary><div class="pfold-body"><div class="pnote">${portalServerOn ? 'בהתחלה אף משמרת לא מסומנת. נשמח שתעברו על כל החודש: בחרו למטה רמה, ואז לחצו על יום (לכל המשמרות שלו) או על משמרת בודדת. "כן" אומר שתשמחו לקבל אותה, "יכול" אומר שאפשר, אבל פחות נוח, ו"לא" אומר שלא מתאים. לחיצה נוספת על אותו סימון מחזירה את המשמרת למצב שלא סומן.' : 'כל המשמרות מסומנות "כן", כלומר שאתם זמינים. נשמח לדעת אם יש משמרות שפחות מתאימות לכם: בחרו למטה רמה, ואז לחצו על יום (לכל המשמרות שלו) או על משמרת בודדת. "יכול" אומר שאפשר, אבל פחות נוח, ו"לא" אומר שלא מתאים.'} ${[...DEFAULT_SHIFT_LEGEND(st.shiftTypes)].join(' · ')}${portalServerOn ? ` · 🕯️ = סופ"ש ארוך (${SRV_LONG.sub}). הוא כפתור אחד לכל סופ"ש, מתחת לשישי ולשבת, ולא תלוי בסימונים של שישי או של שבת. אם לא סימנתם אותו, לא נשבץ אתכם אליו. אם אתם זמינים רק בחלק מהשעות, בחרו "שעות אחרות" ולחצו על היום.` : ''}</div></div></details>
-    ${availHint}${neutralHint}${portalServerOn && srv.profile && srv.profile.no_nights && !locked ? '<div class="pnote pnote-soft" id="nonight-note">הלילות מסומנים אצלך "לא", כי לפי ההגדרות את/ה לא עושה לילות. אם בא לך לילה מסוים, אפשר לשנות אותו.</div>' : ''}
+    ${availHint}${neutralHint}${portalServerOn && prefFixedKinds().size && !locked ? `<div class="pnote pnote-soft" id="nonight-note">${prefFixedNote()}</div>` : ''}
     <div class="pcal">${DOW_SHORT.map(d => `<div class="pcal-head">${d}</div>`).join('')}${cells}</div>
     ${portalServerOn ? `
     <div class="pgoal">
@@ -5844,7 +5898,7 @@ function renderInstructorPrefs(body){
   }));
   body.querySelectorAll('[data-pday]').forEach(b => b.addEventListener('click', () => {
     if(locked) return;
-    const date = b.dataset.pday, lv = portalUi.level, keys = prefShiftsFor(date).map(s => prefKeyOf(`${date}|${s.id}`));
+    const date = b.dataset.pday, lv = portalUi.level, keys = prefShiftsFor(date).map(s => prefKeyOf(`${date}|${s.id}`)).filter(k => !prefFixedNo(k));          // (a shift of a fixed preference changes only when it is pressed by itself)
     if(fixedOn(date)) return;
     if(lv === 'hours'){ openHoursSheet(date, prefs, () => renderInstructorPrefs(body)); return; }
     if(lv === 'absent'){ toggleAbsent(prefs, date); }
@@ -5964,6 +6018,13 @@ function showMailPreview(e){
   if(!e) return;
   const st = portalLoad(), to = e.to === 'all' ? 'כל המדריכים' : (portalPerson(e.to) ? instrName(portalPerson(e.to), st.instructors) : e.to);
   portalSheet(`<h2>תצוגה מקדימה של אימייל</h2><div class="pmail-view"><div><small>אל:</small> ${pEsc(to)}</div><div><small>נושא:</small> <b>${pEsc(e.subject)}</b></div><p>${pEsc(e.body).replace(/\n/g, '<br>')}</p><p class="pnote">קישור לפורטל: (יפעל כשהמערכת תחובר לשרת)</p></div><div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סגירה</button></div>`);
+}
+
+// the sentence over the calendar: which kinds start as "no", and how to change one
+function prefFixedNote(){
+  const k = prefFixedKinds(), words = [['m', 'הבקרים'], ['e', 'הצהריים'], ['n', 'הלילות']].filter(x => k.has(x[0])).map(x => x[1]);
+  const list = words.length === 1 ? words[0] : words.slice(0, -1).join(', ') + ' ו' + words[words.length - 1];
+  return `${list} מסומנים אצלך "לא", לפי ההעדפות הקבועות שלך. כדי לשנות משמרת מסוימת, לוחצים על המשמרת עצמה (לחיצה על היום כולו לא משנה אותה).`;
 }
 
 // ---------- THE INSTRUCTOR PORTAL: what the coordinator sees (the schedule, who submitted, swaps, timetable, settings) ----------
@@ -6484,7 +6545,7 @@ async function srvSwapAction(fn, args){
 }
 // ---- sign in: the personal password (chosen at the first entry), or a code by e-mail (the first entry, or a forgotten password)
 function srvLoginHtml(step, email){
-  const staffLink = location.hash === '#portal' ? '' : '<button type="button" class="btn ghost plogin-link" id="plogin-staff">כניסה עם סיסמת צוות</button>';
+  const staffLink = location.hash === '#portal' ? '' : '<button type="button" class="plogin-staff-link" id="plogin-staff">כניסה למכשיר של המרכז (סיסמת צוות)</button>';          // (not on the first screen: a small link at the bottom)
   let inner;
   if(step === 'code') inner = `
         <h2>הקלידו את הקוד</h2>
@@ -6954,6 +7015,7 @@ async function srvLoadCoord(){
   try { const pm = await sbPersonal.from('staff_private').select('staff_id,min_mid,min_nights,min_weekend,day_buddy,lang'); if(!pm.error) (pm.data || []).forEach(r => { if(st.priv[r.staff_id]) Object.assign(st.priv[r.staff_id], r); }); } catch(e){}          // (personal minimums, the day colleague, the language: scheduling-v25.sql)
   st.waMsg = {}; try { const wm = await sbPersonal.from('sched_settings').select('value').eq('key', 'wa_messages').maybeSingle(); if(!wm.error && wm.data && wm.data.value) st.waMsg = wm.data.value; } catch(e){}          // (the WhatsApp messages as the coordinator wrote them)
   st.voices = {}; try { const sv = await sbPersonal.from('staff_settings').select('staff_id,voice'); (sv.data || []).forEach(r => { if(r.voice) st.voices[r.staff_id] = r.voice; }); } catch(e){}
+  st.fixedNo = {}; try { const sf = await sbPersonal.from('staff_settings').select('staff_id,fixed_no'); if(!sf.error) (sf.data || []).forEach(r => { if((r.fixed_no || []).length) st.fixedNo[r.staff_id] = r.fixed_no; }); } catch(e){}          // (fixed preferences: scheduling-v27.sql)
   st.langs = {}; try { const sl = await sbPersonal.from('staff_settings').select('staff_id,lang'); if(!sl.error) (sl.data || []).forEach(r => { if(r.lang) st.langs[r.staff_id] = r.lang; }); } catch(e){}          // (each person's own choice of language; scheduling-v25.sql)          // (each person's chosen voice, so that her feedback is written in it)
   st.flags = flags; st.vacations = vac;
   st.reasons = {}; try { const sr = await sbPersonal.from('sick_reports').select('assignment_id,note').order('created_at'); (sr.data || []).forEach(x => { if(x.note) st.reasons[x.assignment_id] = x.note; }); } catch(e){}          // (the reason an instructor gave when she reported that she cannot come)
@@ -7194,6 +7256,7 @@ function srvWishFor(staffId, key){
   if((pr.absent || []).includes(date) || (pr.fixed || []).some(f => f.day === date)) return 'no';
   const lv = (pr.slots || {})[key];
   if(!lv && /\|n$/.test(key) && ((portalLoad().priv || {})[staffId] || {}).no_nights) return 'no';          // (somebody who does not do nights: a night she did not mark counts as "no")
+  if(!lv && ((portalLoad().fixedNo || {})[staffId] || []).includes(key.split('|')[1])) return 'no';          // (her fixed preferences: "does not do mornings / afternoons / nights")
   return lv === 'yes' ? 'yes' : lv === 'avoid' ? 'can' : lv === 'no' ? 'no' : 'none';
 }
 const srvDropLevel = cell => srvDragWho ? srvWishFor(srvDragWho, cell.dataset.key) : 'none';
@@ -7813,6 +7876,8 @@ async function srvLoadSettings(){
   try { const lp = await sbPersonal.from('sched_settings').select('value').eq('key', 'leopard_people').maybeSingle(); if(!lp.error && lp.data && Array.isArray(lp.data.value)) srv.leopardPeople = lp.data.value; } catch(e){}          // (who else may choose the leopard look: chosen by the admin)
   try { const t = await sbPersonal.from('staff_settings').select('portal_theme').eq('staff_id', srv.me).maybeSingle(); if(!t.error && t.data) srv.portalTheme = t.data.portal_theme || null; } catch(e){}          // (comes with scheduling-v16.sql)
   if(!srv.voice){ try { srv.voice = localStorage.getItem('ramzor-portal-voice') || null; } catch(e){} }
+  srv.fixedNo = [];          // (fixed preferences: scheduling-v27.sql)
+  try { const fx = await sbPersonal.from('staff_settings').select('fixed_no').eq('staff_id', srv.me).maybeSingle(); if(!fx.error && fx.data && Array.isArray(fx.data.fixed_no)) srv.fixedNo = fx.data.fixed_no; } catch(e){}
   srv.lang = (srv.profile && srv.profile.lang) || null;          // (the language: her own choice, else the admin's default; scheduling-v25.sql)
   try { const lg = await sbPersonal.from('staff_settings').select('lang').eq('staff_id', srv.me).maybeSingle(); if(!lg.error && lg.data && lg.data.lang) srv.lang = lg.data.lang; } catch(e){}
   if(!srv.lang){ try { srv.lang = localStorage.getItem('ramzor-portal-lang') || 'he'; } catch(e){ srv.lang = 'he'; } }
@@ -7842,7 +7907,10 @@ function openPortalSettings(){
     <h3 class="psec">מראה</h3>
     <div class="pchoice wrap"><button type="button" class="${dark && !leo ? 'on' : ''}" data-set-theme="dark">מצב כהה</button><button type="button" class="${dark || leo ? '' : 'on'}" data-set-theme="light">מצב בהיר</button>${coord ? `<button type="button" class="${leo ? 'on' : ''}" data-set-theme="leopard">מצב מנומר 🐆</button>` : ''}</div>
     <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${big === '0' ? 'on' : ''}" data-set-big="0">טקסט רגיל</button><button type="button" class="${big === '1' ? 'on' : ''}" data-set-big="1">טקסט גדול</button><button type="button" class="${big === '2' ? 'on' : ''}" data-set-big="2">טקסט גדול מאוד</button></div>
-    ${srv.meRow && srv.meRow.role === 'instructor' ? `<h3 class="psec">סופי שבוע</h3>
+    ${srv.meRow && srv.meRow.role === 'instructor' ? `<h3 class="psec">העדפות קבועות</h3>
+    <div class="pnote">מה שמסמנים כאן מופיע אצלך "לא" בכל חודש. אפשר לבחור יותר מאחד, ואפשר תמיד לשנות משמרת מסוימת בלחיצה עליה.</div>
+    <div class="pchoice wrap fixed-no">${[['m', 'לא עושה בקרים'], ['e', 'לא עושה צהריים'], ['n', 'לא עושה לילות']].map(([k, w]) => { const admin = k === 'n' && srv.profile && srv.profile.no_nights; return `<button type="button" class="${admin || (srv.fixedNo || []).includes(k) ? 'on' : ''}" data-fixed-no="${k}"${admin ? ' disabled title="הוגדר בפורטל הניהול"' : ''}>${w}</button>`; }).join('')}</div>
+    <h3 class="psec">סופי שבוע</h3>
     <div class="pchoice wrap"><button type="button" class="${srv.showLong ? 'on' : ''}" data-set-long="1">להציג סופ"ש ארוך: כן</button><button type="button" class="${srv.showLong ? '' : 'on'}" data-set-long="0">לא</button></div>
     <div class="pnote">${tx('long_setting')}</div>
     <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${srv.pickOne ? 'on' : ''}" data-set-pick="1">להציג "רק אחד מאלה": כן</button><button type="button" class="${srv.pickOne ? '' : 'on'}" data-set-pick="0">לא</button></div>
@@ -7850,6 +7918,14 @@ function openPortalSettings(){
     <button type="button" class="btn ghost" id="gear-problem" style="margin-top:14px;width:100%">משהו לא עובד? דיווח על תקלה</button>
     <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סיום</button></div>`);
   sh.querySelector('#gear-problem').addEventListener('click', () => { sh.close(); openProblemReport(); });
+  sh.querySelectorAll('[data-fixed-no]').forEach(b => b.addEventListener('click', async () => {
+    const k = b.dataset.fixedNo, cur = new Set(srv.fixedNo || []); if(cur.has(k)) cur.delete(k); else cur.add(k);
+    const next = ['m', 'e', 'n'].filter(x => cur.has(x)), was = srv.fixedNo; srv.fixedNo = next; b.classList.toggle('on', cur.has(k));
+    let ok = false; try { const r = await sbPersonal.from('staff_settings').upsert({ staff_id:srv.me, fixed_no:next }); ok = !r.error; } catch(e){}
+    if(!ok){ srv.fixedNo = was; b.classList.toggle('on', (was || []).includes(k)); toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע'); return; }
+    toast('נשמר. ההעדפה תופיע בכל חודש');
+    if(portalUi.tab === 'prefs'){ const body = document.getElementById('portal-body'); if(body) renderInstructorPrefs(body); }
+  }));
   sh.querySelectorAll('[data-set-lang]').forEach(b => b.addEventListener('click', async () => {
     const lang = b.dataset.setLang; if(lang === srv.lang) return;
     await srvSaveLang(lang); sh.close(); arApply(); showPortal(); toast(lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : 'השפה הוחלפה לעברית');
@@ -8272,7 +8348,7 @@ function summaryPrograms(state){
   const moon = state.moonSteps || 0;
   if(moon < CELEBRATION_TRACK_STEPS) out.push({ kind:'moon', now:moon });
   else out.push({ kind:'mercury', now:state.mercurySteps || 0 });
-  if((state.bricks || 0) > 0) out.push({ kind:'bricks', now:state.bricks });
+  if((state.bricks || 0) > 0) out.push({ kind:'bricks', now:state.bricks, why:state.brickWhy });
   return out;
 }
 // a short word for the grown-ups next to the picture (the children see the pictures), happy even for a small start
@@ -8283,7 +8359,7 @@ function summaryWord(p){
   return 'המקדש שלי';
 }
 function summaryPageHtml(p, child){
-  if(p.kind === 'bricks') return `<div class="sum-page sum-wall">${bigWallHtml(child, p.now)}</div>`;
+  if(p.kind === 'bricks') return `<div class="sum-page sum-wall">${bigWallHtml(child, p.now, null, '', p.why)}</div>`;
   if(p.kind === 'star'){
     const shown = Math.min(p.now, CELEBRATION_STAR_SLOTS);
     let slots = ''; for(let i = 1; i <= CELEBRATION_STAR_SLOTS; i++) slots += `<span class="cel-star${i <= shown ? ' filled' : ''}">★</span>`;
@@ -8936,7 +9012,7 @@ Object.assign(AR, {
   'התקנה כאפליקציה':'التثبيت كتطبيق',
   // the sign-in
   'כניסה אישית':'دخول شخصي', 'ברוכים הבאים':'أهلًا وسهلًا', 'כתובת מייל':'عنوان البريد الإلكتروني', 'סיסמה':'كلمة المرور', 'כניסה':'دخول', 'קוד':'رمز',
-  'כניסה ראשונה, או ששכחתם את הסיסמה?':'دخول أول، أو نسيتم كلمة المرور؟', 'שלחו לי קוד למייל':'أرسلوا لي رمزًا للبريد الإلكتروني', 'כניסה עם סיסמת צוות':'دخول بكلمة مرور الطاقم',
+  'כניסה ראשונה, או ששכחתם את הסיסמה?':'دخول أول، أو نسيتم كلمة المرور؟', 'שלחו לי קוד למייל':'أرسلوا لي رمزًا للبريد الإلكتروني', 'כניסה עם סיסמת צוות':'دخول بكلمة مرور الطاقم', 'כניסה למכשיר של המרכז (סיסמת צוות)':'دخول لجهاز المركز (كلمة مرور الطاقم)',
   'הקלידו את הקוד':'اكتبوا الرمز', 'שליחת קוד חדש':'إرسال رمز جديد', 'נשלח קוד חדש':'أُرسل رمز جديد', 'בחירת סיסמה אישית':'اختيار كلمة مرور شخصية',
   'מהפעם הבאה נכנסים עם המייל והסיסמה הזו, בלי לחכות לקוד. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.':'من المرة القادمة يكون الدخول بالبريد الإلكتروني وكلمة المرور هذه، بدون انتظار رمز. إذا نُسيت، يمكن دائمًا الحصول على رمز للبريد الإلكتروني.',
   'סיסמה (לפחות 8 תווים)':'كلمة المرور (8 أحرف على الأقل)', 'שוב, לאימות':'مرة أخرى، للتأكيد', 'שמירה וכניסה':'حفظ ودخول',
