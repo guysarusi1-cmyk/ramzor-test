@@ -1130,7 +1130,7 @@
   /* the app home and the portal replace the shared page header, like the רמזור home does */
   #protected-app:has(#view-apphome.active) > #shared-header, #protected-app:has(#view-apphome.active) > #shared-logout-row,
   #protected-app:has(#view-portal.active) > #shared-header, #protected-app:has(#view-portal.active) > #shared-logout-row{ display:none; }
-  #protected-app:has(.plogin) > #bottom-nav, #protected-app:has(#view-apphome.active) > #bottom-nav{ display:none; }          /* (the bar is there in the Ramzor and in the portal; not on the sign-in, nor on the first screen itself) */
+  #protected-app:has(#view-portal.active .plogin) > #bottom-nav, #protected-app:has(#view-apphome.active) > #bottom-nav{ display:none; }          /* (the bar is there in the Ramzor and in the portal; not on the sign-in, nor on the first screen itself) */
 
   .apphome{ padding-top:30px; text-align:center; }
   .apphome-top{ text-align:left; }
@@ -1141,9 +1141,11 @@
   .apphome-demo{ margin-top:22px; color:var(--muted); font-size:12.5px; }
 
   .portal-shell{ --p-bg:transparent; --p-panel:var(--panel); --p-panel2:var(--panel-2); --p-line:var(--line); --p-text:var(--text); --p-muted:var(--muted);
-    --p-yes-bg:#123322; --p-yes:#7be0a0; --p-avoid-bg:#3A3314; --p-avoid:#f0c239; --p-no-bg:#3A1A18; --p-no:#ff8a80; padding-bottom:90px; color:var(--p-text); }
+    --p-yes-bg:#123322; --p-yes:#7be0a0; --p-avoid-bg:#3A3314; --p-avoid:#f0c239; --p-no-bg:#3A1A18; --p-no:#ff8a80;
+    --p-can-bg:#14263f; --p-can:#8ec0ff; --p-none-bg:#3d2a0e; --p-none:#ffb347; padding-bottom:90px; color:var(--p-text); }
   .portal-shell[data-ptheme=light]{ --p-bg:#f6f3ea; --p-panel:#ffffff; --p-panel2:#efeadb; --p-line:rgba(0,0,0,.12); --p-text:#1d2433; --p-muted:#5b6478;
     --p-yes-bg:#d7f0df; --p-yes:#14532d; --p-avoid-bg:#fdf0c2; --p-avoid:#7a5a00; --p-no-bg:#fbd9d6; --p-no:#8c1d14;
+    --p-can-bg:#dbe8fb; --p-can:#1d4f91; --p-none-bg:#fde3c0; --p-none:#8a4b00;
     background:var(--p-bg); border-radius:18px; padding:14px 12px 90px; margin:-4px -4px 0; }
   .portal-shell[data-ptheme=light] .btn.ghost{ background:var(--p-panel2); color:var(--p-text); border-color:var(--p-line); }
   .portal-shell[data-ptheme=light] .back-btn{ background:var(--p-panel2); color:var(--p-text); border-color:var(--p-line); }
@@ -1175,7 +1177,7 @@
 
   /* the level colours: used by the chips, the preference calendar and the buttons */
   .lv-yes{ background:var(--p-yes-bg, #123322); color:var(--p-yes, #7be0a0); border-color:var(--p-yes, #7be0a0) !important; }
-  .lv-avoid{ background:var(--p-avoid-bg, #3A3314); color:var(--p-avoid, #f0c239); border-color:var(--p-avoid, #f0c239) !important; }
+  .lv-avoid{ background:var(--p-can-bg, #14263f); color:var(--p-can, #8ec0ff); border-color:var(--p-can, #8ec0ff) !important; }
   .lv-no{ background:var(--p-no-bg, #3A1A18); color:var(--p-no, #ff8a80); border-color:var(--p-no, #ff8a80) !important; }
   .lv-absent{ background:#444; color:#ddd; }
   .pchip{ display:inline-block; margin:2px; padding:4px 10px; border-radius:14px; border:1px solid var(--p-line, var(--line)); font-size:13px; font-weight:700; background:var(--p-panel2, var(--panel-2)); color:var(--p-text, var(--text)); }
@@ -1256,10 +1258,10 @@
   /* each level keeps its own colour at all times; the chosen one is filled with it (and lifted a little), the others are outlined */
   .lvbtn.active{ transform:translateY(-3px); box-shadow:0 4px 12px rgba(0,0,0,.45); }
   .lvbtn.lv-yes.active{ background:var(--p-yes, #7be0a0); color:#0b2417; }
-  .lvbtn.lv-avoid.active{ background:var(--p-avoid, #f0c239); color:#2b2200; }
+  .lvbtn.lv-avoid.active{ background:var(--p-can, #8ec0ff); color:#0b1a2e; }
   .lvbtn.lv-no.active{ background:var(--p-no, #ff8a80); color:#2c0b08; }
-  .lvbtn.lv-hours{ background:#14263f; color:#8ec0ff; border-color:#8ec0ff !important; }
-  .lvbtn.lv-hours.active{ background:#8ec0ff; color:#0b1a2e; }
+  .lvbtn.lv-hours{ background:var(--p-avoid-bg, #3A3314); color:var(--p-avoid, #f0c239); border-color:var(--p-avoid, #f0c239) !important; }
+  .lvbtn.lv-hours.active{ background:var(--p-avoid, #f0c239); color:#2b2200; }
   .lvbtn.lv-clear{ color:var(--muted); }
 
   /* coordinator: edit one shift, submissions, timetable, settings */
@@ -1305,7 +1307,7 @@
     .print-table th, .print-table td{ border:1px solid #777; padding:4px 6px; text-align:center; }
     .print-table th{ background:#e8e2d0; } .print-table th span{ font-weight:400; font-size:9pt; }
     .print-table b{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .print-table .lv-yes{ color:#2E7D32; background:none; } .print-table .lv-neutral{ color:#1F2937; } .print-table .lv-avoid{ color:#B26A00; background:none; } .print-table .lv-no{ color:#C62828; background:none; }
+    .print-table .lv-yes{ color:#2E7D32; background:none; } .print-table .lv-neutral{ color:#B26A00; } .print-table .lv-avoid{ color:#1565C0; background:none; } .print-table .lv-no{ color:#C62828; background:none; }
   }
 
   /* the personal sign-in and greeting of the connected portal */
@@ -1411,19 +1413,20 @@
   .mcal-name.me{ background:var(--gold); color:#1b1b1b; font-weight:800; } .mcal-name.me small{ color:#3a3000; }
   .mcal-cell.editable{ cursor:pointer; min-height:34px; } .mcal-cell.editable:hover, .mcal-cell.editable:focus-visible{ background:rgba(232,185,74,.12); outline:none; }
   .mcal-name.wish-yes{ background:var(--p-yes-bg, #123322); color:var(--p-yes, #7be0a0); box-shadow:inset 0 0 0 1px var(--p-yes, #7be0a0); }
-  .mcal-name.wish-can{ background:var(--p-avoid-bg, #3A3314); color:var(--p-avoid, #f0c239); box-shadow:inset 0 0 0 1px var(--p-avoid, #f0c239); }
+  .mcal-name.wish-can{ background:var(--p-can-bg, #14263f); color:var(--p-can, #8ec0ff); box-shadow:inset 0 0 0 1px var(--p-can, #8ec0ff); }
   .mcal-name.wish-no{ background:var(--p-no-bg, #3a1a18); color:var(--p-no, #ff8a80); box-shadow:inset 0 0 0 1px var(--p-no, #ff8a80); }
-  .mcal-name.wish-none{ background:rgba(110,168,254,.16); color:#8ec0ff; box-shadow:inset 0 0 0 1px #8ec0ff; }
+  .mcal-name.wish-none{ background:var(--p-none-bg, #3d2a0e); color:var(--p-none, #ffb347); box-shadow:inset 0 0 0 1px var(--p-none, #ffb347); }
   .cs-pick{ position:relative; width:100%; }
+  .cs-pick-list.cs-repl-list{ position:static; margin:4px 0 8px; max-height:300px; }          /* (the "החלפה" list opens under its row, inside the window; floating, it fell outside the window and the button seemed dead) */
   .cs-pick-btn{ display:flex; align-items:center; justify-content:space-between; width:100%; min-height:44px; padding:8px 12px; border:1px solid var(--p-line); border-radius:10px; background:var(--p-panel2); color:var(--p-text); font:inherit; font-size:16px; cursor:pointer; }
-  .cs-pick-btn.sel-yes{ background:#123322; color:#7be0a0; } .cs-pick-btn.sel-can{ background:#3A3314; color:#f0c239; } .cs-pick-btn.sel-none{ background:#14263f; color:#8ec0ff; } .cs-pick-btn.sel-no{ background:#3a1a18; color:#ff8a80; }
+  .cs-pick-btn.sel-yes{ background:#123322; color:#7be0a0; } .cs-pick-btn.sel-can{ background:var(--p-can-bg, #14263f); color:var(--p-can, #8ec0ff); } .cs-pick-btn.sel-none{ background:var(--p-none-bg, #3d2a0e); color:var(--p-none, #ffb347); } .cs-pick-btn.sel-no{ background:#3a1a18; color:#ff8a80; }
   .cs-pick-list{ position:absolute; z-index:20; inset-inline:0; top:calc(100% + 4px); max-height:340px; overflow-y:auto; padding:6px; background:var(--p-panel); border:1px solid var(--p-line); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
   .cs-pick-head{ position:sticky; top:-6px; z-index:1; display:flex; align-items:center; gap:10px; margin:-6px -6px 4px; padding:8px 10px; background:var(--p-panel); border-bottom:1px solid var(--p-line); }
   .cs-pick-title{ font-weight:700; } .cs-pick-key{ display:inline-flex; flex-wrap:wrap; gap:4px; margin-inline-start:auto; }
   .cs-pick-key .mcal-name{ display:inline-block; font-size:11px; padding:1px 7px; }
   .cs-pick-item{ display:block; width:100%; margin:2px 0; padding:7px 12px; text-align:start; border:1px solid transparent; border-radius:8px; font:inherit; font-size:15px; cursor:pointer; }
   .cs-pick-item:hover, .cs-pick-item:focus-visible{ border-color:#fff; outline:none; }
-  .cs-pick-item.opt-yes{ background:#123322; color:#7be0a0; } .cs-pick-item.opt-can{ background:#3A3314; color:#f0c239; } .cs-pick-item.opt-none{ background:#14263f; color:#8ec0ff; } .cs-pick-item.opt-no{ background:#3a1a18; color:#ff8a80; }
+  .cs-pick-item.opt-yes{ background:#123322; color:#7be0a0; } .cs-pick-item.opt-can{ background:var(--p-can-bg, #14263f); color:var(--p-can, #8ec0ff); } .cs-pick-item.opt-none{ background:var(--p-none-bg, #3d2a0e); color:var(--p-none, #ffb347); } .cs-pick-item.opt-no{ background:#3a1a18; color:#ff8a80; }
   .preason{ color:var(--p-muted); }
   .pedit-btns{ display:inline-flex; gap:6px; margin-inline-start:auto; }
   .pedit-row.editing{ flex-wrap:wrap; } .phours-edit{ display:inline-flex; align-items:center; gap:6px; } .phours-edit select{ min-height:40px; width:auto; }
@@ -1441,20 +1444,20 @@
   .cs-person-head{ display:flex; align-items:center; gap:10px; margin:6px 0 8px; } .cs-person-head img{ width:44px; height:44px; border-radius:50%; object-fit:cover; } .cs-person-head small{ display:block; color:var(--p-muted); }
   .cs-req{ display:flex; flex-direction:column; gap:2px; padding:6px 8px; margin:4px 0; border:1px solid var(--p-line); border-radius:10px; font-size:13px; line-height:1.5; }
   .cs-req b{ font-size:12.5px; } .cs-req > span{ color:var(--p-text); overflow-wrap:anywhere; }
-  .cs-req.no{ border-color:var(--p-no, #ff8a80); } .cs-req.can{ border-color:var(--p-avoid, #f0c239); } .cs-req.yes{ border-color:var(--p-yes, #7be0a0); }
+  .cs-req.no{ border-color:var(--p-no, #ff8a80); } .cs-req.can{ border-color:var(--p-can, #8ec0ff); } .cs-req.yes{ border-color:var(--p-yes, #7be0a0); }
   .cs-name[draggable=true]{ cursor:grab; } .cs-name.dragging{ opacity:.5; }
   .mcal .mcal-cell.drop-ok{ outline:3px solid var(--gold); outline-offset:-3px; }          /* (stronger than the weekend and hover backgrounds, so the wish colour shows on every day) */
   .mcal .mcal-cell.drop-ok.drop-yes{ outline-color:var(--p-yes, #7be0a0); background:rgba(123,224,160,.28); }
-  .mcal .mcal-cell.drop-ok.drop-can{ outline-color:var(--p-avoid, #f0c239); background:rgba(240,194,57,.28); }
+  .mcal .mcal-cell.drop-ok.drop-can{ outline-color:var(--p-can, #8ec0ff); background:rgba(110,168,254,.24); }
   .mcal .mcal-cell.drop-ok.drop-no{ outline-color:var(--p-no, #ff8a80); background:rgba(255,138,128,.28); }
-  .mcal .mcal-cell.drop-ok.drop-none{ outline-color:#8ec0ff; background:rgba(110,168,254,.24); }
+  .mcal .mcal-cell.drop-ok.drop-none{ outline-color:var(--p-none, #ffb347); background:rgba(255,179,71,.28); }
   .mcal-key.compact{ display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
   .tab-key{ display:flex; flex-direction:column; gap:3px; width:100%; }          /* the folded tab: a small colour key, stacked, above the text */
   .tab-key{ gap:10px; margin-top:6px; align-items:center; }
   .tab-key .mcal-name{ display:block; text-align:center; font-weight:700; padding:0; border:none !important; background:none !important; box-shadow:none !important; white-space:nowrap; writing-mode:vertical-rl; transform:rotate(180deg); }          /* written along the tab, like its title */          /* plain coloured words, no frame and no background */
-  .tab-key .wish-yes{ color:#7be0a0; } .tab-key .wish-can{ color:#f0c239; } .tab-key .wish-no{ color:#ff8a80; } .tab-key .wish-none{ color:#8ec0ff; }
+  .tab-key .wish-yes{ color:#7be0a0; } .tab-key .wish-can{ color:var(--p-can, #8ec0ff); } .tab-key .wish-no{ color:#ff8a80; } .tab-key .wish-none{ color:var(--p-none, #ffb347); }
   .mcal-key.compact .mcal-name{ border:none !important; background:none !important; box-shadow:none !important; padding:0 4px !important; font-weight:700; }          /* the key in the opened panel: plain coloured words too */
-  .mcal-key.compact .wish-yes{ color:#7be0a0; } .mcal-key.compact .wish-can{ color:#f0c239; } .mcal-key.compact .wish-no{ color:#ff8a80; } .mcal-key.compact .wish-none{ color:#8ec0ff; }
+  .mcal-key.compact .wish-yes{ color:#7be0a0; } .mcal-key.compact .wish-can{ color:var(--p-can, #8ec0ff); } .mcal-key.compact .wish-no{ color:#ff8a80; } .mcal-key.compact .wish-none{ color:var(--p-none, #ffb347); }
   .cs-tab-text, .cs-tab .tab-key .mcal-name{ writing-mode:vertical-rl; transform:rotate(180deg); width:1.4em; line-height:1.4em; font-size:14px; font-weight:700; padding:0 !important; text-align:center; }          /* the title and the key words in boxes of the same width, so that they all stand on one centre line */
   .cs-side-top .mcal-key.compact .mcal-name{ display:inline-block; font-size:11.5px; padding:2px 8px; }
   .cs-tab{ display:flex; flex-direction:column; align-items:center; padding-top:20vh !important; gap:12px; flex:0 0 54px; align-self:stretch; min-height:160px; max-height:calc(100vh - 20px); position:sticky; top:10px; padding:8px 4px; border:1px solid var(--p-line); border-radius:12px; background:var(--p-panel2); color:var(--p-text); font:inherit; font-weight:700; cursor:pointer; }
@@ -4906,6 +4909,7 @@ function showFirstLogin(){
 }
 
 async function loadApp(){
+  if(!portalHomeFirst() && (document.querySelector('.view.active') || {}).id === 'view-portal' && !(typeof portalServerOn !== 'undefined' && portalServerOn)) showHub();          // (the staff password came from under the personal sign-in: leave that screen at once)
   await initRoster();
   await initMiniLists();
   renderManageRoster();
@@ -5226,7 +5230,7 @@ function whyAssigned(ctx, pid, slot){
 // ---------- EXPORT: Excel file (a real .xlsx, built here with no library) and print / PDF ----------
 // The schedule is written with rows = days and columns = shifts; every name is coloured by how well the wish was kept
 // (green = got what they wanted, orange = would rather not, red = "לא" or a missing person, dark = no preference).
-const XLSX_COLORS = { yes:'FF2E7D32', neutral:'FF1F2937', avoid:'FFB26A00', no:'FFC62828' };
+const XLSX_COLORS = { yes:'FF2E7D32', neutral:'FFB26A00', avoid:'FF1565C0', no:'FFC62828' };          // (as in the coordinator's schedule: can = blue, not marked = orange)
 
 const CRC_TABLE = (() => { const t = new Uint32Array(256); for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 function crc32(bytes){ let c = 0xFFFFFFFF; for(let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
@@ -5324,7 +5328,7 @@ function buildScheduleXlsx(ctx, assignments){
     if(c.missing){ if(runs.length) runs.push({ text:'\n' }); runs.push({ text:`חסר/ים ${c.missing}`, color:XLSX_COLORS.no, bold:true }); }
     return runs.length ? { runs, s:2 } : { text:'', s:2 };
   }), ...(others ? OTHERS_COLS.map(([k]) => { const list = (others[r.date] || {})[k] || []; return list.length ? { runs:list.flatMap((x, i) => [...(i ? [{ text:'\n' }] : []), { text:x.name, bold:true }, ...(x.hours ? [{ text:` ${x.hours}` }] : [])]), s:2 } : { text:'', s:2 }; }) : [])]));
-  rows.push([{ text:'מקרא', s:3 }, { runs:[{ text:'ירוק = קיבל/ה מה שרצה  ', color:XLSX_COLORS.yes, bold:true }, { text:'כתום = יכול/ה  ', color:XLSX_COLORS.avoid, bold:true }, { text:'אדום = לא / חסר  ', color:XLSX_COLORS.no, bold:true }, { text:'כהה = בלי העדפה', color:XLSX_COLORS.neutral, bold:true }], s:0 }]);
+  rows.push([{ text:'מקרא', s:3 }, { runs:[{ text:'ירוק = קיבל/ה מה שרצה  ', color:XLSX_COLORS.yes, bold:true }, { text:'כחול = יכול/ה  ', color:XLSX_COLORS.avoid, bold:true }, { text:'אדום = לא / חסר  ', color:XLSX_COLORS.no, bold:true }, { text:'כתום = לא סומן', color:XLSX_COLORS.neutral, bold:true }], s:0 }]);
   return buildXlsx('סידור ' + monthLabel(ctx.month), rows, [16, ...ctx.shiftTypes.map(() => 26), ...(others ? OTHERS_COLS.map(() => 24) : [])]);
 }
 function downloadBytes(bytes, filename, mime){
@@ -5953,7 +5957,8 @@ function renderInstructorSwaps(body){
   const name = id => { const p = portalPerson(id); return p ? instrName(p, st.instructors) : '?'; };
   const approvalsForMe = [];
   Object.keys(st.months).forEach(mk => Object.keys(st.months[mk].approvals || {}).forEach(k => { const key = k.slice(0, k.lastIndexOf('|')), iid = k.slice(k.lastIndexOf('|') + 1); if(iid === me.id && st.months[mk].approvals[k] === 'pending') approvalsForMe.push({ mk, k, key }); }));
-  const open = st.swaps.filter(s => s.status === 'open').sort((a, b) => a.key.localeCompare(b.key));
+  const roleOf = id => (portalPerson(id) || {}).role, svc = me.role === 'service';
+  const open = st.swaps.filter(s => s.status === 'open' && (!portalServerOn || roleOf(s.from) === me.role)).sort((a, b) => a.key.localeCompare(b.key));          // (service girls among themselves, instructors among themselves)
   const mineReq = st.swaps.filter(s => s.from === me.id || s.to === me.id).slice(0, 10);
   body.innerHTML = `
     ${approvalsForMe.length ? '<h2 class="psec">בקשות אליי</h2>' : ''}
@@ -5966,7 +5971,7 @@ function renderInstructorSwaps(body){
       <summary><span>בקשות החלפה פתוחות</span><span class="pcount">${open.length}</span></summary>
       <div class="pfold-body"><div class="pnote">${tx('swaps_intro')}</div>
       ${open.length ? open.map(s => {
-        const own = s.from === me.id, can = !own && canTakeShift(me.id, s.key);
+        const own = s.from === me.id, can = !own && (svc ? !st.rows.some(r => r.staff === me.id && r.day === s.key.split('|')[0]) : canTakeShift(me.id, s.key));          // (a service girl: free that day)
         return `<div class="preq swap"><div>${s.urgent ? '<span class="pchip missing">⚠ דחוף: דווח שלא יכול/ה להגיע</span> ' : ''}<b>${pEsc(name(s.from))}</b> מחפש/ת מחליף/ה<br>${slotLabel(s.key)}</div><div class="preq-actions">${own ? `<button type="button" class="btn ghost" data-swap-cancel="${s.id}">ביטול הבקשה שלי</button>` : can ? `<button type="button" class="btn" data-swap-take="${s.id}">אני יכול/ה להחליף</button>` : '<em class="pst">אי אפשר לשבץ אותך כרגע</em>'}</div></div>`;
       }).join('') : `<div class="pnote">${tx('swaps_none')}</div>`}</div>
     </details>`;
@@ -6070,7 +6075,7 @@ function renderCoordSchedule(body){
       ${pendingCount ? `<span class="pchip pending">ממתינים לאישור מדריך ${pendingCount}</span>` : ''}
     </div>` : '<div class="pnote">עוד אין סידור לחודש הזה. אפשר ללחוץ "שבץ אוטומטית", או לבנות ידנית בלחיצה על משמרות בטבלה.</div>'}
     ${issues.filter(i => i.type !== 'no').length ? `<details class="pissues"><summary>${issues.filter(i => i.type !== 'no').length} דברים שדורשים תשומת לב</summary>${issues.filter(i => i.type !== 'no').slice(0, 40).map(i => `<div>• ${pEsc(issueText(i, ctx))}</div>`).join('')}</details>` : ''}
-    <div class="pnote">לחיצה על משמרת בטבלה פותחת עריכה. הצבעים: ירוק = בלי הסתייגות, צהוב = יכול/ה, אדום = לא או חסר.</div>
+    <div class="pnote">לחיצה על משמרת בטבלה פותחת עריכה. הצבעים: ירוק = בלי הסתייגות, כחול = יכול/ה, אדום = לא או חסר.</div>
     ${boardHtml(ctx, m.assignments, { colour:true, edit:true })}`;
   wireMonthNav(body);
   body.querySelectorAll('td.editable').forEach(td => {
@@ -6356,7 +6361,8 @@ async function srvLoad(){
     settings:{ theme:(function(){ try { return localStorage.getItem('ramzor-portal-theme') || 'dark'; } catch(e){ return 'dark'; } })() }
   };
   if(!fresh()) return false;
-  portalState = st; srv.me = meId; srv.meRow = st.instructors.find(p => p.id === meId) || null;
+  const old = portalState && portalState.serverMode && srv.me === meId ? portalState : null;          // (only the same person's data)
+  if(!old) portalState = st; srv.me = meId; srv.meRow = st.instructors.find(p => p.id === meId) || null;          // (a reload keeps the old data on the screen until the new is complete: a tap in between must not find an empty list)
   months.forEach(mk => {
     const prev = addMonths(mk, -1), m = { deadline:prev + '-24', deadlineTime:'22:30', prefs:{}, submitted:{}, notes:{}, goals:{}, assignments:{}, annot:{}, approvals:{}, published:false, status:null };
     st.months[mk] = m;
@@ -6386,6 +6392,7 @@ async function srvLoad(){
   const swapRows = await srvAll(() => sbPersonal.from('swap_requests').select('id,assignment_id,from_staff,to_staff,status,urgent,created_at').order('created_at', { ascending:false })).catch(() => []);
   st.swaps = swapRows.filter(s => st.assignmentIds[s.assignment_id]).map(s => ({ id:s.id, key:st.assignmentIds[s.assignment_id].key, aid:s.assignment_id, urgent:!!s.urgent, from:s.from_staff, to:s.to_staff, status:s.status, at:s.created_at }));
   if(!fresh()) return false;
+  if(old){ Object.keys(old).forEach(k => { if(!(k in st)) st[k] = old[k]; }); portalState = st; }          // (what only the coordinator's load adds stays until it is read again, just below)
   srv.saved = {};
   months.forEach(mk => { srv.saved[mk] = srvSnapshot(mk); });
   if(srv.meRow && (srv.meRow.role === 'coordinator' || srv.meRow.admin)) await srvLoadCoord();          // (what only the coordinator may read: personal flags, open items, vacation requests)
@@ -6421,6 +6428,7 @@ function srvAddRow(st, r){
   const t5 = x => x ? x.slice(0, 5) : null, from = t5(r.from_time), to = t5(r.to_time);
   st.rows.push({ id:r.id, staff:r.staff_id, day:r.day, shift:r.shift, from, to, flags:r.flags || [] });
   const who = st.instructors.find(p => p.id === r.staff_id);
+  if(who && who.role === 'service' && r.shift !== 'L'){ const key = `${r.day}|${SRV_SHIFT_UI[r.shift] || 'm'}`; st.assignmentIds[r.id] = { key, staff:r.staff_id }; st.assignmentIds[`${key}|${r.staff_id}`] = r.id; }          // (a service girl's shift can be swapped too: scheduling-v28.sql)
   if(!who || who.role !== 'instructor') return;
   const keys = r.shift === 'L' ? [[r.day, 'e'], [addDays(r.day, 1), 'm'], [addDays(r.day, 1), 'e']] : r.shift === 'S' ? [[r.day, 'm']] : [[r.day, SRV_SHIFT_UI[r.shift]]];
   const std = SRV_STD[r.shift];
@@ -6503,7 +6511,7 @@ function srvTabs(me){
   if(portalAsCoord(me)) return [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);          // (the admin: one more tab, 14s-portal-admin.js)
   if(me.role === 'instructor' && srv.profile && srv.profile.manual_only) return [['schedule', 'הסידור'], ['open', 'משמרות חסרות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];          // (not scheduled automatically: she places herself where somebody is missing)
   if(me.role === 'instructor') return [['schedule', 'הסידור'], ['prefs', 'העדפות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];
-  if(me.role === 'service') return [['schedule', 'הסידור'], ['avail', 'זמינות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];
+  if(me.role === 'service') return [['schedule', 'הסידור'], ['avail', 'זמינות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];          // (swaps: only among the service girls)
   return [['schedule', 'הסידור'], ['hours', 'שעות'], ['inbox', 'הודעות']];          // teachers
 }
 function srvRenderTab(me, body, t){
@@ -6702,7 +6710,7 @@ const srvCandidatesText = names => names.length ? tx('cands', names.join(', ')) 
 function srvRenderSchedule(body){
   if(!body.isConnected || !portalServerOn || !portalState || !portalState.serverMode) return;                                   // (a screen that finished loading after the person left it, or signed out, must not draw)
   const me = portalMe(), st = portalLoad(), mk = portalUi.month || (portalUi.month = monthKeyOf(srvToday())), m = portalMonth(mk), ctx = portalCtx(mk);
-  const today = srvToday(), isInstr = me.role === 'instructor';
+  const today = srvToday(), isInstr = me.role === 'instructor', canChange = isInstr || me.role === 'service';          // (a service girl can ask for a swap or report she cannot come too)
   const mine = st.rows.filter(r => r.staff === me.id && monthKeyOf(r.day) === mk).sort((a, b) => (a.day + (a.from || '')).localeCompare(b.day + (b.from || '')));
   const next = st.rows.filter(r => r.staff === me.id && r.day >= today).sort((a, b) => (a.day + (a.from || '')).localeCompare(b.day + (b.from || '')))[0];
   const notices = st.notices.filter(n => !n.seen);
@@ -6718,13 +6726,13 @@ function srvRenderSchedule(body){
     ${!m.published ? `<div class="pnote">${tx('sch_unpub')}</div>` : `
     <details class="pfold" data-fold="mine"${openFold('mine') ? ' open' : ''}>
       <summary><span>המשמרות שלי</span><span class="pcount">${mine.length}</span></summary>
-      <div class="pfold-body">${isInstr && mine.length ? `<div class="pchange"><button type="button" class="btn ghost small" id="want-change">בקשת החלפה</button></div>` : ''}<div class="pmine">${mine.length ? mine.map(r => {
+      <div class="pfold-body">${canChange && mine.length ? `<div class="pchange"><button type="button" class="btn ghost small" id="want-change">בקשת החלפה</button></div>` : ''}<div class="pmine">${mine.length ? mine.map(r => {
         const upcoming = r.day >= today, isNext = next && next.id === r.id, req = openByAid[r.id];
         return `<div class="pmine-row${upcoming ? '' : ' past'}${isNext ? ' next' : ''}">
           <div class="pmine-main">${isNext ? '<span class="pnext-badge">המשמרת הבאה שלך</span>' : ''}${srvRowLine(r)}</div>
           ${req ? `<em class="pst pst-${req.status}">${SWAP_STATUS[req.status]}</em>` : ''}
         </div>`; }).join('') : `<div class="pnote">${tx('sch_none')}</div>`}</div>
-        ${isInstr ? `<div class="pnote">${tx('sch_help')}</div>` : ''}</div>
+        ${canChange ? `<div class="pnote">${tx('sch_help')}</div>` : ''}</div>
     </details>
     <details class="pfold" data-fold="team"${openFold('team') ? ' open' : ''}>
       <summary><span>הצוות כולו</span></summary>
@@ -7173,7 +7181,7 @@ function srvOpenSlot(mk, key, body){
       const flags = Array.from(new Set((row.flags || []).concat('manual')));
       const u = await sbPersonal.from('assignment').update({ from_time:from, to_time:to, flags }).eq('id', row.id);
       if(u.error){ toast('השינוי נכשל'); return; }
-      editing = null; toast('השעות עודכנו. מי שנוגע בעניין קיבל עדכון.');
+      row.from = from; row.to = to; row.flags = flags; editing = null; draw(); toast('השעות עודכנו. מי שנוגע בעניין קיבל עדכון.');          // (the row is shown at once with its new hours; the reload follows)
       await srvReloadSafe(); await srvLoadCoord(); draw(); srvRenderCoordSchedule(body);
     }));
     wrap.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', async () => {
@@ -7204,6 +7212,7 @@ function srvOpenSlot(mk, key, body){
       replacing = null; draw(); srvRenderCoordSchedule(body); toast(`${nm(nw)} במקום ${was}. מי שנוגע בעניין קיבל עדכון.`);
       srvReloadSafe().then(() => srvLoadCoord()).then(() => { draw(); if(body.isConnected) srvRenderCoordSchedule(body); }).catch(() => {});
     }));
+    { const rl = wrap.querySelector('.cs-repl-list'); if(rl) rl.scrollIntoView({ block:'nearest' }); }          // (the opened list is shown, not left below the fold)
   };
   draw();
 }
