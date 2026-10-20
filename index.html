@@ -1209,6 +1209,7 @@
   .pfold > summary::-webkit-details-marker{ display:none; }
   .pfold > summary::after{ content:'▾'; color:var(--p-muted); transition:transform .2s; }
   .pfold[open] > summary::after{ transform:rotate(180deg); }
+  .gear-fold > summary small.gear-now{ margin-inline-start:auto; font-family:inherit; font-weight:500; font-size:12px; color:var(--p-muted); text-align:end; }          /* (what is chosen now, next to the arrow) */
   .pfold-body{ padding:0 10px 12px; }
   .pfold.sub{ background:var(--p-panel2); margin:2px 0 8px; } .pfold.sub > summary{ min-height:42px; font-size:13.5px; font-weight:700; }
   .pfold.sub:not([open]) ~ .pmine .swap-btn{ display:none; }
@@ -5492,8 +5493,9 @@ function portalPerson(id){ return portalLoad().instructors.find(p => p.id === id
 function portalMe(){ return portalPerson(portalUi.persona) || portalLoad().instructors[0]; }          // (in server mode persona = the signed-in person)
 function portalIsCoordinator(){ return portalMe().role === 'coordinator'; }
 // the coordinator's view of the portal: the coordinator herself, or the admin when he opened the management portal (an admin can also be an instructor)
-// the leopard look is exclusive: the coordinator, the admin, and the people the admin chose (sched_settings "leopard_people")
-const leopardAllowed = () => !!srv.meRow && (srv.meRow.role === 'coordinator' || !!srv.meRow.admin || (srv.leopardPeople || []).includes(srv.me));
+// the leopard look: everybody may choose it in the gear; the coordinator has it by default, until she chooses another look (Guy 2026-10-20)
+const leopardAllowed = () => !!srv.meRow;
+const portalThemeNow = () => srv.portalTheme || (srv.meRow && srv.meRow.role === 'coordinator' ? 'leopard' : null);
 const portalAsCoord = me => !!me && (me.role === 'coordinator' || (!!portalUi.manager && !!me.admin));
 function pEsc(s){ return escapeHtml(s == null ? '' : s); }
 function portalActivateView(id){
@@ -5563,7 +5565,7 @@ function showPortal(tab){
   const today = monthKeyOf(isoDate(new Date()));
   if(!portalUi.month) portalUi.month = today;
   const view = document.getElementById('view-portal');
-  const leopard = portalServerOn && !portalUi.viewAs && leopardAllowed() && srv.portalTheme === 'leopard', theme = leopard ? 'leopard' : st.settings.theme;          // (the leopard look: the coordinator's own choice, kept with her account)
+  const leopard = portalServerOn && !portalUi.viewAs && leopardAllowed() && portalThemeNow() === 'leopard', theme = leopard ? 'leopard' : st.settings.theme;          // (the leopard look: the coordinator's own choice, kept with her account)
   document.body.classList.toggle('leopard-bg', leopard);
   view.innerHTML = `
     <div class="portal-shell${portalServerOn && portalAsCoord(me) ? ' wide' : ''}" data-ptheme="${theme}">
@@ -5834,6 +5836,19 @@ const prefNoNight = prefFixedNo;
 const prefLevelOf = (prefs, key) => prefs.slots[key] || (portalServerOn ? (prefNoNight(key) ? 'no' : 'neutral') : 'yes');          // (on the server a shift nobody marked is "neutral": the person did not say)
 const DEFAULT_SHIFT_LEGEND = types => types.map(s => (s.letter || s.label.charAt(0)) + ' = ' + s.label);
 const FIXED_REASON = { vacation:'חופשה', sick:'מחלה', reserve:'מילואים', leave:'חופשה מיוחדת', other:'היעדרות', self:'היעדרות' };
+// how the preferences start: whoever chose "all yes" / "all no" in the gear gets a month she opens for the first time (nothing marked yet) filled
+// that way, as real marks (the fixed "no" ones stay "no"; days away stay away). Once per month on this device, so "נקה הכל" stays clean. (scheduling-v30.sql)
+function prefStartFill(mk, id, prefs, days){
+  const lv = srv.prefStart; if(lv !== 'yes' && lv !== 'no') return false;
+  const key = `ramzor-prefstart-${id}-${mk}`; try { if(localStorage.getItem(key)) return false; } catch(e){}
+  if(Object.keys(prefs.slots).length) return false;
+  days.forEach(date => {
+    if(prefs.absent.includes(date) || prefs.fixed.some(f => f.day === date)) return;
+    prefShiftsFor(date).forEach(s => { const k = `${date}|${s.id}`; if(!prefNoNight(k)) prefs.slots[k] = lv; });
+  });
+  try { localStorage.setItem(key, '1'); } catch(e){}
+  portalSave(); return true;
+}
 function renderInstructorPrefs(body){
   if(!body.isConnected) return;                                   // (a screen that finished loading after the person left it must not draw)
   const me = portalMe(), st = portalLoad();
@@ -5841,6 +5856,8 @@ function renderInstructorPrefs(body){
   const mk = portalUi.pmonth, m = portalMonth(mk), prefs = portalServerOn ? srvPrefsOf(m, me.id) : portalPrefsOf(mk, me.id), submitted = !!m.submitted[me.id];
   const days = daysOfMonth(mk), lead = dowOf(days[0]);
   const locked = portalServerOn && !srvPrefsOpen(mk);                                  // the database refuses changes after the closing time, so the screen does not offer them
+  if(portalServerOn && me.role === 'instructor' && !locked && !submitted && prefStartFill(mk, me.id, prefs, days))
+    toast(srv.prefStart === 'yes' ? 'כל המשמרות סומנו "כן", לפי ההגדרות שלך. משנים רק את מה שצריך' : 'כל המשמרות סומנו "לא", לפי ההגדרות שלך. משנים רק את מה שצריך');
   const dl = m.deadline ? parseIso(m.deadline) : null;
   const fixedOn = date => portalServerOn ? prefs.fixed.find(f => f.day === date) : null;
   // the long weekend: one button under the Friday and the Saturday of a weekend (and, when the person switched it on in the settings, the small "only one of these" next to it)
@@ -7923,10 +7940,11 @@ async function srvLoadSettings(){
     if(!r.error) hasCols = true; else r = await sbPersonal.from('staff_settings').select('voice,reminders').eq('staff_id', srv.me).maybeSingle();          // (before scheduling-v8.sql / v12.sql the columns do not exist)
     if(!r.error && r.data){ srv.voice = r.data.voice || null; srv.reminders = r.data.reminders !== false; srv.pickOne = !!r.data.pick_one; srv.showLong = !!r.data.show_long; }
   } catch(e){}
-  srv.portalTheme = null; srv.leopardPeople = [];
-  try { const lp = await sbPersonal.from('sched_settings').select('value').eq('key', 'leopard_people').maybeSingle(); if(!lp.error && lp.data && Array.isArray(lp.data.value)) srv.leopardPeople = lp.data.value; } catch(e){}          // (who else may choose the leopard look: chosen by the admin)
+  srv.portalTheme = null;
   try { const t = await sbPersonal.from('staff_settings').select('portal_theme').eq('staff_id', srv.me).maybeSingle(); if(!t.error && t.data) srv.portalTheme = t.data.portal_theme || null; } catch(e){}          // (comes with scheduling-v16.sql)
   if(!srv.voice){ try { srv.voice = localStorage.getItem('ramzor-portal-voice') || null; } catch(e){} }
+  srv.prefStart = null;          // (how the preferences start every month: scheduling-v30.sql)
+  try { const pr = await sbPersonal.from('staff_settings').select('pref_start').eq('staff_id', srv.me).maybeSingle(); if(!pr.error && pr.data) srv.prefStart = pr.data.pref_start || null; } catch(e){}
   srv.fixedNo = [];          // (fixed preferences: scheduling-v27.sql)
   try { const fx = await sbPersonal.from('staff_settings').select('fixed_no').eq('staff_id', srv.me).maybeSingle(); if(!fx.error && fx.data && Array.isArray(fx.data.fixed_no)) srv.fixedNo = fx.data.fixed_no; } catch(e){}
   srv.lang = (srv.profile && srv.profile.lang) || null;          // (the language: her own choice, else the admin's default; scheduling-v25.sql)
@@ -7948,26 +7966,52 @@ async function srvSaveSetting(patch){
   } catch(e){ return false; }
 }
 function openPortalSettings(){
-  const coord = leopardAllowed(), leo = coord && srv.portalTheme === 'leopard';          // (the leopard look: exclusive — the coordinator, the admin, and whom the admin chose; never the default)          // (the leopard look: only the coordinator's portal)
+  const coord = leopardAllowed(), leo = coord && portalThemeNow() === 'leopard';          // (the leopard look: exclusive — the coordinator, the admin, and whom the admin chose; never the default)          // (the leopard look: only the coordinator's portal)
   const st = portalLoad(), v = portalVoice(), dark = st.settings.theme === 'dark', big = (() => { try { return localStorage.getItem('ramzor-portal-big') || '0'; } catch(e){ return '0'; } })();          // ('0' usual, '1' large, '2' very large)
+  const role = srv.meRow ? srv.meRow.role : '', isInstr = role === 'instructor', remOn = ['instructor', 'service'].includes(role);
+  const ps = srv.prefStart || '', PS = { '':'הכל לא סומן', yes:'הכל "כן"', no:'הכל "לא"' };
+  const gf = portalUi.gearFold = portalUi.gearFold || {};
+  // the settings in a few folded groups, each with what is chosen now under its title (Guy 2026-10-20)
+  const fold = (id, title, now, inner) => `<details class="pfold gear-fold" data-gfold="${id}"${gf[id] ? ' open' : ''}><summary><span>${title}</span><small class="gear-now">${now}</small></summary><div class="pfold-body">${inner}</div></details>`;
+  const W = (he, ar) => arOn() ? ar : he;          // (the short lines under the titles are put together here, so they are written in her language)
+  const langNow = [portalAsCoord(portalMe()) ? '' : (srv.lang === 'ar' ? 'العربية' : 'עברית'), arOn() ? '' : VOICE_NAMES[v], remOn ? (srv.reminders === false ? W('בלי תזכורות', 'بدون تذكيرات') : W('עם תזכורות', 'مع تذكيرات')) : ''].filter(Boolean).join(' · ');
+  const lookNow = [leo ? W('מנומר', 'نمر') : dark ? W('כהה', 'داكن') : W('בהיר', 'فاتح'), ({ '0':W('טקסט רגיל', 'نص عادي'), '1':W('טקסט גדול', 'نص كبير'), '2':W('טקסט גדול מאוד', 'نص كبير جدًا') })[big]].join(' · ');
   const sh = portalSheet(`<h2>העדפות מערכת</h2>
-    ${portalAsCoord(portalMe()) ? '' : `<h3 class="psec">שפה · اللغة</h3>
+    ${fold('talk', 'שפה והודעות', langNow, `${portalAsCoord(portalMe()) ? '' : `<h3 class="psec">שפה · اللغة</h3>
     <div class="pchoice wrap ar-keep"><button type="button" class="${srv.lang === 'ar' ? '' : 'on'}" data-set-lang="he">עברית</button><button type="button" class="${srv.lang === 'ar' ? 'on' : ''}" data-set-lang="ar">العربية</button></div>`}
     ${arOn() ? '' : `<h3 class="psec">באיזו שפה נדבר איתך?</h3>
     <div class="pgoal-list" role="group" aria-label="שפת המערכת">${Object.keys(VOICE_NAMES).map(k => `<button type="button" class="pgoal-opt${v === k ? ' on' : ''}" data-voice="${k}"><b>${VOICE_NAMES[k]}</b><small>${VOICE_SAMPLE[k]}</small></button>`).join('')}</div>`}
-    <h3 class="psec">מראה</h3>
-    <div class="pchoice wrap"><button type="button" class="${dark && !leo ? 'on' : ''}" data-set-theme="dark">מצב כהה</button><button type="button" class="${dark || leo ? '' : 'on'}" data-set-theme="light">מצב בהיר</button>${coord ? `<button type="button" class="${leo ? 'on' : ''}" data-set-theme="leopard">מצב מנומר 🐆</button>` : ''}</div>
-    <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${big === '0' ? 'on' : ''}" data-set-big="0">טקסט רגיל</button><button type="button" class="${big === '1' ? 'on' : ''}" data-set-big="1">טקסט גדול</button><button type="button" class="${big === '2' ? 'on' : ''}" data-set-big="2">טקסט גדול מאוד</button></div>
-    ${srv.meRow && srv.meRow.role === 'instructor' ? `<h3 class="psec">העדפות קבועות</h3>
+    ${remOn ? `<h3 class="psec">תזכורות במייל להגשת ההעדפות</h3>
+    <div class="pchoice wrap"><button type="button" class="${srv.reminders === false ? '' : 'on'}" data-set-rem="1">לקבל תזכורות</button><button type="button" class="${srv.reminders === false ? 'on' : ''}" data-set-rem="0">בלי תזכורות</button></div>` : ''}`)}
+    ${fold('look', 'מראה', lookNow, `<div class="pchoice wrap"><button type="button" class="${dark && !leo ? 'on' : ''}" data-set-theme="dark">מצב כהה</button><button type="button" class="${dark || leo ? '' : 'on'}" data-set-theme="light">מצב בהיר</button>${coord ? `<button type="button" class="${leo ? 'on' : ''}" data-set-theme="leopard">מצב מנומר 🐆</button>` : ''}</div>
+    <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${big === '0' ? 'on' : ''}" data-set-big="0">טקסט רגיל</button><button type="button" class="${big === '1' ? 'on' : ''}" data-set-big="1">טקסט גדול</button><button type="button" class="${big === '2' ? 'on' : ''}" data-set-big="2">טקסט גדול מאוד</button></div>`)}
+    ${isInstr ? fold('prefs', 'ההעדפות שלי', PS[ps], `<h3 class="psec">איך מתחילות ההעדפות בכל חודש?</h3>
+    <div class="pchoice wrap pref-start">${Object.keys(PS).map(k => `<button type="button" class="${ps === k ? 'on' : ''}" data-pref-start="${k}">${PS[k]}</button>`).join('')}</div>
+    <div class="pnote">כשנפתח חודש חדש, כל המשמרות מסומנות אצלך כך מההתחלה, ומשנים רק את מה שצריך. ההעדפות הקבועות שלך נשארות "לא".</div>
+    <h3 class="psec">העדפות קבועות</h3>
     <div class="pnote">מה שמסמנים כאן מופיע אצלך "לא" בכל חודש. אפשר לבחור יותר מאחד, ואפשר תמיד לשנות משמרת מסוימת בלחיצה עליה.</div>
     <div class="pchoice wrap fixed-no">${[['m', 'לא עושה בקרים'], ['e', 'לא עושה צהריים'], ['n', 'לא עושה לילות']].map(([k, w]) => { const admin = k === 'n' && srv.profile && srv.profile.no_nights; return `<button type="button" class="${admin || (srv.fixedNo || []).includes(k) ? 'on' : ''}" data-fixed-no="${k}"${admin ? ' disabled title="הוגדר בפורטל הניהול"' : ''}>${w}</button>`; }).join('')}</div>
     <h3 class="psec">סופי שבוע</h3>
     <div class="pchoice wrap"><button type="button" class="${srv.showLong ? 'on' : ''}" data-set-long="1">להציג סופ"ש ארוך: כן</button><button type="button" class="${srv.showLong ? '' : 'on'}" data-set-long="0">לא</button></div>
     <div class="pnote">${tx('long_setting')}</div>
     <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${srv.pickOne ? 'on' : ''}" data-set-pick="1">להציג "רק אחד מאלה": כן</button><button type="button" class="${srv.pickOne ? '' : 'on'}" data-set-pick="0">לא</button></div>
-    <div class="pnote">${tx('pick_setting')}</div>` : ''}
+    <div class="pnote">${tx('pick_setting')}</div>`) : ''}
     <button type="button" class="btn ghost" id="gear-problem" style="margin-top:14px;width:100%">משהו לא עובד? דיווח על תקלה</button>
     <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סיום</button></div>`);
+  sh.querySelectorAll('[data-gfold]').forEach(d => d.addEventListener('toggle', () => { gf[d.dataset.gfold] = d.open; }));
+  sh.querySelectorAll('[data-set-rem]').forEach(b => b.addEventListener('click', async () => {
+    const on = b.dataset.setRem === '1', was = srv.reminders;
+    sh.querySelectorAll('[data-set-rem]').forEach(x => x.classList.toggle('on', x === b));
+    if(!(await srvSaveSetting({ reminders:on }))){ srv.reminders = was; toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע'); return; }
+    toast(on ? 'נשלח לך תזכורות לקראת סוף ההגשה' : 'לא נשלח לך יותר תזכורות במייל');
+  }));
+  sh.querySelectorAll('[data-pref-start]').forEach(b => b.addEventListener('click', async () => {
+    const val = b.dataset.prefStart || null, was = srv.prefStart;
+    sh.querySelectorAll('[data-pref-start]').forEach(x => x.classList.toggle('on', x === b)); srv.prefStart = val;
+    let ok = false; try { const r = await sbPersonal.from('staff_settings').upsert({ staff_id:srv.me, pref_start:val }); ok = !r.error; } catch(e){}          // (scheduling-v30.sql)
+    if(!ok){ srv.prefStart = was; sh.querySelectorAll('[data-pref-start]').forEach(x => x.classList.toggle('on', (x.dataset.prefStart || null) === (was || null))); toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע'); return; }
+    toast('נשמר. בחודש הבא שייפתח, ההעדפות יתחילו כך');
+  }));
   sh.querySelector('#gear-problem').addEventListener('click', () => { sh.close(); openProblemReport(); });
   sh.querySelectorAll('[data-fixed-no]').forEach(b => b.addEventListener('click', async () => {
     const k = b.dataset.fixedNo, cur = new Set(srv.fixedNo || []); if(cur.has(k)) cur.delete(k); else cur.add(k);
@@ -7988,8 +8032,8 @@ function openPortalSettings(){
     const th = b.dataset.setTheme;
     if(th === 'leopard'){ srv.portalTheme = 'leopard'; sh.close(); showPortal(); await srvSaveSetting({ portalTheme:'leopard' }); return; }
     st.settings.theme = th; try { localStorage.setItem('ramzor-portal-theme', th); } catch(e){}
-    const wasLeo = srv.portalTheme === 'leopard'; srv.portalTheme = null; sh.close(); showPortal();
-    if(wasLeo || coord) await srvSaveSetting({ portalTheme:th });
+    srv.portalTheme = th; sh.close(); showPortal();          // (her own choice is kept, so the coordinator's default leopard does not come back)
+    await srvSaveSetting({ portalTheme:th });
   }));
   sh.querySelectorAll('[data-set-long]').forEach(b => b.addEventListener('click', async () => {
     const on = b.dataset.setLong === '1';
@@ -8559,9 +8603,8 @@ async function adminStaff(box, body){
   if(!extra) priv = await sbPersonal.from('staff_private').select(BASE);
   if(staff.error || priv.error) throw staff.error || priv.error;
   const pv = {}; (priv.data || []).forEach(p => { pv[p.staff_id] = p; });
-  const lr = await sbPersonal.from('sched_settings').select('value').eq('key', 'leopard_people').maybeSingle(), leoList = (lr.data && Array.isArray(lr.data.value)) ? lr.data.value.slice() : [];
   const KIND = { instructor:'מדריך/ה', service:'בת שירות', teacher:'מורה / גננת', coordinator:'רכזת', admin:'מנהל' };
-  const flags = (s, p) => [p.is_admin ? 'מנהל' : '', p.is_leader ? 'מוביל/ה' : '', p.ahmash_rank ? `אחמ"ש ${p.ahmash_rank}` : '', p.no_nights ? 'בלי לילות' : '', p.latest_end_hour ? `עד ${p.latest_end_hour}:00` : '', p.manual_only ? 'שיבוץ ידני בלבד' : '', p.only_long_weekend ? 'רק סופ"ש ארוך' : '', p.female === false ? 'גבר' : '', leoList.includes(s.id) ? '🐆' : '',
+  const flags = (s, p) => [p.is_admin ? 'מנהל' : '', p.is_leader ? 'מוביל/ה' : '', p.ahmash_rank ? `אחמ"ש ${p.ahmash_rank}` : '', p.no_nights ? 'בלי לילות' : '', p.latest_end_hour ? `עד ${p.latest_end_hour}:00` : '', p.manual_only ? 'שיבוץ ידני בלבד' : '', p.only_long_weekend ? 'רק סופ"ש ארוך' : '', p.female === false ? 'גבר' : '',
     [p.min_mid, p.min_nights, p.min_weekend].some(x => x != null) ? `מינימום אישי ${p.min_mid ?? 2}/${p.min_nights ?? 1}/${p.min_weekend ?? 4}` : '', p.day_buddy ? `יום עדיף עם ${nameOf(p.day_buddy)}` : '', p.lang === 'ar' ? 'ערבית' : ''].filter(Boolean).join(' · ');
   box.innerHTML = (staff.data || []).map(s => { const p = pv[s.id] || {}; return `<div class="pmine-row adm-row${s.active ? '' : ' inactive'}"><span><b>${pEsc(s.display_name)}</b> <small>${KIND[s.kind] || s.kind}${s.active ? '' : ' · לא פעיל/ה'}</small><br><small>${pEsc(flags(s, p)) || '—'}</small></span><button type="button" class="btn ghost small" data-adm-edit="${s.id}">✏️ עריכה</button></div>`; }).join('');
   box.querySelectorAll('[data-adm-edit]').forEach(b => b.addEventListener('click', () => {
@@ -8570,7 +8613,7 @@ async function adminStaff(box, body){
     const sh = portalSheet(`<h2>עריכת ${pEsc(s.display_name)}</h2>
       <label class="pfield">השם (כפי שמוצג)<input type="text" id="ae-name" maxlength="40" value="${pEsc(s.display_name)}"></label>
       <label class="pfield">תפקיד<select id="ae-kind">${Object.keys(KIND).filter(k => k !== 'admin').map(k => `<option value="${k}"${s.kind === k ? ' selected' : ''}>${KIND[k]}</option>`).join('')}</select></label>
-      <div class="adm-checks">${yes('ae-active', 'פעיל/ה', s.active)}${yes('ae-female', 'אישה', p.female !== false)}${yes('ae-leader', 'מוביל/ה', p.is_leader)}${yes('ae-nonights', 'לא עושה לילות', p.no_nights)}${yes('ae-manual', 'שיבוץ ידני בלבד', p.manual_only)}${yes('ae-long', 'רק סופ"ש ארוך', p.only_long_weekend)}${yes('ae-admin', 'מנהל (פורטל ניהול)', p.is_admin)}${yes('ae-leo', 'מצב מנומר (אפשרות בהגדרות)', leoList.includes(s.id))}</div>
+      <div class="adm-checks">${yes('ae-active', 'פעיל/ה', s.active)}${yes('ae-female', 'אישה', p.female !== false)}${yes('ae-leader', 'מוביל/ה', p.is_leader)}${yes('ae-nonights', 'לא עושה לילות', p.no_nights)}${yes('ae-manual', 'שיבוץ ידני בלבד', p.manual_only)}${yes('ae-long', 'רק סופ"ש ארוך', p.only_long_weekend)}${yes('ae-admin', 'מנהל (פורטל ניהול)', p.is_admin)}</div>
       <label class="pfield">אחמ"ש<select id="ae-ahm"><option value="0"${!p.ahmash_rank ? ' selected' : ''}>לא</option><option value="1"${p.ahmash_rank === 1 ? ' selected' : ''}>כן, דרגה 1</option><option value="2"${p.ahmash_rank === 2 ? ' selected' : ''}>כן, דרגה 2 (רק כשאין אחר)</option></select></label>
       <label class="pfield">שעת סיום קבועה<select id="ae-end"><option value="">אין</option>${[19, 20, 21].map(h => `<option value="${h}"${p.latest_end_hour === h ? ' selected' : ''}>${h}:00</option>`).join('')}</select></label>
       ${extra && s.kind === 'instructor' ? `<h3 class="psec">מינימום אישי</h3>
@@ -8591,7 +8634,7 @@ async function adminStaff(box, body){
       if(v('ae-lang')) row.lang = v('ae-lang').value === 'ar' ? 'ar' : null;
       const c = pv[s.id] ? await sbPersonal.from('staff_private').update(row).eq('staff_id', s.id) : await sbPersonal.from('staff_private').insert(Object.assign({ staff_id:s.id }, row));
       if(a.error || c.error){ toast('השמירה נכשלה: ' + ((a.error || c.error).message || '')); return; }
-      const wantLeo = v('ae-leo').checked; if(wantLeo !== leoList.includes(s.id)){ const next = wantLeo ? leoList.concat(s.id) : leoList.filter(x => x !== s.id); const l = await sbPersonal.from('sched_settings').upsert({ key:'leopard_people', value:next }); if(!l.error){ leoList.length = 0; next.forEach(x => leoList.push(x)); } }
+
       sh.close(); toast('נשמר'); adminStaff(box, body); srvReloadSafe();
     });
   }));
@@ -8999,7 +9042,7 @@ const AR = {
   'לכל יום נשמח שתבחרו מתי נוח לכן. ביום ראשון מגיעות ב-11:00 (עד 19:00), וביום חמישי עד 16:00':'لكل يوم يسعدنا أن تخترن متى يناسبكن. يوم الأحد يكون الوصول الساعة 11:00 (حتى 19:00)، ويوم الخميس حتى 16:00',
   'אם לא תספיקו עד ה-24 בשעה 22:30, לא נורא: השעות הקבועות יישלחו בשבילכן אוטומטית':'إن لم تلحقن حتى 24 الساعة 22:30، لا بأس: الساعات الثابتة تُرسل عنكن تلقائيًا',
   // the gear
-  'באיזו שפה נדבר איתך?':'بأي أسلوب نتحدث معك؟', 'מראה':'المظهر', 'מצב כהה':'وضع داكن', 'מצב בהיר':'وضع فاتح', 'טקסט רגיל':'نص عادي', 'טקסט גדול':'نص كبير', 'טקסט גדול מאוד':'نص كبير جدًا',
+  'באיזו שפה נדבר איתך?':'بأي أسلوب نتحدث معك؟', 'מראה':'المظهر', 'מצב כהה':'وضع داكن', 'מצב בהיר':'وضع فاتح', 'שפה והודעות':'اللغة والرسائل', 'ההעדפות שלי':'تفضيلاتي', 'תזכורות במייל להגשת ההעדפות':'تذكيرات بالبريد لتقديم التفضيلات', 'לקבל תזכורות':'استلام التذكيرات', 'בלי תזכורות':'بدون تذكيرات', 'איך מתחילות ההעדפות בכל חודש?':'كيف تبدأ التفضيلات في كل شهر؟', 'הכל לא סומן':'الكل غير محدد', 'הכל "כן"':'الكل "نعم"', 'הכל "לא"':'الكل "لا"', 'כשנפתח חודש חדש, כל המשמרות מסומנות אצלך כך מההתחלה, ומשנים רק את מה שצריך. ההעדפות הקבועות שלך נשארות "לא".':'عندما يُفتح شهر جديد، تكون كل المناوبات محددة هكذا من البداية، وتغيّر/ين فقط ما يلزم. تفضيلاتك الثابتة تبقى "لا".', 'מצב מנומר 🐆':'وضع النمر 🐆', 'טקסט רגיל':'نص عادي', 'טקסט גדול':'نص كبير', 'טקסט גדול מאוד':'نص كبير جدًا',
   'סופי שבוע':'نهايات الأسبوع', 'שפת הפורטל':'لغة البوابة', 'שפה':'اللغة',
   // a new day for sign-up
   'נפתח יום נוסף לשיבוץ':'فُتح يوم إضافي للجدولة', 'נרשמת ליום הנוסף ✓':'سجّلت لليوم الإضافي ✓', 'אני רוצה להשתבץ':'أريد الانضمام', 'נשאר מקום אחד':'بقي مكان واحد',
