@@ -1830,6 +1830,32 @@
   #tvp-code{ width:100%; min-height:64px; font-size:34px; letter-spacing:.4em; text-align:center; border-radius:14px; border:2px solid var(--gold); background:rgba(255,255,255,.08); color:#fff; font-family:inherit; }
   #tvp-go{ min-width:200px; min-height:56px; font-size:20px; }
   .tvp-err{ min-height:24px; color:#ffb3a7; font-weight:700; }
+  /* ---- two portals: the therapist's (🩺) and the staff's (🌱) ---- */
+  .th-todo-list{ display:flex; flex-direction:column; gap:8px; margin:6px 0 16px; }
+  .th-todo{ display:flex; align-items:center; gap:12px; min-height:64px; padding:10px 12px; text-align:right; border-radius:14px; border:1px solid var(--p-line, var(--line)); border-inline-start:4px solid var(--gold); background:var(--p-panel, var(--panel)); color:var(--p-text, var(--text)); font-family:inherit; cursor:pointer; width:100%; }
+  .th-todo:hover, .th-todo:focus-visible{ border-color:var(--gold); }
+  .th-todo .th-kid-text{ flex:1; }
+  .th-todo .th-kid-text small{ font-size:14px; color:var(--p-text, var(--text)); line-height:1.45; }
+  .th-todo-go{ flex:none; font-size:22px; color:var(--p-muted, var(--muted)); }
+  .th-empty{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:36px 16px; text-align:center; color:var(--p-muted, var(--muted)); }
+  .th-empty span{ font-size:40px; } .th-empty b{ font-size:18px; color:var(--p-text, var(--text)); }
+  .th-stat{ position:relative; align-items:flex-start; }
+  .th-stat .pcount{ position:absolute; top:8px; inset-inline-end:8px; margin:0; background:var(--gold); color:#1a1405; font-weight:800; }
+  .th-ws-tabs{ margin-top:12px; }
+  .th-ws-tabs .pcount{ background:var(--gold); color:#1a1405; font-weight:800; }
+  .th-fresh{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:4px 0 10px; font-size:13px; color:var(--p-muted, var(--muted)); }
+  .th-fresh .th-chip{ cursor:pointer; font-family:inherit; min-height:32px; }
+  .th-search{ width:100%; min-height:44px; padding:8px 12px; border-radius:12px; font-family:inherit; font-size:16px; background:var(--p-panel2, var(--panel-2)); color:var(--p-text, var(--text)); border:1px solid var(--p-line, var(--line)); margin-bottom:10px; }
+  .th-kcards{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:10px; margin-bottom:30px; }
+  .th-kcard{ display:flex; flex-direction:column; gap:6px; padding:12px; border-radius:14px; border:1px solid var(--p-line, var(--line)); background:var(--p-panel, var(--panel)); min-width:0; }
+  .th-kcard-head{ display:flex; align-items:center; gap:10px; } .th-kcard-head b{ flex:1; font-size:17px; min-width:0; overflow-wrap:anywhere; }
+  .th-kcard .th-avoid{ margin:2px 0; padding:8px 10px; font-size:14px; }
+  .th-kfocus{ padding:6px 10px; border-inline-start:3px solid var(--p-yes, #7be0a0); font-size:14px; line-height:1.5; white-space:pre-line; }
+  .th-kfocus b{ display:block; font-size:14.5px; }
+  .th-kcard-none{ font-size:13.5px; color:var(--p-muted, var(--muted)); }
+  .th-kcard-obs{ align-self:flex-start; min-height:40px; }
+  .obs-wait{ font-size:13px; color:var(--p-muted, var(--muted)); margin-top:6px; }
+  @media (max-width:480px){ .th-kcards{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -5695,10 +5721,15 @@ function showAppHome(){
           <span class="home-card-title">${portalServerOn && (portalMe() || {}).role === 'coordinator' ? ((portalMe() || {}).admin ? 'פורטל ניהול' : 'פורטל הרכזת') : 'פורטל המדריך'}</span>
           <span class="home-card-sub">משמרות, העדפות והודעות</span>
         </button>`}
-        ${typeof therapyAvailable === 'function' && therapyAvailable() ? `<button type="button" class="home-card" id="apphome-therapy">
+        ${typeof therapyAvailable === 'function' && therapyAvailable() && canTherapistPortal() ? `<button type="button" class="home-card" id="apphome-therapist">
+          <span class="apphome-emoji" aria-hidden="true">🩺</span>
+          <span class="home-card-title">פורטל איש הטיפול</span>
+          <span class="home-card-sub">מה מחכה לך, התוכניות, התצפיות והמעקב</span>
+        </button>` : ''}
+        ${typeof therapyAvailable === 'function' && therapyAvailable() && canStaffPortal() ? `<button type="button" class="home-card" id="apphome-therapy">
           <span class="apphome-emoji" aria-hidden="true">🌱</span>
           <span class="home-card-title">פורטל הטיפול</span>
-          <span class="home-card-sub">התוכנית הטיפולית של כל ילד, והכוונה לצוות</span>
+          <span class="home-card-sub">מה עושים עם כל ילד, וממה להימנע</span>
         </button>` : ''}
         ${portalServerOn && (portalMe() || {}).admin && (portalMe() || {}).role !== 'coordinator' ? `<button type="button" class="home-card" id="apphome-manage">
           <span class="apphome-emoji" aria-hidden="true">🛠️</span>
@@ -5710,7 +5741,8 @@ function showAppHome(){
       ${portalServerOn || sbPersonal ? '' : '<div class="apphome-demo">גרסת דמו של הפורטל: הנתונים בו לדוגמה בלבד ונשמרים במכשיר הזה.</div>'}
     </div>`;
   document.getElementById('apphome-ramzor').addEventListener('click', showHub);
-  { const th = document.getElementById('apphome-therapy'); if(th) th.addEventListener('click', showTherapyPortal); }          // (Mercury: the therapy portal, 14w-therapy-portal.js)
+  { const th = document.getElementById('apphome-therapy'); if(th) th.addEventListener('click', () => showTherapyPortal('staff')); }          // (Mercury: the two therapy portals, 14w-therapy-portal.js)
+  { const tt = document.getElementById('apphome-therapist'); if(tt) tt.addEventListener('click', () => showTherapyPortal('therapist')); }
   if(document.getElementById('apphome-portal')) document.getElementById('apphome-portal').addEventListener('click', () => { portalUi.manager = false; if(portalServerOn) srvOpenPortal(); else if(typeof srvShowLogin === 'function' && sbPersonal && !window.__portalDemo) srvShowLogin('email'); else showPortal(); });          // (with the staff password: the personal sign-in, not a demo)
   const mg = document.getElementById('apphome-manage'); if(mg) mg.addEventListener('click', () => { portalUi.manager = true; srvOpenPortal(); });
   document.getElementById('apphome-logout').addEventListener('click', () => document.getElementById('hub-logout-link').click());
@@ -5760,7 +5792,7 @@ function showPortal(tab){
   }
   document.getElementById('portal-home').addEventListener('click', portalServerOn && !ramzorPersonal ? srvSignOut : showAppHome);          // (after the one personal sign-in: back to the two cards; leaving is there)
   const gear = document.getElementById('portal-gear'); if(gear) gear.addEventListener('click', openPortalSettings);
-  { const th = document.getElementById('portal-therapy'); if(th) th.addEventListener('click', showTherapyPortal); }          // (service girls and teachers: their way to the therapy portal)
+  { const th = document.getElementById('portal-therapy'); if(th) th.addEventListener('click', () => showTherapyPortal('staff')); }          // (service girls and teachers: their way to the therapy portal)
   const prob = document.getElementById('portal-problem'); if(prob) prob.addEventListener('click', openProblemReport);
   document.getElementById('portal-theme').addEventListener('click', () => { if(leopard){ srv.portalTheme = null; srvSaveSetting({ portalTheme:st.settings.theme }); showPortal(); return; } st.settings.theme = st.settings.theme === 'dark' ? 'light' : 'dark'; if(portalServerOn){ try { localStorage.setItem('ramzor-portal-theme', st.settings.theme); } catch(e){} } else portalSave(); showPortal(); });
   if(!portalServerOn) document.getElementById('portal-persona').addEventListener('change', e => { portalUi.persona = e.target.value; portalUi.tab = null; showPortal(); });
@@ -9226,7 +9258,7 @@ const AR = {
   'לכל יום נשמח שתבחרו מתי נוח לכן. ביום ראשון מגיעות ב-11:00 (עד 19:00), וביום חמישי עד 16:00':'لكل يوم يسعدنا أن تخترن متى يناسبكن. يوم الأحد يكون الوصول الساعة 11:00 (حتى 19:00)، ويوم الخميس حتى 16:00',
   'אם לא תספיקו עד ה-24 בשעה 22:30, לא נורא: השעות הקבועות יישלחו בשבילכן אוטומטית':'إن لم تلحقن حتى 24 الساعة 22:30، لا بأس: الساعات الثابتة تُرسل عنكن تلقائيًا',
   // the gear
-  'באיזו שפה נדבר איתך?':'بأي أسلوب نتحدث معك؟', 'מראה':'المظهر', 'מצב כהה':'وضع داكن', 'מצב בהיר':'وضع فاتح', 'פורטל הטיפול':'بوابة العلاج', 'ספרייה':'المكتبة', 'איך לעדכן אותך על הילדים שלך?':'كيف نُبلغك عن أطفالك؟', 'מייל מיד':'بريد فورًا', 'סיכום יומי במייל':'ملخص يومي بالبريد', 'רק בפורטל':'في البوابة فقط', 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. לחיצה על ילד פותחת את התוכנית שלו.':'الأطفال الذين أنت المعالج/ة المسؤول/ة عنهم. الضغط على طفل يفتح خطته.', 'יש תוכנית טיפולית':'توجد خطة علاجية', 'מטרות נוספות':'أهداف إضافية', 'ממה להימנע':'ممّا نمتنع', 'במוקד':'في التركيز', '📝 תצפית לאיש/אשת הטיפול':'📝 ملاحظة للمعالج/ة', 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. בניית התוכניות תגיע בשלב הבא.':'الأطفال الذين أنت المعالج/ة المسؤول/ة عنهم. بناء الخطط سيأتي في المرحلة القادمة.', 'עוד לא שויכו אלייך ילדים. השיוך נעשה אצל הרכזת או מנהל המערכת.':'لم يُعيَّن لك أطفال بعد. التعيين تقوم به المنسقة أو مدير النظام.', 'לכל ילד איש/אשת טיפול אחראי/ת אחד/ת. רק הוא/היא רואה את המידע הטיפולי של הילד ובונה את התוכנית שלו. כל שינוי נרשם.':'لكل طفل معالج/ة مسؤول/ة واحد/ة. هو/هي فقط يرى المعلومات العلاجية للطفل ويبني خطته. كل تغيير يُسجَّل.', 'עוד אין אנשי טיפול במערכת. מוסיפים בהגדרות (תפקיד "איש/אשת טיפול"), או מסמנים "גם איש/אשת טיפול" בפורטל הניהול.':'لا يوجد معالجون في النظام بعد. يُضافون في الإعدادات (دور "معالج/ة")، أو بتحديد "معالج/ة أيضًا" في بوابة الإدارة.', 'התוכנית הטיפולית של כל ילד, והכוונה לצוות':'الخطة العلاجية لكل طفل، وتوجيه للطاقم', 'הילדים שבאחריותי':'الأطفال الذين في مسؤوليتي', 'כל הילדים':'كل الأطفال', 'שיוך אנשי טיפול':'تعيين المعالجين', 'עוד אין תוכנית טיפולית':'لا توجد خطة علاجية بعد', 'ללא':'بدون', 'ההכוונה של כל ילד, לפי התוכנית הטיפולית שלו: מה במוקד, מה לעשות וממה להימנע. התוכניות יופיעו כאן כשאנשי הטיפול יפרסמו אותן.':'توجيه لكل طفل حسب خطته العلاجية: ما في التركيز، ماذا نفعل وممّا نمتنع. ستظهر الخطط هنا عندما ينشرها المعالجون.', 'פורטל הטיפול עוד לא מוכן בשרת הזה, או שאין חיבור כרגע. אפשר לנסות שוב בעוד רגע.':'بوابة العلاج غير جاهزة بعد أو لا يوجد اتصال الآن. يمكن المحاولة بعد قليل.', 'שפה והודעות':'اللغة والرسائل', 'ההעדפות שלי':'تفضيلاتي', 'תזכורות במייל להגשת ההעדפות':'تذكيرات بالبريد لتقديم التفضيلات', 'לקבל תזכורות':'استلام التذكيرات', 'בלי תזכורות':'بدون تذكيرات', 'איך מתחילות ההעדפות בכל חודש?':'كيف تبدأ التفضيلات في كل شهر؟', 'הכל לא סומן':'الكل غير محدد', 'הכל "כן"':'الكل "نعم"', 'הכל "לא"':'الكل "لا"', 'כשנפתח חודש חדש, כל המשמרות מסומנות אצלך כך מההתחלה, ומשנים רק את מה שצריך. ההעדפות הקבועות שלך נשארות "לא".':'عندما يُفتح شهر جديد، تكون كل المناوبات محددة هكذا من البداية، وتغيّر/ين فقط ما يلزم. تفضيلاتك الثابتة تبقى "لا".', 'מצב מנומר 🐆':'وضع النمر 🐆', 'טקסט רגיל':'نص عادي', 'טקסט גדול':'نص كبير', 'טקסט גדול מאוד':'نص كبير جدًا',
+  'באיזו שפה נדבר איתך?':'بأي أسلوب نتحدث معك؟', 'מראה':'المظهر', 'מצב כהה':'وضع داكن', 'מצב בהיר':'وضع فاتح', 'פורטל הטיפול':'بوابة العلاج', 'הילדים':'الأطفال', 'התצפיות שלי':'ملاحظاتي', 'עודכן לאחרונה:':'تم التحديث مؤخرًا:', 'עוד':'المزيد', 'מה עושים עם כל ילד, וממה להימנע':'ما نفعله مع كل طفل، وما نتجنّبه', 'פורטל איש הטיפול':'بوابة المعالج', 'מה דורש אותי':'ما ينتظرني', 'הילדים שלי':'أطفالي', 'הגדרות':'الإعدادات', 'הכול מעודכן':'كل شيء محدّث', 'אין כרגע משהו שמחכה לך.':'لا يوجد حاليًا ما ينتظرك.', 'מה מחכה לך, התוכניות, התצפיות והמעקב':'ما ينتظرك، الخطط، الملاحظات والمتابعة', '📝 תצפית':'📝 ملاحظة', 'עוד אין תוכנית טיפולית':'لا توجد خطة علاجية بعد', 'אין כרגע מטרות במוקד. "עוד" פותח את כל התוכנית.':'لا توجد حاليًا أهداف في المركز. "المزيد" يفتح الخطة كلها.', 'עוד לא שלחת תצפיות':'لم ترسل ملاحظات بعد', 'בכל כרטיס של ילד יש כפתור "תצפית". כמה מילים מספיקות.':'في بطاقة كل طفل يوجد زر "ملاحظة". بضع كلمات تكفي.', 'נקרא':'تمت القراءة', 'עוד לא נקרא':'لم تُقرأ بعد', 'לא נמצא ילד בשם הזה.':'لم يُعثر على طفل بهذا الاسم.', '🎙️ הקלטה':'🎙️ تسجيل', 'ספרייה':'المكتبة', 'איך לעדכן אותך על הילדים שלך?':'كيف نُبلغك عن أطفالك؟', 'מייל מיד':'بريد فورًا', 'סיכום יומי במייל':'ملخص يومي بالبريد', 'רק בפורטל':'في البوابة فقط', 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. לחיצה על ילד פותחת את התוכנית שלו.':'الأطفال الذين أنت المعالج/ة المسؤول/ة عنهم. الضغط على طفل يفتح خطته.', 'יש תוכנית טיפולית':'توجد خطة علاجية', 'מטרות נוספות':'أهداف إضافية', 'ממה להימנע':'ممّا نمتنع', 'במוקד':'في التركيز', '📝 תצפית לאיש/אשת הטיפול':'📝 ملاحظة للمعالج/ة', 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. בניית התוכניות תגיע בשלב הבא.':'الأطفال الذين أنت المعالج/ة المسؤول/ة عنهم. بناء الخطط سيأتي في المرحلة القادمة.', 'עוד לא שויכו אלייך ילדים. השיוך נעשה אצל הרכזת או מנהל המערכת.':'لم يُعيَّن لك أطفال بعد. التعيين تقوم به المنسقة أو مدير النظام.', 'לכל ילד איש/אשת טיפול אחראי/ת אחד/ת. רק הוא/היא רואה את המידע הטיפולי של הילד ובונה את התוכנית שלו. כל שינוי נרשם.':'لكل طفل معالج/ة مسؤول/ة واحد/ة. هو/هي فقط يرى المعلومات العلاجية للطفل ويبني خطته. كل تغيير يُسجَّل.', 'עוד אין אנשי טיפול במערכת. מוסיפים בהגדרות (תפקיד "איש/אשת טיפול"), או מסמנים "גם איש/אשת טיפול" בפורטל הניהול.':'لا يوجد معالجون في النظام بعد. يُضافون في الإعدادات (دور "معالج/ة")، أو بتحديد "معالج/ة أيضًا" في بوابة الإدارة.', 'התוכנית הטיפולית של כל ילד, והכוונה לצוות':'الخطة العلاجية لكل طفل، وتوجيه للطاقم', 'הילדים שבאחריותי':'الأطفال الذين في مسؤوليتي', 'כל הילדים':'كل الأطفال', 'שיוך אנשי טיפול':'تعيين المعالجين', 'עוד אין תוכנית טיפולית':'لا توجد خطة علاجية بعد', 'ללא':'بدون', 'ההכוונה של כל ילד, לפי התוכנית הטיפולית שלו: מה במוקד, מה לעשות וממה להימנע. התוכניות יופיעו כאן כשאנשי הטיפול יפרסמו אותן.':'توجيه لكل طفل حسب خطته العلاجية: ما في التركيز، ماذا نفعل وممّا نمتنع. ستظهر الخطط هنا عندما ينشرها المعالجون.', 'פורטל הטיפול עוד לא מוכן בשרת הזה, או שאין חיבור כרגע. אפשר לנסות שוב בעוד רגע.':'بوابة العلاج غير جاهزة بعد أو لا يوجد اتصال الآن. يمكن المحاولة بعد قليل.', 'שפה והודעות':'اللغة والرسائل', 'ההעדפות שלי':'تفضيلاتي', 'תזכורות במייל להגשת ההעדפות':'تذكيرات بالبريد لتقديم التفضيلات', 'לקבל תזכורות':'استلام التذكيرات', 'בלי תזכורות':'بدون تذكيرات', 'איך מתחילות ההעדפות בכל חודש?':'كيف تبدأ التفضيلات في كل شهر؟', 'הכל לא סומן':'الكل غير محدد', 'הכל "כן"':'الكل "نعم"', 'הכל "לא"':'الكل "لا"', 'כשנפתח חודש חדש, כל המשמרות מסומנות אצלך כך מההתחלה, ומשנים רק את מה שצריך. ההעדפות הקבועות שלך נשארות "לא".':'عندما يُفتح شهر جديد، تكون كل المناوبات محددة هكذا من البداية، وتغيّر/ين فقط ما يلزم. تفضيلاتك الثابتة تبقى "لا".', 'מצב מנומר 🐆':'وضع النمر 🐆', 'טקסט רגיל':'نص عادي', 'טקסט גדול':'نص كبير', 'טקסט גדול מאוד':'نص كبير جدًا',
   'סופי שבוע':'نهايات الأسبوع', 'שפת הפורטל':'لغة البوابة', 'שפה':'اللغة',
   // a new day for sign-up
   'נפתח יום נוסף לשיבוץ':'فُتح يوم إضافي للجدولة', 'נרשמת ליום הנוסף ✓':'سجّلت لليوم الإضافي ✓', 'אני רוצה להשתבץ':'أريد الانضمام', 'נשאר מקום אחד':'بقي مكان واحد',
@@ -9380,15 +9412,23 @@ async function srvSaveLang(lang){
   srv.lang = lang; try { localStorage.setItem('ramzor-portal-lang', lang); } catch(e){}
   try { const r = await sbPersonal.from('staff_settings').upsert({ staff_id:srv.me, lang }); return !r.error; } catch(e){ return false; }
 }
-// ---------- MERCURY: THE THERAPY PORTAL (stage 1: the frame) ----------
-// A third card on the app home, "פורטל הטיפול", with the personal sign-in only. Everybody on the staff sees every child (the guidance of
-// the plans comes in stage 2); a therapist sees the children they are responsible for; the admin and the coordinator assign the
-// responsible therapist of every child. (scheduling-v31.sql; Mercury spec, decisions 1-6, 44-46)
-const thp = { loaded:false, ok:false, mine:[], assign:{}, therapists:[], tab:null, guidance:{}, plans:{}, planets:[], library:[], v32:false, editing:null };
+// ---------- MERCURY: THE THERAPY PORTAL — two portals for two needs ----------
+// The therapist and the staff need different things, so the portal is two different portals:
+//  · "פורטל איש הטיפול" (🩺, the therapists and the admin): "מה דורש אותי" first (new observations, journeys waiting for an approval,
+//    strengths that rose in the temple, plans to review, children without a published plan), then "הילדים שלי" with the status of each,
+//    the library and the settings. A child opens as a workspace in tabs: the plan, the observations, the tracking, the journey, the temple.
+//  · "פורטל הטיפול" (🌱, the rest of the staff): phone-first. Every child's card shows what to avoid and what to do in focus without a
+//    tap, an observation button on every card, "עודכן לאחרונה" on top, and "התצפיות שלי" with the therapist's answers.
+// Somebody with both roles gets both cards on the app home. The admin and the coordinator assign the responsible therapist of every
+// child (in the staff portal). The personal sign-in only. (scheduling-v31.sql, v32.sql; Mercury spec, decisions 1-6, 44-46)
+const thp = { loaded:false, ok:false, mode:'staff', mine:[], assign:{}, therapists:[], tab:null, guidance:{}, plans:{}, planets:[], library:[], v32:false,
+  editing:null, wtab:null, unseen:{}, journeys:{}, risen:[], myObs:[], q:'' };
 const therapyAvailable = () => typeof portalServerOn !== 'undefined' && portalServerOn && !!srv.profile && 'therapist' in srv.profile;          // (my_profile carries "therapist" from v31)
 const isTherapistMe = () => !!(srv.profile && srv.profile.therapist);
 const isPureTherapist = () => (portalMe() || {}).role === 'therapist';
 const canAssignTherapist = () => !!(srv.meRow && (srv.meRow.role === 'coordinator' || srv.meRow.admin));
+const canTherapistPortal = () => isTherapistMe() || !!(srv.profile && srv.profile.admin);
+const canStaffPortal = () => !isPureTherapist();
 
 async function thpLoad(){
   thp.ok = false;
@@ -9419,60 +9459,158 @@ async function thpLoad(){
     thp.planets = pn.data || []; thp.library = lb.data || []; thp.v32 = true;
     if(isTherapistMe()) await obsLoadNotify();
   } catch(e){ thp.v32 = false; }
+  // what each portal needs on top: the therapist — what waits for them; the staff — their own observations
+  thp.unseen = {}; thp.journeys = {}; thp.risen = []; thp.myObs = [];
+  if(thp.v32) try {
+    if(thp.mode === 'therapist'){
+      const since = new Date(Date.now() - 14 * 864e5).toISOString();
+      const [o, j, s] = await Promise.all([
+        sbPersonal.from('observations').select('child_id').is('seen_at', null),
+        sbPersonal.from('child_journeys').select('child_id,route,planet_idx,stage,step,next_approved'),
+        sbPersonal.from('child_strengths').select('child_id,strength,updated_at').eq('status', 'main').gte('updated_at', since)]);
+      (o.data || []).forEach(r => { thp.unseen[r.child_id] = (thp.unseen[r.child_id] || 0) + 1; });
+      (j.data || []).forEach(r => { thp.journeys[r.child_id] = r; });
+      thp.risen = s.data || [];
+    } else {
+      const r = await sbPersonal.from('observations').select('id,child_id,text,audio_path,created_at,seen_at,reply,replied_at').eq('author', srv.me).order('created_at', { ascending:false }).limit(40);
+      thp.myObs = r.data || [];
+    }
+  } catch(e){}
   thp.loaded = true;
 }
 
-// the tabs: a therapist starts with their own children; the rest of the staff with all the children; the admin and the coordinator also assign
+// the tabs of each portal
 function thpTabs(){
   const t = [];
-  if(isTherapistMe()) t.push(['mine', 'הילדים שבאחריותי']);
-  if(!isPureTherapist()) t.push(['all', 'כל הילדים']);
-  if(canAssignTherapist()) t.push(['assign', 'שיוך אנשי טיפול']);
-  if(thp.v32 && (isTherapistMe() || (srv.profile && srv.profile.admin))) t.push(['library', 'ספרייה']);
+  if(thp.mode === 'therapist'){
+    t.push(['todo', 'מה דורש אותי'], ['mine', 'הילדים שלי']);
+    if(thp.v32) t.push(['library', 'ספרייה']);
+    if(thp.v32 && isTherapistMe()) t.push(['settings', 'הגדרות']);
+  } else {
+    t.push(['kids', 'הילדים']);
+    if(thp.v32) t.push(['myobs', 'התצפיות שלי']);
+    if(canAssignTherapist()) t.push(['assign', 'שיוך אנשי טיפול']);
+  }
   return t;
 }
-async function showTherapyPortal(){
+// mode: 'therapist' (the 🩺 card) or 'staff' (the 🌱 card); a pure therapist has only the first, the staff only the second
+async function showTherapyPortal(mode){
+  thp.mode = mode === 'therapist' ? 'therapist' : 'staff';
+  if(!canTherapistPortal()) thp.mode = 'staff'; else if(!canStaffPortal()) thp.mode = 'therapist';
   portalActivateView('view-therapy');
   const view = document.getElementById('view-therapy');
-  thp.tab = null; thp.editing = null;          // (every entry starts on the first tab of this person)
+  thp.tab = null; thp.editing = null; thp.wtab = null; thp.q = '';          // (every entry starts on the first tab of this portal)
   view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${portalLoad().settings.theme || 'dark'}"><div class="pnote">טוען...</div></div>`;
   await thpLoad();
   thpRender();
 }
 const thpKids = () => (typeof roster !== 'undefined' ? roster : []).slice().sort((a, b) => displayName(a).localeCompare(displayName(b), 'he'));
 const thpAvatar = c => { const k = typeof characterFor === 'function' && characterFor(c.id); return k ? `<span class="th-av">${charImgHtml(k)}</span>` : `<span class="th-av th-av-name ar-keep">${pEsc(displayName(c).slice(0, 2))}</span>`; };
+// the children of the therapist's portal: their own; the admin — all of them
+const thpScope = () => { const kids = thpKids(); if(srv.profile && srv.profile.admin) return kids; const mine = new Set(thp.mine); return kids.filter(c => mine.has(c.id)); };
+const thpDaysTo = d => Math.round((new Date(d + 'T12:00:00') - new Date(isoDate(new Date()) + 'T12:00:00')) / 864e5);
+
+// ---- "מה דורש אותי": every item opens the child's workspace on the right tab
+function thpTodo(){
+  const items = [], scope = thpScope(), ids = new Set(scope.map(c => c.id)), name = id => { const c = roster.find(x => x.id === id); return c ? displayName(c) : id; };
+  const add = (id, tab, emoji, text, order) => items.push({ id, tab, emoji, text, order, name:name(id) });
+  scope.forEach(c => {
+    const n = thp.unseen[c.id] || 0; if(n) add(c.id, 'obs', '📝', n === 1 ? 'תצפית חדשה מהצוות' : `${n} תצפיות חדשות מהצוות`, 1);
+    const j = thp.journeys[c.id]; if(j && j.stage === 'extra' && !j.next_approved) add(c.id, 'journey', '🚀', 'סיים/ה את ההרפתקה. מחכה לאישור שלך למעבר לכוכב הבא', 2);
+    const row = thp.plans[c.id];
+    if(row && row.published_version && row.review_date){ const d = thpDaysTo(row.review_date); if(d <= 14) add(c.id, 'plan', '🗓️', d < 0 ? `עבר מועד הבדיקה מחדש של התוכנית (${dayLabel(row.review_date)})` : d === 0 ? 'היום מועד הבדיקה מחדש של התוכנית' : `בדיקה מחדש של התוכנית בעוד ${d} ימים`, 3); }
+    if(!row || !row.published_version) add(c.id, 'plan', '📋', row && row.draft ? 'יש טיוטה שעוד לא פורסמה' : 'עוד אין תוכנית טיפולית', 4);
+    else if(row.draft && JSON.stringify(row.draft) !== JSON.stringify(row.published)) add(c.id, 'plan', '✏️', 'יש שינויים בתוכנית שעוד לא פורסמו', 4);
+  });
+  thp.risen.filter(s => ids.has(s.child_id)).forEach(s => add(s.child_id, 'temple', '🏛️', `החוזקה "${s.strength}" עלתה למקדש`, 5));
+  return items.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'he'));
+}
+function thpTodoHtml(){
+  const items = thpTodo();
+  if(!items.length) return '<div class="th-empty"><span aria-hidden="true">🌿</span><b>הכול מעודכן</b><small>אין כרגע משהו שמחכה לך.</small></div>';
+  return `<div class="th-todo-list">${items.map(x => { const c = roster.find(k => k.id === x.id);
+    return `<button type="button" class="th-todo" data-todo-kid="${pEsc(x.id)}" data-todo-tab="${x.tab}">${c ? thpAvatar(c) : ''}<span class="th-kid-text"><b class="ar-keep">${pEsc(x.name)}</b><small><span aria-hidden="true">${x.emoji}</span> ${pEsc(x.text)}</small></span><span class="th-todo-go" aria-hidden="true">‹</span></button>`; }).join('')}</div>`;
+}
+// ---- "הילדים שלי": the status of every child, at a glance
+function thpStatusCard(c){
+  const row = thp.plans[c.id] || {}, n = thp.unseen[c.id] || 0, j = thp.journeys[c.id], planets = {};
+  (thp.planets || []).forEach(p => { planets[p.id] = p; });
+  const lines = [planStatus(c.id)];
+  if(j && typeof journeyWhere === 'function') lines.push('המסע: ' + journeyWhere(j, planets));
+  return `<button type="button" class="th-kid th-stat${row.published_version ? ' has-plan' : ''}" data-th-kid="${pEsc(c.id)}">${thpAvatar(c)}<span class="th-kid-text"><b class="ar-keep">${pEsc(displayName(c))}</b>${lines.map(l => `<small>${pEsc(l)}</small>`).join('')}</span>${n ? `<span class="pcount" title="תצפיות חדשות">${n}</span>` : ''}</button>`;
+}
+// ---- the staff: one child's card, what matters without a tap
+function thpStaffCard(c){
+  const g = thp.guidance[c.id], ct = g && g.content, focus = ct ? (ct.goals || []).filter(x => x.focus && x.title) : [];
+  return `<article class="th-kcard${g ? ' has-plan' : ''}" data-th-card="${pEsc(c.id)}">
+    <div class="th-kcard-head">${thpAvatar(c)}<b class="ar-keep">${pEsc(displayName(c))}</b>${g ? `<button type="button" class="btn ghost small" data-th-kid="${pEsc(c.id)}">עוד</button>` : ''}</div>
+    ${g ? `${ct.avoid ? `<div class="th-avoid"><b>ממה להימנע</b><div class="ar-keep">${pEsc(ct.avoid)}</div></div>` : ''}
+      ${focus.map(x => `<div class="th-kfocus"><b class="ar-keep">${pEsc(x.title)}</b>${x.interventions ? `<div class="ar-keep">${pEsc(x.interventions)}</div>` : ''}</div>`).join('')}
+      ${!ct.avoid && !focus.length ? '<div class="pnote">אין כרגע מטרות במוקד. "עוד" פותח את כל התוכנית.</div>' : ''}`
+      : '<div class="th-kcard-none">עוד אין תוכנית טיפולית</div>'}
+    ${thp.v32 ? `<button type="button" class="btn ghost small th-kcard-obs" data-th-obs="${pEsc(c.id)}">📝 תצפית</button>` : ''}
+  </article>`;
+}
+function thpStaffKidsHtml(){
+  const kids = thpKids(), week = Date.now() - 7 * 864e5;
+  const fresh = kids.filter(c => { const g = thp.guidance[c.id]; return g && g.published_at && new Date(g.published_at).getTime() >= week; });
+  return `${fresh.length ? `<div class="th-fresh"><span>עודכן לאחרונה:</span>${fresh.map(c => `<button type="button" class="th-chip" data-th-kid="${pEsc(c.id)}"><span class="ar-keep">${pEsc(displayName(c))}</span></button>`).join('')}</div>` : ''}
+    <input type="search" class="th-search" id="th-q" placeholder="חיפוש ילד/ה" aria-label="חיפוש ילד/ה" value="${pEsc(thp.q)}">
+    <div class="th-kcards" id="th-kcards">${kids.map(thpStaffCard).join('')}</div>`;
+}
+// ---- the staff: "התצפיות שלי" and what the therapist answered
+function thpMyObsHtml(){
+  if(!thp.myObs.length) return '<div class="th-empty"><span aria-hidden="true">📝</span><b>עוד לא שלחת תצפיות</b><small>בכל כרטיס של ילד יש כפתור "תצפית". כמה מילים מספיקות.</small></div>';
+  return `<div class="th-myobs">${thp.myObs.map(o => { const c = roster.find(x => x.id === o.child_id);
+    return `<div class="obs-item" data-myobs="${o.id}"><div class="obs-head"><b class="ar-keep">${pEsc(c ? displayName(c) : '')}</b><small>${pEsc(dayLabel(String(o.created_at).slice(0, 10)))} ${String(o.created_at).slice(11, 16)}</small></div>
+      ${o.text ? `<div class="obs-body">${pEsc(o.text)}</div>` : ''}${o.audio_path ? '<div class="pnote">🎙️ הקלטה</div>' : ''}
+      ${o.reply != null ? `<div class="obs-reply">איש/אשת הטיפול: ${pEsc(o.reply || 'ראיתי, תודה')}</div>` : `<div class="obs-wait">${o.seen_at ? 'נקרא' : 'עוד לא נקרא'}</div>`}</div>`; }).join('')}</div>`;
+}
+
 function thpRender(){
   const view = document.getElementById('view-therapy'); if(!view) return;
   const tabs = thpTabs(); if(!tabs.some(t => t[0] === thp.tab)) thp.tab = tabs.length ? tabs[0][0] : null;
-  const me = portalMe() || {}, kids = thpKids(), mine = new Set(thp.mine);
-  const card = c => `<button type="button" class="th-kid${thp.guidance[c.id] ? ' has-plan' : ''}" data-th-kid="${pEsc(c.id)}">${thpAvatar(c)}<span class="th-kid-text"><b class="ar-keep">${pEsc(displayName(c))}</b><small>${planCardSub(c.id)}</small></span></button>`;
+  const me = portalMe() || {}, kids = thpKids(), ther = thp.mode === 'therapist';
   let inner = '';
   if(!thp.ok) inner = '<div class="pnote">פורטל הטיפול עוד לא מוכן בשרת הזה, או שאין חיבור כרגע. אפשר לנסות שוב בעוד רגע.</div>';
+  else if(thp.tab === 'todo') inner = thp.v32 ? thpTodoHtml() : '<div class="pnote">בניית התוכניות תגיע בשלב הבא.</div>';
   else if(thp.tab === 'mine'){
-    const list = kids.filter(c => mine.has(c.id));
-    inner = `${thp.v32 ? obsNotifyHtml() : ''}<div class="pnote">${thp.v32 ? 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. לחיצה על ילד פותחת את התוכנית שלו.' : 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. בניית התוכניות תגיע בשלב הבא.'}</div>${list.length ? `<div class="th-kids">${list.map(card).join('')}</div>` : '<div class="pnote">עוד לא שויכו אלייך ילדים. השיוך נעשה אצל הרכזת או מנהל המערכת.</div>'}`;
-  } else if(thp.tab === 'all'){
-    inner = `<div class="pnote">ההכוונה של כל ילד, לפי התוכנית הטיפולית שלו: מה במוקד, מה לעשות וממה להימנע. התוכניות יופיעו כאן כשאנשי הטיפול יפרסמו אותן.</div><div class="th-kids">${kids.map(card).join('')}</div>`;
-  } else if(thp.tab === 'library'){
-    inner = planLibraryHtml();
-  } else if(thp.tab === 'assign'){
+    const list = thpScope();
+    inner = list.length ? `<div class="th-kids">${list.map(thpStatusCard).join('')}</div>` : '<div class="pnote">עוד לא שויכו אלייך ילדים. השיוך נעשה אצל הרכזת או מנהל המערכת.</div>';
+  } else if(thp.tab === 'settings') inner = obsNotifyHtml();
+  else if(thp.tab === 'kids') inner = thpStaffKidsHtml();
+  else if(thp.tab === 'myobs') inner = thpMyObsHtml();
+  else if(thp.tab === 'library') inner = planLibraryHtml();
+  else if(thp.tab === 'assign'){
     const opts = sel => `<option value="">ללא</option>${thp.therapists.map(t => `<option value="${t.id}"${sel === t.id ? ' selected' : ''}>${pEsc(t.display_name)}</option>`).join('')}`;
     inner = `<div class="pnote">לכל ילד איש/אשת טיפול אחראי/ת אחד/ת. רק הוא/היא רואה את המידע הטיפולי של הילד ובונה את התוכנית שלו. כל שינוי נרשם.</div>
       ${thp.therapists.length ? '' : '<div class="pnote">עוד אין אנשי טיפול במערכת. מוסיפים בהגדרות (תפקיד "איש/אשת טיפול"), או מסמנים "גם איש/אשת טיפול" בפורטל הניהול.</div>'}
       <div class="th-assign">${kids.map(c => `<div class="th-assign-row">${thpAvatar(c)}<b class="ar-keep">${pEsc(displayName(c))}</b><select data-th-assign="${pEsc(c.id)}" aria-label="איש/אשת הטיפול של ${pEsc(displayName(c))}">${opts(thp.assign[c.id] || '')}</select></div>`).join('')}</div>`;
   }
-  view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${portalLoad().settings.theme || 'dark'}">
-      <div class="portal-top"><button type="button" class="back-btn portal-back" id="therapy-home">→ מסך ראשי</button><h1 class="portal-title">פורטל הטיפול</h1><span></span></div>
+  const todoN = ther && thp.v32 ? thpTodo().length : 0;
+  view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${portalLoad().settings.theme || 'dark'}" data-thmode="${thp.mode}">
+      <div class="portal-top"><button type="button" class="back-btn portal-back" id="therapy-home">→ מסך ראשי</button><h1 class="portal-title">${ther ? 'פורטל איש הטיפול' : 'פורטל הטיפול'}</h1><span></span></div>
       <div class="portal-hello">שלום ${pEsc(me.first || '')}</div>
-      ${tabs.length > 1 ? `<nav class="portal-tabs" role="tablist">${tabs.map(t => `<button type="button" role="tab" data-th-tab="${t[0]}" class="${t[0] === thp.tab ? 'active' : ''}">${t[1]}</button>`).join('')}</nav>` : ''}
+      ${tabs.length > 1 ? `<nav class="portal-tabs" role="tablist">${tabs.map(t => `<button type="button" role="tab" data-th-tab="${t[0]}" class="${t[0] === thp.tab ? 'active' : ''}">${t[1]}${t[0] === 'todo' && todoN ? ` <span class="pcount">${todoN}</span>` : ''}</button>`).join('')}</nav>` : ''}
       <div id="therapy-body">${inner}</div>
     </div>`;
   view.querySelector('#therapy-home').addEventListener('click', () => { if(typeof personalRamzorKind === 'function' && !personalRamzorKind()) srvOpenPortal(); else showAppHome(); });
-  view.querySelectorAll('[data-th-tab]').forEach(b => b.addEventListener('click', () => { thp.tab = b.dataset.thTab; thp.editing = null; thpRender(); }));
-  view.querySelectorAll('[data-th-kid]').forEach(b => b.addEventListener('click', () => { if(thp.v32 && thp.tab === 'mine' && planCanEdit(b.dataset.thKid)) planOpenEditor(b.dataset.thKid); else thpOpenChild(b.dataset.thKid); }));
-  if(thp.tab === 'library') planWireLibrary(view.querySelector('#therapy-body'));
-  if(thp.tab === 'mine' && thp.v32) obsWireNotify(view.querySelector('#therapy-body'));
-  if(thp.editing && thp.v32 && planCanEdit(thp.editing)) planOpenEditor(thp.editing);
+  view.querySelectorAll('[data-th-tab]').forEach(b => b.addEventListener('click', () => { thp.tab = b.dataset.thTab; thp.editing = null; thp.wtab = null; thpRender(); }));
+  const body = view.querySelector('#therapy-body');
+  const wireKids = box => box.querySelectorAll('[data-th-kid]').forEach(b => b.addEventListener('click', () => { if(ther && thp.v32 && planCanEdit(b.dataset.thKid)) planOpenEditor(b.dataset.thKid, 'plan'); else thpOpenChild(b.dataset.thKid); }));
+  wireKids(body);
+  body.querySelectorAll('[data-todo-kid]').forEach(b => b.addEventListener('click', () => { if(planCanEdit(b.dataset.todoKid)) planOpenEditor(b.dataset.todoKid, b.dataset.todoTab); else thpOpenChild(b.dataset.todoKid); }));
+  const wireObs = box => box.querySelectorAll('[data-th-obs]').forEach(b => b.addEventListener('click', () => obsOpen(b.dataset.thObs)));
+  wireObs(body);
+  const q = body.querySelector('#th-q');
+  if(q) q.addEventListener('input', () => {          // (only the cards change, so the keyboard stays open)
+    thp.q = q.value.trim(); const box = body.querySelector('#th-kcards');
+    box.innerHTML = thpKids().filter(c => !thp.q || displayName(c).includes(thp.q)).map(thpStaffCard).join('') || '<div class="pnote">לא נמצא ילד בשם הזה.</div>';
+    wireKids(box); wireObs(box);
+  });
+  if(thp.tab === 'library') planWireLibrary(body);
+  if(thp.tab === 'settings') obsWireNotify(body);
+  if(thp.editing && ther && thp.v32 && planCanEdit(thp.editing)) planOpenEditor(thp.editing);
   view.querySelectorAll('[data-th-assign]').forEach(s => s.addEventListener('change', async () => {
     const child = s.dataset.thAssign, to = s.value || null, was = thp.assign[child] || null; s.disabled = true;
     const r = to ? await sbPersonal.from('child_therapist').upsert({ child_id:child, staff_id:to }) : await sbPersonal.from('child_therapist').delete().eq('child_id', child);
@@ -9483,18 +9621,17 @@ function thpRender(){
     toast(to ? `${t ? t.display_name : ''} אחראי/ת עכשיו על ${c ? displayName(c) : ''}` : 'השיוך הוסר');
   }));
 }
-// one child (stage 1: the frame; the plan, the guidance and the observations come in the next stages)
+// one child, as the staff sees it: the whole published plan
 function thpOpenChild(id){
   const c = roster.find(x => x.id === id); if(!c) return;
-  const g = thp.guidance && thp.guidance[id], edit = thp.v32 && planCanEdit(id);
+  const g = thp.guidance && thp.guidance[id];
   const sh = portalSheet(`<div class="th-child-head">${thpAvatar(c)}<h2 class="ar-keep">${pEsc(displayName(c))}</h2></div>
     ${g ? planGuidanceHtml(g) : `<div class="pnote">עוד אין תוכנית טיפולית ל${pEsc(displayName(c))}. כשאיש/אשת הטיפול יפרסמו אותה, יופיעו כאן מה במוקד, מה לעשות וממה להימנע.</div>`}
     ${thp.v32 ? '<button type="button" class="btn ghost" id="th-observe" style="width:100%;margin-top:8px">📝 תצפית לאיש/אשת הטיפול</button>' : ''}
     ${thp.v32 && srv.profile && srv.profile.admin ? '<button type="button" class="btn ghost" id="th-place" style="width:100%;margin-top:8px">מיקום במסע בחלל (מנהל)</button>' : ''}
-    <div class="confirm-actions" style="grid-template-columns:${edit ? '1fr 1fr' : '1fr'}">${edit ? '<button type="button" class="btn ghost" id="th-edit-plan">עריכת התוכנית</button>' : ''}<button type="button" class="btn" data-close>סגירה</button></div>`);
+    <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סגירה</button></div>`);
   const pl = sh.querySelector('#th-place'); if(pl) pl.addEventListener('click', () => { sh.close(); journeyPlaceSheet(id); });
   const ob = sh.querySelector('#th-observe'); if(ob) ob.addEventListener('click', () => { sh.close(); obsOpen(id); });
-  const ed = sh.querySelector('#th-edit-plan'); if(ed) ed.addEventListener('click', () => { sh.close(); planOpenEditor(id); });
 }
 // ---------- MERCURY: TREATMENT PLANS (stage 2) ----------
 // The therapist builds a plan per child: a short summary for the staff, "what to avoid", goals (up to 3 in focus) with what we see when
@@ -9544,12 +9681,10 @@ function planGoalHtml(g, i){
 }
 // ---- the plan editor (the responsible therapist, or the admin)
 function planEditorHtml(id){
-  const c = roster.find(x => x.id === id), row = thp.plans[id] || {}, d = row.draft || row.published || planEmpty();
-  const status = row.published_version ? `פורסמה גרסה ${row.published_version}${row.draft && JSON.stringify(row.draft) !== JSON.stringify(row.published) ? ' · יש שינויים שלא פורסמו' : ''}` : (row.draft ? 'טיוטה, עוד לא פורסמה' : 'תוכנית חדשה');
+  const row = thp.plans[id] || {}, d = row.draft || row.published || planEmpty();
   return `<div class="th-editor" data-plan="${pEsc(id)}">
     <datalist id="th-lib-goals">${thpLib('goal').map(x => `<option value="${pEsc(x.title)}">`).join('')}</datalist>
     <datalist id="th-lib-strengths">${thpLib('strength').map(x => `<option value="${pEsc(x.title)}">`).join('')}</datalist>
-    <div class="th-ed-head"><button type="button" class="btn ghost small" id="pe-back">→ חזרה</button><div class="th-child-head">${thpAvatar(c)}<h2 class="ar-keep">${pEsc(displayName(c))}</h2></div><span class="th-status">${status}</span></div>
     <label class="pfield">תקציר קצר לצוות<textarea id="pe-summary" rows="3" placeholder="בכמה משפטים: מה חשוב לדעת על הילד/ה עכשיו">${pEsc(d.summary || '')}</textarea></label>
     <label class="pfield th-avoid-field">ממה להימנע (מצבים או מילים שמעוררים את הילד/ה)<textarea id="pe-avoid" rows="2">${pEsc(d.avoid || '')}</textarea></label>
     <h3 class="psec">מטרות <small>(עד ${PLAN_FOCUS_MAX} במוקד)</small></h3>
@@ -9562,10 +9697,6 @@ function planEditorHtml(id){
     <label class="th-important"><input type="checkbox" id="pe-important"> שינוי חשוב: לשלוח לצוות גם מייל</label>
     <div class="th-actions"><button type="button" class="btn ghost" id="pe-save">שמירת טיוטה</button><button type="button" class="btn" id="pe-publish">פרסום</button>
       <button type="button" class="btn ghost" id="pe-versions"${row.published_version ? '' : ' disabled'}>גרסאות קודמות</button><button type="button" class="btn ghost" id="pe-print">הדפסה / PDF</button></div>
-    <div id="pe-temple" class="th-temple"></div>
-    <h3 class="psec">המסע בחלל</h3><div id="pe-journey"></div>
-    <h3 class="psec">תצפיות מהצוות</h3><div id="pe-obs"></div>
-    <h3 class="psec">מעקב, 8 שבועות</h3><div id="pe-track"></div>
   </div>`;
 }
 // the editor as it is on the screen now -> the draft
@@ -9585,11 +9716,28 @@ async function planSave(id, draft, review){
   if(r.error) return false;
   thp.plans[id] = r.data; return true;
 }
-function planOpenEditor(id){
-  thp.editing = id;
+// the therapist's workspace of one child: the plan, the observations, the tracking, the journey, the temple — each in its own tab
+const PLAN_WS_TABS = [['plan', 'התוכנית'], ['obs', 'תצפיות'], ['track', 'מעקב'], ['journey', 'המסע בחלל'], ['temple', 'המקדש']];
+const planStatus = id => { const row = thp.plans[id] || {}; return row.published_version ? `פורסמה גרסה ${row.published_version}${row.draft && JSON.stringify(row.draft) !== JSON.stringify(row.published) ? ' · יש שינויים שלא פורסמו' : ''}${row.review_date ? ' · בדיקה מחדש ' + dayLabel(row.review_date) : ''}` : (row.draft ? 'טיוטה, עוד לא פורסמה' : 'עוד אין תוכנית'); };
+function planOpenEditor(id, tab){
+  thp.editing = id; if(tab) thp.wtab = tab; if(!PLAN_WS_TABS.some(x => x[0] === thp.wtab)) thp.wtab = 'plan';
   const body = document.getElementById('therapy-body'); if(!body) return;
-  body.innerHTML = planEditorHtml(id);
-  const root = body.querySelector('.th-editor'), goalsBox = root.querySelector('#pe-goals');
+  const c = roster.find(x => x.id === id), unseen = (thp.unseen && thp.unseen[id]) || 0;
+  body.innerHTML = `<div class="th-ws" data-ws="${pEsc(id)}">
+    <div class="th-ed-head"><button type="button" class="btn ghost small" id="pe-back">→ חזרה</button><div class="th-child-head">${thpAvatar(c)}<h2 class="ar-keep">${pEsc(displayName(c))}</h2></div><span class="th-status">${pEsc(planStatus(id))}</span></div>
+    <nav class="portal-tabs th-ws-tabs" role="tablist">${PLAN_WS_TABS.map(([k, w]) => `<button type="button" role="tab" data-ws-tab="${k}" class="${k === thp.wtab ? 'active' : ''}">${w}${k === 'obs' && unseen ? ` <span class="pcount">${unseen}</span>` : ''}</button>`).join('')}</nav>
+    <div id="th-ws-body"></div></div>`;
+  body.querySelector('#pe-back').addEventListener('click', () => { thp.editing = null; thp.wtab = null; thpRender(); });
+  body.querySelectorAll('[data-ws-tab]').forEach(b => b.addEventListener('click', () => planOpenEditor(id, b.dataset.wsTab)));
+  const wb = body.querySelector('#th-ws-body');
+  if(thp.wtab === 'plan'){ wb.innerHTML = planEditorHtml(id); planWireEditor(id, wb.querySelector('.th-editor')); }
+  else if(thp.wtab === 'obs'){ wb.innerHTML = '<div id="pe-obs"></div>'; obsSection(id, wb.querySelector('#pe-obs')).then(() => { if(thp.unseen) thp.unseen[id] = 0; }); }
+  else if(thp.wtab === 'track'){ wb.innerHTML = '<div id="pe-track"></div>'; trackSection(id, wb.querySelector('#pe-track')); }
+  else if(thp.wtab === 'journey'){ wb.innerHTML = '<div id="pe-journey"></div>'; const jb = wb.querySelector('#pe-journey'), draw = async () => { jb.innerHTML = await journeyAdminHtml(id); journeyWireAdmin(jb, id, draw); }; draw(); }
+  else { wb.innerHTML = '<div id="pe-temple" class="th-temple"></div>'; planTemple(id, wb.querySelector('#pe-temple')); }
+}
+function planWireEditor(id, root){
+  const goalsBox = root.querySelector('#pe-goals');
   const wireGoal = el => {
     el.querySelector('.pe-g-rm').addEventListener('click', () => { el.remove(); });
     el.querySelector('.pe-g-focus').addEventListener('change', e => { if(e.target.checked && root.querySelectorAll('.pe-g-focus:checked').length > PLAN_FOCUS_MAX){ e.target.checked = false; toast(`אפשר עד ${PLAN_FOCUS_MAX} מטרות במוקד`); } });
@@ -9605,7 +9753,6 @@ function planOpenEditor(id){
     const tmp = document.createElement('div'); const g = planNewGoal();
     tmp.innerHTML = planGoalHtml(g, goalsBox.children.length); const el = tmp.firstElementChild; goalsBox.appendChild(el); wireGoal(el); el.querySelector('.pe-g-title').focus();
   });
-  root.querySelector('#pe-back').addEventListener('click', () => { thp.editing = null; thpRender(); });
   const save = async () => { const ok = await planSave(id, planRead(root), root.querySelector('#pe-review').value); if(!ok) toast('השמירה נכשלה. אפשר לנסות שוב בעוד רגע'); return ok; };
   root.querySelector('#pe-save').addEventListener('click', async e => { e.target.disabled = true; if(await save()){ toast('הטיוטה נשמרה. הצוות עוד רואה את הגרסה שפורסמה'); planOpenEditor(id); } else e.target.disabled = false; });
   root.querySelector('#pe-publish').addEventListener('click', async e => {
@@ -9620,9 +9767,6 @@ function planOpenEditor(id){
     await thpLoad(); thp.editing = id; planOpenEditor(id);
   });
   root.querySelector('#pe-versions').addEventListener('click', () => planVersions(id));
-  planTemple(id, root.querySelector('#pe-temple'));
-  { const jb = root.querySelector('#pe-journey'), draw = async () => { jb.innerHTML = await journeyAdminHtml(id); journeyWireAdmin(jb, id, draw); }; draw(); }
-  obsSection(id, root.querySelector('#pe-obs')); trackSection(id, root.querySelector('#pe-track'));
   root.querySelector('#pe-print').addEventListener('click', () => planPrint(id, planRead(root)));
   const fin = root.querySelector('#pe-file');
   fin.addEventListener('change', async () => {
