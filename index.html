@@ -596,11 +596,13 @@
   #view-manage .add-row{ flex-wrap:wrap; }
   #view-manage .add-row input, #view-manage .add-row select{ min-width:0; flex:1 1 120px; }
   #view-manage .add-row input[type=number]{ flex:0 1 90px; }
-  .roster-sw{
+  .roster-sw, .roster-th{
     flex:0 0 auto; width:104px; min-height:44px; padding:0 8px; background:var(--panel); color:var(--text); border:1px solid var(--line);
     border-radius:10px; font-family:'Rubik', sans-serif; font-size:13px; cursor:pointer;
   }
   .roster-row{ flex-wrap:nowrap; }
+  .roster-th{ width:118px; }
+  @media (max-width:520px){ .roster-row:has(.roster-th){ flex-wrap:wrap; } .roster-row:has(.roster-th) .roster-name{ flex:1 1 40%; } }          /* (Mercury: the therapist choice moves to a second line on a phone) */
   .roster-name{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* ---- folded protocol reminder ---- */
@@ -1021,6 +1023,8 @@
   /* the strength sheet of "המקדש שלי" */
   .strength-sheet .sheet-card{ max-width:520px; }
   .strength-chips{ display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+  .strength-extra-label{ font-size:13px; color:var(--muted); margin-top:4px; }          /* (Mercury: the child's own strengths that are not main yet) */
+  .strength-extra .strength-chip{ opacity:.85; font-size:.92em; }
   .strength-chip{
     flex:1 1 calc(33% - 10px); min-width:96px; min-height:54px; padding:10px 8px; border-radius:14px; cursor:pointer;
     font-family:inherit; font-size:17px; font-weight:700; color:var(--text); background:var(--panel-2); border:1px solid #d9b46a66;
@@ -1719,6 +1723,113 @@
   .portal-shell[data-ptheme=leopard] .cs-tab{ background:rgba(38,24,13,.92); border-color:rgba(226,182,92,.45); }
   .portal-shell[data-ptheme=leopard] .pnote, .portal-shell[data-ptheme=leopard] small{ color:#f0dcb8; }          /* (stronger contrast: the text reads clearly over the pattern) */
   .portal-shell[data-ptheme=leopard] .portal-hello, .portal-shell[data-ptheme=leopard] .pmonth b{ color:#fffaf0; text-shadow:0 1px 2px rgba(0,0,0,.6); }
+  /* ---------- Mercury: the therapy portal (14w-therapy-portal.js) ---------- */
+  #view-therapy .portal-shell{ max-width:960px; margin:0 auto; }
+  .th-kids{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px; margin:12px 0; }
+  .th-kid{ display:flex; align-items:center; gap:12px; min-height:64px; padding:10px 12px; text-align:right; border-radius:14px; border:1px solid var(--p-line, var(--line)); background:var(--p-panel, var(--panel)); color:var(--p-text, var(--text)); font-family:inherit; cursor:pointer; }
+  .th-kid:hover, .th-kid:focus-visible{ border-color:var(--gold); }
+  .th-kid-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .th-kid-text b{ font-size:16px; overflow-wrap:anywhere; }
+  .th-kid-text small{ font-size:12.5px; color:var(--p-muted, var(--muted)); }
+  .th-av{ flex:none; width:44px; height:44px; border-radius:50%; overflow:hidden; display:grid; place-items:center; background:var(--p-panel2, var(--panel-2)); border:1px solid var(--p-line, var(--line)); }
+  .th-av img{ width:100%; height:100%; object-fit:cover; }
+  .th-av-name{ font-weight:800; font-size:14px; color:var(--p-text, var(--text)); }
+  .th-assign{ display:flex; flex-direction:column; gap:6px; margin:12px 0; }
+  .th-assign-row{ display:grid; grid-template-columns:44px 1fr minmax(140px, 220px); align-items:center; gap:10px; padding:6px 10px; border-radius:12px; background:var(--p-panel, var(--panel)); border:1px solid var(--p-line, var(--line)); }
+  .th-assign-row b{ min-width:0; overflow-wrap:anywhere; }
+  .th-assign-row select{ min-height:44px; border-radius:10px; padding:6px 8px; font-family:inherit; font-size:15px; background:var(--p-panel2, var(--panel-2)); color:var(--p-text, var(--text)); border:1px solid var(--p-line, var(--line)); }
+  .th-child-head{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .th-child-head h2{ margin:0; }
+  @media (max-width:480px){ .th-assign-row{ grid-template-columns:40px 1fr; } .th-assign-row select{ grid-column:1 / -1; } }
+  /* ---- stage 2: the plan (14x-therapy-plans.js) ---- */
+  .th-kid.has-plan{ border-color:var(--p-yes, #7be0a0); }
+  .th-avoid{ margin:6px 0 10px; padding:10px 12px; border-radius:12px; border:2px solid var(--p-no, #ff8a80); background:var(--p-no-bg, #3a1a18); color:var(--p-text, var(--text)); }
+  .th-avoid b{ display:block; color:var(--p-no, #ff8a80); margin-bottom:2px; }
+  .th-summary{ margin:6px 0 10px; line-height:1.6; white-space:pre-line; }
+  .th-g{ margin:8px 0; padding:10px 12px; border-radius:12px; background:var(--p-panel, var(--panel)); border:1px solid var(--p-line, var(--line)); }
+  .th-g > b{ display:block; font-size:16px; margin-bottom:4px; }
+  .th-g-row{ margin:3px 0; line-height:1.55; white-space:pre-line; } .th-g-row span{ color:var(--p-muted, var(--muted)); font-weight:700; }
+  .th-chips{ display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+  .th-chip{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:14px; font-size:13px; font-weight:700; background:var(--p-panel2, var(--panel-2)); border:1px solid var(--gold); color:var(--p-text, var(--text)); }
+  .th-chip-x{ border:none; background:none; color:var(--p-muted, var(--muted)); cursor:pointer; font-size:12px; padding:0 2px; min-height:24px; }
+  .th-ver{ font-size:12px; color:var(--p-muted, var(--muted)); margin-top:8px; }
+  .th-editor{ display:flex; flex-direction:column; gap:10px; margin:10px 0 40px; }
+  .th-editor textarea, .th-editor input[type=text], .th-editor input[type=date], .th-editor select{ width:100%; min-height:44px; padding:8px 10px; border-radius:10px; font-family:inherit; font-size:16px; background:var(--p-panel2, var(--panel-2)); color:var(--p-text, var(--text)); border:1px solid var(--p-line, var(--line)); }
+  .th-editor .pfield{ display:flex; flex-direction:column; gap:4px; font-weight:700; font-size:14px; }
+  .th-ed-head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .th-ed-head .th-child-head{ margin:0; }
+  .th-status{ margin-inline-start:auto; font-size:13px; color:var(--p-muted, var(--muted)); }
+  .th-avoid-field textarea{ border:2px solid var(--p-no, #ff8a80) !important; }
+  .th-goal{ display:flex; flex-direction:column; gap:8px; padding:12px; border-radius:14px; border:1px solid var(--p-line, var(--line)); background:var(--p-panel, var(--panel)); margin-bottom:10px; }
+  .th-goal-top{ display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; }
+  .th-focus{ display:flex; align-items:center; gap:6px; font-weight:700; white-space:nowrap; min-height:44px; }
+  .th-focus input{ width:22px; height:22px; }
+  .th-add-row{ display:grid; grid-template-columns:1fr auto; gap:8px; }
+  .th-ed-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .th-file{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .th-important{ display:flex; align-items:center; gap:8px; font-weight:700; min-height:44px; } .th-important input{ width:22px; height:22px; }
+  .th-actions{ display:flex; flex-wrap:wrap; gap:8px; }
+  .th-lib-add{ display:grid; grid-template-columns:120px 1fr 1fr auto auto; gap:8px; margin:10px 0; }
+  .th-lib-add input, .th-lib-add select{ min-height:44px; border-radius:10px; padding:6px 8px; font-family:inherit; font-size:15px; background:var(--p-panel2, var(--panel-2)); color:var(--p-text, var(--text)); border:1px solid var(--p-line, var(--line)); }
+  .th-lib-item{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--p-line, var(--line)); }
+  .th-lib-item > span:first-child{ flex:1; min-width:0; display:flex; flex-direction:column; } .th-lib-item small{ color:var(--p-muted, var(--muted)); }
+  .th-lib-item.off{ opacity:.5; }
+  .th-lib-scope{ font-size:12px; font-weight:700; padding:2px 8px; border-radius:10px; border:1px solid var(--p-line, var(--line)); } .th-lib-scope.mercury{ border-color:var(--gold); }
+  @media (max-width:600px){ .th-ed-grid{ grid-template-columns:1fr; } .th-lib-add{ grid-template-columns:1fr 1fr; } .th-lib-add #lib-desc{ grid-column:1 / -1; } .th-goal-top{ grid-template-columns:1fr auto; } .th-goal-top .pe-g-rm{ grid-column:2; grid-row:1; } .th-goal-top .th-focus{ grid-column:1 / -1; } }
+  @media print{ .th-print{ font-family:'Assistant', sans-serif; font-size:11pt; } .th-print h1{ font-size:18pt; } .th-print h2{ font-size:13pt; margin-top:12px; } .th-print h3{ font-size:12pt; margin:8px 0 2px; } .th-print-meta{ color:#444; } .th-print-goal{ break-inside:avoid; border-top:1px solid #ccc; padding-top:4px; } }
+  /* ---- stage 3: the temple in the therapist's view ---- */
+  .th-bricks{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .th-brick{ display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; font-size:12.5px; background:rgba(214,166,92,.18); border:1px solid rgba(214,166,92,.55); color:var(--p-text, var(--text)); }
+  .th-brick small{ color:var(--p-muted, var(--muted)); font-size:11px; }
+  .th-plan-mark{ flex-basis:100%; display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:var(--gold); }
+  .th-plan-mark::before, .th-plan-mark::after{ content:''; flex:1; border-top:1px dashed var(--gold); }
+  .th-str-group{ margin:8px 0; } .th-str-group > b{ display:block; margin-bottom:4px; }
+  .th-str-row{ display:flex; align-items:center; gap:8px; padding:4px 0; } .th-str-row span{ flex:1; } .th-str-row small{ color:var(--p-muted, var(--muted)); }
+  /* ---- stage 4: the new space journey (14y-journey.js); the look is decided in the design session ---- */
+  .journey-where{ font-weight:700; margin:6px 0; }
+  .journey-dots, .tvj-track{ display:flex; gap:6px; margin:6px 0 10px; }
+  .journey-dots i, .tvj-track i{ width:14px; height:14px; border-radius:50%; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35); }
+  .journey-dots i.on, .tvj-track i.on{ background:var(--gold); border-color:var(--gold); }
+  .journey-ships{ display:grid; grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); gap:10px; margin:10px 0; }
+  .journey-admin{ display:flex; flex-direction:column; gap:10px; }
+  .journey-admin select, .journey-admin input{ min-height:44px; border-radius:10px; padding:6px 8px; font-family:inherit; font-size:15px; background:var(--p-panel2, var(--panel-2)); color:var(--p-text, var(--text)); border:1px solid var(--p-line, var(--line)); }
+  .tv-journey{ width:min(96vw, 1900px); height:100%; display:flex; align-items:center; justify-content:center; }
+  .tvj-rows{ display:flex; flex-direction:column; gap:1.6vmin; width:100%; }
+  .tvj-row{ display:grid; grid-template-columns:9vmin minmax(0, 18vw) 1fr 8vmin; align-items:center; gap:2vmin; padding:1vmin 2vmin; border-radius:2vmin; background:rgba(28,35,64,.6); }
+  .tvj-char img{ width:8vmin; height:8vmin; border-radius:50%; object-fit:cover; }
+  .tvj-name{ font-size:3.4vmin; font-weight:800; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tvj-track i{ width:3.2vmin; height:3.2vmin; }
+  .tvj-goal{ font-size:6vmin; text-align:center; }
+  #tv-journey-ms{ position:fixed; inset:0; z-index:46; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 35%, #33407e 0%, #1a2150 55%, #0e1230 100%); }
+  #tv-journey-ms[hidden]{ display:none; }
+  .tvj-ms{ display:flex; flex-direction:column; align-items:center; gap:3vmin; color:#fff; text-align:center; }
+  .tvj-ms-char img{ width:34vmin; height:34vmin; border-radius:50%; object-fit:cover; border:1vmin solid var(--gold); }
+  .tvj-ms-name{ font-size:9vmin; font-weight:900; }
+  .tvj-ms-words{ font-size:6vmin; font-weight:800; color:var(--gold); }
+  /* ---- stage 5: observations and tracking (14z-observations.js) ---- */
+  .obs-text{ width:100%; min-height:96px; border-radius:12px; padding:10px; font-family:inherit; font-size:16px; background:var(--p-panel2, var(--panel-2)); color:var(--p-text, var(--text)); border:1px solid var(--p-line, var(--line)); }
+  .obs-rec{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:10px 0; } .obs-rec audio{ max-width:100%; } .obs-rec-state{ font-weight:700; color:var(--p-no, #ff8a80); }
+  .obs-goals button.on{ border-color:var(--gold); background:rgba(240,194,57,.15); }
+  .obs-item{ padding:10px 12px; margin:8px 0; border-radius:12px; border:1px solid var(--p-line, var(--line)); background:var(--p-panel, var(--panel)); }
+  .obs-item.new{ border-color:var(--gold); }
+  .obs-head{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; } .obs-head small{ color:var(--p-muted, var(--muted)); }
+  .obs-body{ margin:6px 0; white-space:pre-line; line-height:1.55; }
+  .obs-reply{ font-size:13px; color:var(--p-yes, #7be0a0); margin-top:6px; }
+  .trk-sentence{ font-weight:700; margin:6px 0; }
+  .trk-scroll{ overflow-x:auto; } .trk-table{ border-collapse:collapse; font-size:13px; min-width:520px; width:100%; }
+  .trk-table th, .trk-table td{ border:1px solid var(--p-line, var(--line)); padding:4px 6px; text-align:center; font-variant-numeric:tabular-nums; } .trk-table tbody th{ text-align:right; font-weight:700; white-space:nowrap; }
+  .trk-chart{ margin:10px 0; } .trk-bars{ display:grid; grid-template-columns:repeat(8, 1fr); gap:6px; height:90px; align-items:end; margin-top:6px; }
+  .trk-bars span{ height:100%; display:flex; align-items:flex-end; background:var(--p-panel2, var(--panel-2)); border-radius:6px; } .trk-bars i{ display:block; width:100%; background:var(--gold); border-radius:6px; min-height:2px; }
+  .th-notify{ margin:6px 0 10px; }
+  .th-g-row em{ font-style:normal; }
+  /* ---- stage 6: a kids' screen joins by a code (14za-tv-pair.js) ---- */
+  #tv-pair{ position:fixed; inset:0; z-index:500; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 35%, #33407e 0%, #1a2150 55%, #0e1230 100%); color:#fff; padding:16px; }
+  #tv-pair[hidden]{ display:none; }
+  .tvp-card{ width:min(560px, 100%); display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; }
+  .tvp-emoji{ font-size:64px; } .tvp-card h1{ margin:0; font-size:30px; } .tvp-card p{ margin:0; line-height:1.6; color:#d8dcf0; }
+  #tvp-code{ width:100%; min-height:64px; font-size:34px; letter-spacing:.4em; text-align:center; border-radius:14px; border:2px solid var(--gold); background:rgba(255,255,255,.08); color:#fff; font-family:inherit; }
+  #tvp-go{ min-width:200px; min-height:56px; font-size:20px; }
+  .tvp-err{ min-height:24px; color:#ffb3a7; font-weight:700; }
 </style>
 </head>
 <body>
@@ -1782,6 +1893,7 @@
   <section class="view" id="view-apphome"></section>
   <section class="view" id="view-portal"></section>
   <section class="view" id="view-control"></section>
+  <section class="view" id="view-therapy"></section>
 
   <!-- ============ HUB (post-login landing page) ============ -->
   <section class="view active" id="view-hub">
@@ -1849,6 +1961,9 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:8px; padding-inline-start:50px;">
           <button class="btn ghost" id="kq-revoke-bonus-btn">🍬 גריעת בונוס</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; padding-inline-start:50px; margin-top:24px;">
+          <button class="btn ghost" id="kq-observe-btn">📝 תצפית לאיש/אשת הטיפול</button>
         </div>
       </div>
 
@@ -2092,6 +2207,7 @@
       <div class="slide" id="slide-10"><div class="tv-timetable" id="tv-timetable"></div></div>
       <div class="slide" id="slide-11"><div class="tv-week" id="tv-week"></div></div>
       <div class="slide" id="slide-12"><div class="tv-birthdays" id="tv-birthdays"></div></div>
+      <div class="slide" id="slide-13"><div class="tv-journey" id="tv-journey"></div></div>
     </div>
     <button type="button" class="tv-sound-btn" id="tv-sound-btn" aria-label="הפעלת קול (לחצו על כל כפתור בשלט)" title="הפעלת קול">🔈</button>
   </section>
@@ -2153,6 +2269,8 @@ if(location.hash === '#t') history.replaceState(null, '', location.pathname + lo
 
 // ---------- ENVIRONMENT + SUPABASE CONFIG (filled in by build.ps1 from config/<env>.json) ----------
 const APP_ENV = 'test';   // 'live' (what staff use) or 'test' (the safe sandbox)
+// Mercury stage 6: the shared staff password is gone (decision 32); only the automatic checks and the demo of the test site still sign in with it
+const staffPasswordOn = () => APP_ENV === 'test' && !!window.__staffPasswordOn;          // (set by the test-only checks and demo, which are not in the live build)
 const SUPABASE_URL = 'https://anxisgqhaxhbfffmtcrc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFueGlzZ3FoYXhoYmZmZm10Y3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NjIyMDMsImV4cCI6MjEwNjUzODIwM30.G9SlMmctJ2wJtho3_93KT7E-hAzH0u3QPNgY4sYlusY';
 const STAFF_EMAIL = 'staff@merkaz-cherum.local';
@@ -2616,11 +2734,31 @@ async function setChildSocialWorker(childId, worker){
   child.swName = worker ? worker.name : ''; child.swPhone = worker ? worker.phone : '';
   return true;
 }
+// Mercury: the responsible therapist of every child, chosen next to the child (scheduling-v31.sql). null = not read yet, false = not available here
+let rosterTh = null;
+async function loadRosterTherapists(){
+  const client = (typeof ramzorPersonal !== 'undefined' && ramzorPersonal) ? sb : (MANAGER_LOGIN && typeof sbAdmin !== 'undefined' ? sbAdmin : sb);
+  try {
+    const [a, s, p] = await Promise.all([client.from('child_therapist').select('child_id,staff_id'), client.from('staff').select('id,display_name,kind,active'), client.from('staff_private').select('staff_id,is_therapist')]);
+    if(a.error || s.error || p.error) throw (a.error || s.error || p.error);
+    const flag = {}; (p.data || []).forEach(r => { flag[r.staff_id] = !!r.is_therapist; });
+    const map = {}; (a.data || []).forEach(r => { map[r.child_id] = r.staff_id; });
+    rosterTh = { map, list:(s.data || []).filter(x => x.active && (x.kind === 'therapist' || flag[x.id])).sort((x, y) => String(x.display_name).localeCompare(String(y.display_name), 'he')) };
+  } catch(e){ rosterTh = false; }
+}
+async function setChildTherapist(childId, staffId){
+  const client = (typeof ramzorPersonal !== 'undefined' && ramzorPersonal) ? sb : await adminClient(); if(!client) return false;
+  const r = staffId ? await client.from('child_therapist').upsert({ child_id:childId, staff_id:staffId }) : await client.from('child_therapist').delete().eq('child_id', childId);
+  if(r.error){ console.error(r.error); return false; }
+  if(staffId) rosterTh.map[childId] = staffId; else delete rosterTh.map[childId];
+  return true;
+}
 let shipPickerOpenFor = null;
 let charPickerOpenFor = null;
 function renderManageRoster(){
   const el = document.getElementById('roster-list');
   if(!roster.length){ el.innerHTML = '<div class="empty">אין עדיין ילדים ברשימה</div>'; return; }
+  if(rosterTh === null){ rosterTh = undefined; loadRosterTherapists().then(() => { if(rosterTh) renderManageRoster(); }); }          // (read once; the list shows at once and the therapist choice joins it)
   el.innerHTML = roster.map(c => {
     const ship = shipFor(c.id);
     const picker = c.id !== shipPickerOpenFor ? '' : `
@@ -2649,6 +2787,7 @@ function renderManageRoster(){
           <option value="">ללא עו״סית</option>
           ${socialWorkers().map(w => `<option value="${w.phone}"${digitsOnly(c.swPhone) === w.phone ? ' selected' : ''}>${escapeHtml(w.name)}</option>`).join('')}
         </select>
+        ${rosterTh ? `<select class="roster-th" data-th-for="${c.id}" aria-label="איש/אשת הטיפול של ${escapeHtml(displayName(c))}"><option value="">ללא איש טיפול</option>${rosterTh.list.map(x => `<option value="${x.id}"${rosterTh.map[c.id] === x.id ? ' selected' : ''}>${escapeHtml(x.display_name)}</option>`).join('')}</select>` : ''}
         <button type="button" class="rm" data-id="${c.id}" aria-label="מחיקה">✕</button>
       </div>${picker}${charPicker}`;
   }).join('');
@@ -2664,6 +2803,13 @@ function renderManageRoster(){
     });
   });
 
+  el.querySelectorAll('.roster-th').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const ok = await setChildTherapist(sel.dataset.thFor, sel.value || null);
+      toast(ok ? 'איש/אשת הטיפול עודכנו' : 'השמירה נכשלה — בדקו חיבור ונסו שוב');
+      renderManageRoster();
+    });
+  });
   el.querySelectorAll('.roster-sw').forEach(sel => {
     sel.addEventListener('change', async () => {
       const worker = socialWorkers().find(w => w.phone === sel.value) || null;
@@ -3510,6 +3656,7 @@ async function giveBrick(childId, strength){
   const n = r.after.bricks || 0;
   const msg = (n >= WALL_BRICKS ? `🧱🎉 המקדש של ${displayName(child)} הושלם!` : `🧱 לבנה נוספה ל${displayName(child)} — ${n} מתוך ${WALL_BRICKS}`) + (why ? ` · כוח: ${why}` : '');
   logFeedbackEvent(child.id, 'bricks', msg);
+  if(why) sb.rpc('note_strength', { p_child:child.id, p_strength:why }).then(() => {}, () => {});          // (Mercury: the child's strengths; chosen by two instructors -> the child's main suggestions)
   toast(msg);
   return true;
 }
@@ -3518,6 +3665,7 @@ async function renderMoonPanel(containerId){
   const child = roster.find(c=>c.id===selectedStaffChild);
   const state = await getChildState(selectedStaffChild);
   const fb = document.getElementById(containerId);
+  if(typeof journeyPanel === 'function' && await journeyPanel(child, fb, containerId)) return;          // (Mercury: the new journey by skills, 14y-journey.js; a child placed there or new)
   const inStage2 = (state.moonSteps || 0) >= 7;
   const stage2Done = (state.mercurySteps || 0) >= 7;
 
@@ -3712,15 +3860,26 @@ async function renderWallsBoard(){
 // ---- the instructor names the strength before a brick is given: "איזה כוח ראית בו עכשיו?" (one quick tap)
 const BRICK_STRENGTHS = ['אומץ', 'התמדה', 'גמישות', 'בקשת עזרה', 'סבלנות', 'נדיבות', 'קבלה'];
 const cleanStrength = s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 20);
+// Mercury (stage 3): the strengths offered are the plan's and the child's own; a child with no published plan gets the general list (decisions 26, 28)
+async function brickStrengthList(child){
+  try {
+    const r = await sb.rpc('brick_strengths', { p_child:child.id });
+    if(r.error || !r.data) return { main:BRICK_STRENGTHS, extra:[] };
+    const main = [...new Set([].concat(r.data.plan || [], r.data.main || []).map(cleanStrength).filter(Boolean))];
+    const extra = (r.data.extra || []).map(cleanStrength).filter(s => s && !main.includes(s)).slice(0, 8);
+    return main.length || extra.length ? { main, extra } : { main:BRICK_STRENGTHS, extra:[] };
+  } catch(e){ return { main:BRICK_STRENGTHS, extra:[] }; }
+}
 // resolves to the strength's name ('' is never returned: "אחר" without text gives 'אחר'), or null if they went back
-function askBrickStrength(child){
+async function askBrickStrength(child){
+  const list = await brickStrengthList(child);
   return new Promise(resolve => {
     const wrap = document.createElement('div');
     wrap.className = 'sheet strength-sheet';
     wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
     wrap.innerHTML = `<div class="sheet-card">
         <h2></h2>
-        <div class="strength-chips">${BRICK_STRENGTHS.map(s => `<button type="button" class="strength-chip" data-s="${s}">${s}</button>`).join('')}<button type="button" class="strength-chip strength-other-btn">אחר</button></div>
+        <div class="strength-chips">${list.main.map(s => `<button type="button" class="strength-chip" data-s="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('')}<button type="button" class="strength-chip strength-other-btn">אחר</button></div>${list.extra.length ? `<div class="strength-extra-label">הצעות נוספות</div><div class="strength-chips strength-extra">${list.extra.map(s => `<button type="button" class="strength-chip" data-s="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('')}</div>` : ''}
         <div class="strength-other" hidden><input type="text" class="confirm-input strength-input" maxlength="20" autocomplete="off" placeholder="איזה כוח? (לא חובה)" aria-label="כוח אחר"><button type="button" class="btn strength-ok">הוספת לבנה</button></div>
         <div class="confirm-actions strength-actions"><button type="button" class="btn ghost strength-cancel">חזרה</button></div>
       </div>`;
@@ -4367,7 +4526,8 @@ function handleTvCommand(c){
   else if(c.cmd === 'show' && visibleSlideIds().includes(c.slide)){ tvHold(); showSlide(c.slide); }
   else if(c.cmd === 'next'){ tvHold(); tvStep(1); }
   else if(c.cmd === 'prev'){ tvHold(); tvStep(-1); }
-  else if(c.cmd === 'summary' && c.child && typeof showChildSummary === 'function') showChildSummary(c.child);          // (a child's summary: 14q-child-summary.js)
+  else if(c.cmd === 'summary' && c.child && typeof showChildSummary === 'function') showChildSummary(c.child);
+  else if(c.cmd === 'journey' && c.child && typeof journeyShowMilestone === 'function') journeyShowMilestone(c.child, c.milestone);          // (Mercury: a milestone, when the instructor says the child may watch)          // (a child's summary: 14q-child-summary.js)
 }
 function announceTvStatus(){
   if(tvControlChannel && !IS_TV_PREVIEW) tvControlChannel.send({ type:'broadcast', event:'status', payload: tvStatusPayload() });
@@ -4663,6 +4823,7 @@ function celebrateFeedbackEvent(ev){
   if(!document.getElementById('view-display').classList.contains('active')) return;
   const type = ev.type, childId = ev.child_id;
   const child = roster.find(c => c.id === childId);
+  if(type === 'journey'){ if(child && typeof journeyCelebrate === 'function') journeyCelebrate(ev, child); return; }          // (Mercury: a step of the new journey)
   if(!(type in EVENT_TYPE_SLIDE) || type === 'bonus' || !child) return;
   queueCelebration(async () => {
     const state = await getChildState(childId);
@@ -5529,11 +5690,16 @@ function showAppHome(){
           <span class="home-card-title">הרמזור</span>
           <span class="home-card-sub">תפעול יומיומי ומסך הילדים</span>
         </button>
-        <button type="button" class="home-card" id="apphome-portal">
+        ${(portalMe() || {}).role === 'therapist' ? '' : `<button type="button" class="home-card" id="apphome-portal">
           <span class="apphome-emoji" aria-hidden="true">👥</span>
           <span class="home-card-title">${portalServerOn && (portalMe() || {}).role === 'coordinator' ? ((portalMe() || {}).admin ? 'פורטל ניהול' : 'פורטל הרכזת') : 'פורטל המדריך'}</span>
           <span class="home-card-sub">משמרות, העדפות והודעות</span>
-        </button>
+        </button>`}
+        ${typeof therapyAvailable === 'function' && therapyAvailable() ? `<button type="button" class="home-card" id="apphome-therapy">
+          <span class="apphome-emoji" aria-hidden="true">🌱</span>
+          <span class="home-card-title">פורטל הטיפול</span>
+          <span class="home-card-sub">התוכנית הטיפולית של כל ילד, והכוונה לצוות</span>
+        </button>` : ''}
         ${portalServerOn && (portalMe() || {}).admin && (portalMe() || {}).role !== 'coordinator' ? `<button type="button" class="home-card" id="apphome-manage">
           <span class="apphome-emoji" aria-hidden="true">🛠️</span>
           <span class="home-card-title">פורטל ניהול</span>
@@ -5544,7 +5710,8 @@ function showAppHome(){
       ${portalServerOn || sbPersonal ? '' : '<div class="apphome-demo">גרסת דמו של הפורטל: הנתונים בו לדוגמה בלבד ונשמרים במכשיר הזה.</div>'}
     </div>`;
   document.getElementById('apphome-ramzor').addEventListener('click', showHub);
-  document.getElementById('apphome-portal').addEventListener('click', () => { portalUi.manager = false; if(portalServerOn) srvOpenPortal(); else if(typeof srvShowLogin === 'function' && sbPersonal && !window.__portalDemo) srvShowLogin('email'); else showPortal(); });          // (with the staff password: the personal sign-in, not a demo)
+  { const th = document.getElementById('apphome-therapy'); if(th) th.addEventListener('click', showTherapyPortal); }          // (Mercury: the therapy portal, 14w-therapy-portal.js)
+  if(document.getElementById('apphome-portal')) document.getElementById('apphome-portal').addEventListener('click', () => { portalUi.manager = false; if(portalServerOn) srvOpenPortal(); else if(typeof srvShowLogin === 'function' && sbPersonal && !window.__portalDemo) srvShowLogin('email'); else showPortal(); });          // (with the staff password: the personal sign-in, not a demo)
   const mg = document.getElementById('apphome-manage'); if(mg) mg.addEventListener('click', () => { portalUi.manager = true; srvOpenPortal(); });
   document.getElementById('apphome-logout').addEventListener('click', () => document.getElementById('hub-logout-link').click());
 }
@@ -5572,7 +5739,7 @@ function showPortal(tab){
       <div class="portal-top">
         <button type="button" class="back-btn portal-back" id="portal-home">${portalServerOn && !ramzorPersonal ? 'יציאה' : '→ מסך ראשי'}</button>
         <h1 class="portal-title">${portalServerOn && portalAsCoord(me) ? (me.admin ? 'פורטל ניהול' : 'פורטל הרכזת') : portalServerOn && me.role === 'service' ? 'פורטל בנות השירות' : 'פורטל המדריך'}</h1>
-        <span class="portal-top-actions">${portalServerOn ? '<button type="button" class="portal-theme" id="portal-gear" aria-label="העדפות מערכת" title="העדפות מערכת">⚙️</button>' : ''}<button type="button" class="portal-theme" id="portal-theme" aria-label="החלפה בין מצב כהה לבהיר">${leopard ? '🐆' : st.settings.theme === 'dark' ? '☀️' : '🌙'}</button></span>
+        <span class="portal-top-actions">${portalServerOn && ['service', 'teacher'].includes(me.role) && typeof therapyAvailable === 'function' && therapyAvailable() ? '<button type="button" class="portal-theme" id="portal-therapy" aria-label="פורטל הטיפול" title="פורטל הטיפול">🌱</button>' : ''}${portalServerOn ? '<button type="button" class="portal-theme" id="portal-gear" aria-label="העדפות מערכת" title="העדפות מערכת">⚙️</button>' : ''}<button type="button" class="portal-theme" id="portal-theme" aria-label="החלפה בין מצב כהה לבהיר">${leopard ? '🐆' : st.settings.theme === 'dark' ? '☀️' : '🌙'}</button></span>
       </div>
       ${portalServerOn ? `<div class="portal-hello">שלום ${pEsc(me.first)}</div>` : `<label class="portal-as">צפייה כ:
         <select id="portal-persona">${st.instructors.filter(p => p.active).map(p => `<option value="${p.id}"${p.id === me.id ? ' selected' : ''}>${pEsc(instrName(p, st.instructors))}${p.role === 'coordinator' ? ' (רכזת)' : ''}</option>`).join('')}</select>
@@ -5593,6 +5760,7 @@ function showPortal(tab){
   }
   document.getElementById('portal-home').addEventListener('click', portalServerOn && !ramzorPersonal ? srvSignOut : showAppHome);          // (after the one personal sign-in: back to the two cards; leaving is there)
   const gear = document.getElementById('portal-gear'); if(gear) gear.addEventListener('click', openPortalSettings);
+  { const th = document.getElementById('portal-therapy'); if(th) th.addEventListener('click', showTherapyPortal); }          // (service girls and teachers: their way to the therapy portal)
   const prob = document.getElementById('portal-problem'); if(prob) prob.addEventListener('click', openProblemReport);
   document.getElementById('portal-theme').addEventListener('click', () => { if(leopard){ srv.portalTheme = null; srvSaveSetting({ portalTheme:st.settings.theme }); showPortal(); return; } st.settings.theme = st.settings.theme === 'dark' ? 'light' : 'dark'; if(portalServerOn){ try { localStorage.setItem('ramzor-portal-theme', st.settings.theme); } catch(e){} } else portalSave(); showPortal(); });
   if(!portalServerOn) document.getElementById('portal-persona').addEventListener('change', e => { portalUi.persona = e.target.value; portalUi.tab = null; showPortal(); });
@@ -6609,7 +6777,7 @@ async function srvSwapAction(fn, args){
 }
 // ---- sign in: the personal password (chosen at the first entry), or a code by e-mail (the first entry, or a forgotten password)
 function srvLoginHtml(step, email){
-  const staffLink = location.hash === '#portal' ? '' : '<button type="button" class="plogin-staff-link" id="plogin-staff">כניסה למכשיר של המרכז (סיסמת צוות)</button>';          // (not on the first screen: a small link at the bottom)
+  const staffLink = location.hash === '#portal' || !staffPasswordOn() ? '' : '<button type="button" class="plogin-staff-link" id="plogin-staff">כניסה למכשיר של המרכז (סיסמת צוות)</button>';          // (not on the first screen: a small link at the bottom)
   let inner;
   if(step === 'code') inner = `
         <h2>הקלידו את הקוד</h2>
@@ -6711,7 +6879,7 @@ async function srvStart(){
 // ---- one personal sign-in for the portal AND the Ramzor: after it, the Ramzor reads its data with the personal session
 // (supabase/scheduling-v15.sql lets an active instructor / coordinator / admin read and work with the Ramzor's data)
 let ramzorPersonal = false;
-const personalRamzorKind = () => !!(srv.profile && ['instructor', 'coordinator', 'admin'].includes(srv.profile.kind)) || ['instructor', 'coordinator'].includes((portalMe() || {}).role);
+const personalRamzorKind = () => !!(srv.profile && ['instructor', 'coordinator', 'admin', 'therapist'].includes(srv.profile.kind)) || ['instructor', 'coordinator'].includes((portalMe() || {}).role);
 async function personalEnter(){
   portalServerOn = true; portalUi.viewAs = null; portalUi.manager = false;          // (a new sign-in never keeps somebody else's view)
   if(!(await srvLoadFirst())) return false;
@@ -7394,7 +7562,7 @@ function srvAskBeforePlacing(staffId, key){
 
 // ---------- THE PORTAL ON THE SERVER: the coordinator's other screens (who submitted, absences, vacation requests, settings) ----------
 const ABSENCE_REASONS = [['sick', 'מחלה'], ['reserve', 'מילואים'], ['leave', 'חופשה מיוחדת / לידה'], ['other', 'אחר']];
-const KIND_WORD = { instructor:'מדריך/ה', service:'בת שירות', teacher:'מורה / גננת', coordinator:'רכזת' };
+const KIND_WORD = { instructor:'מדריך/ה', service:'בת שירות', teacher:'מורה / גננת', coordinator:'רכזת', therapist:'איש/אשת טיפול' };
 const nameOf = id => { const p = portalPerson(id); return p ? instrName(p, portalLoad().instructors) : '?'; };
 const shortDate = d => `${parseIso(d).getDate()}/${parseIso(d).getMonth() + 1}`;
 // the days of one person as ranges: ['2026-12-03','2026-12-04','2026-12-05'] -> '3/12–5/12'
@@ -7410,7 +7578,7 @@ function srvRenderSubmissions(body){
   if(!body.isConnected) return;                                   // (a screen that finished loading after the person left it must not draw)
   const st = portalLoad();
   if(!portalUi.smonth) portalUi.smonth = addMonths(monthKeyOf(srvToday()), 1);
-  const mk = portalUi.smonth, m = portalMonth(mk), people = st.instructors.filter(p => p.active && p.role !== 'coordinator');
+  const mk = portalUi.smonth, m = portalMonth(mk), people = st.instructors.filter(p => p.active && !['coordinator', 'therapist'].includes(p.role));          // (a therapist hands in no preferences)
   const missing = people.filter(p => !m.submitted[p.id]), done = people.filter(p => m.submitted[p.id]);
   const subRow = p => { const pr = m.prefs[p.id] || { slots:{}, absent:[], hours:{} }, c = { avoid:0, no:0 }; Object.values(pr.slots).forEach(v => { if(c[v] !== undefined) c[v]++; });
     const note = m.notes && m.notes[p.id];
@@ -7429,7 +7597,7 @@ function srvRenderSubmissions(body){
   document.getElementById('abs-add').addEventListener('click', () => srvAbsenceSheet(body));
 }
 function srvAbsenceSheet(body){
-  const st = portalLoad(), people = st.instructors.filter(p => p.active && p.role !== 'coordinator'), today = srvToday();
+  const st = portalLoad(), people = st.instructors.filter(p => p.active && !['coordinator', 'therapist'].includes(p.role)), today = srvToday();
   const sh = portalSheet(`<h2>הוספת היעדרות</h2>
     <label class="pfield">מי<select id="ab-who">${people.map(p => `<option value="${p.id}">${pEsc(instrName(p, st.instructors))}</option>`).join('')}</select></label>
     <label class="pfield">סיבה<select id="ab-why">${ABSENCE_REASONS.map(r => `<option value="${r[0]}">${r[1]}</option>`).join('')}</select></label>
@@ -7536,7 +7704,7 @@ function srvRenderCoordSettings(body){
         <input type="email" dir="ltr" placeholder="מייל" value="${pEsc((priv[p.id] || {}).email || '')}" data-mail="${p.id}"><input type="tel" dir="ltr" placeholder="טלפון" value="${pEsc((priv[p.id] || {}).phone || '')}" data-phone="${p.id}">
         ${(priv[p.id] || {}).auth_user_id ? '<em class="pst pst-approved">מחובר/ת</em>' : `<button type="button" class="btn ghost small" data-login="${p.id}">יצירת התחברות</button>`}</div>`).join('')}
       <h3 class="psec">הוספת איש צוות</h3>
-      <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם (כפי שיוצג)"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option></select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
+      <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם (כפי שיוצג)"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option>${srv.profile && 'therapist' in srv.profile ? '<option value="therapist">איש/אשת טיפול</option>' : ''}</select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
       const wire = box => {
         box.querySelectorAll('[data-phone]').forEach(inp => inp.addEventListener('change', async () => {          // (for a WhatsApp chat from the schedule; scheduling-v21.sql)
           const phone = inp.value.trim() || null;
@@ -7586,7 +7754,7 @@ function srvRenderCoordSettings(body){
           const s = await sbPersonal.from('staff').insert({ display_name:name, kind, sort_order:maxOrder + 1 }).select('id').single();
           if(s.error){ toast('ההוספה נכשלה'); return; }
           const role = kind === 'instructor' ? roleSel.value : 'plain';
-          const pr = await sbPersonal.from('staff_private').insert({ staff_id:s.data.id, email:mail, female:true, is_leader:role === 'leader', ahmash_rank:role === 'ahmash' ? 1 : 0, leader_priority:kind === 'instructor' ? instr.length + 1 : null });
+          const pr = await sbPersonal.from('staff_private').insert({ staff_id:s.data.id, email:mail, female:true, is_leader:role === 'leader', ahmash_rank:role === 'ahmash' ? 1 : 0, leader_priority:kind === 'instructor' ? instr.length + 1 : null, ...(kind === 'therapist' ? { is_therapist:true } : {}) });          // (a therapist: scheduling-v31.sql)
           toast(pr.error ? 'האדם נוסף, אבל המייל לא נשמר' : 'נוסף. אפשר ליצור לו התחברות.'); again();
         });
       };
@@ -7670,6 +7838,18 @@ function srvRenderCoordSettings(body){
       <div class="pnote">מי שינה משמרת ומתי. מקובץ לפי סוג השינוי; פותחים קבוצה כדי לראות את השינויים בה (החדשים למעלה).</div>
       ${GROUPS.map(([key, title, test]) => { const list = rows.filter(test); return `<details class="pfold pfold-in" data-lgroup="${key}"><summary><span>${title}</span><span class="pcount">${list.length}</span></summary><div class="pfold-body">${list.slice(0, 60).map(line).join('') || '<div class="pnote">אין.</div>'}${list.length > 60 ? `<div class="pnote">ועוד ${list.length - 60} שינויים ישנים יותר.</div>` : ''}</div></details>`; }).join('')}`;
       return { html, wire:() => {} };
+    }],
+    screens: [() => 'מסכי הילדים בחדר', async () => {          // (Mercury stage 6: no staff password; a screen joins by a code sent by e-mail, scheduling-v32.sql)
+      const r = await sbPersonal.from('tv_devices').select('id,name,created_at,last_seen,active').order('created_at', { ascending:false });
+      if(r.error) return { html:'<div class="pnote">צריך את SQL 32.</div>', wire:() => {} };
+      const when = x => x ? new Date(x).toLocaleString('he-IL', { dateStyle:'short', timeStyle:'short' }) : 'עוד לא';
+      const html = `<div class="pnote">מסך ילדים מתחבר פעם אחת בקוד קצר. הקוד נשלח במייל אלייך, תקף ל-15 דקות, ומקלידים אותו במסך (בכתובת של מסך הילדים).</div>
+        <button type="button" class="btn" id="tv-code-new">שליחת קוד למסך חדש</button>
+        ${(r.data || []).map(d => `<div class="pmine-row"><span><b>${pEsc(d.name)}</b><br><small>חובר ${when(d.created_at)} · נראה לאחרונה ${when(d.last_seen)}${d.active ? '' : ' · מנותק'}</small></span>${d.active ? `<button type="button" class="btn ghost small" data-tv-off="${d.id}">ניתוק</button>` : ''}</div>`).join('') || '<div class="pnote">עוד אין מסכים מחוברים.</div>'}`;
+      return { html, wire:box => {
+        box.querySelector('#tv-code-new').addEventListener('click', async e => { e.target.disabled = true; const x = await sbPersonal.rpc('tv_code_new'); e.target.disabled = false; toast(x.error ? 'שליחת הקוד נכשלה' : 'הקוד נשלח למייל שלך. הוא תקף ל-15 דקות'); });
+        box.querySelectorAll('[data-tv-off]').forEach(b => b.addEventListener('click', async () => { if(!(await confirmSheet({ title:'לנתק את המסך?', text:'המסך יפסיק להציג עד שיחובר מחדש בקוד.', okLabel:'כן, לנתק', cancelLabel:'חזרה', danger:true }))) return; const x = await sbPersonal.rpc('tv_revoke', { p_id:b.dataset.tvOff }); toast(x.error ? 'הניתוק נכשל' : 'המסך נותק'); again(); }));
+      } };
     }]
   };
   const fill = async id => {
@@ -8159,7 +8339,7 @@ async function ctlShifts(box){
   }));
   box.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
     const code = b.dataset.add, here = new Set(groups[code].filter(p => !p.removed).map(p => p.id));
-    const people = st.instructors.filter(p => p.active && p.role !== 'coordinator' && !here.has(p.id)).sort((a, c) => String(a.first).localeCompare(String(c.first), 'he'));
+    const people = st.instructors.filter(p => p.active && !['coordinator', 'therapist'].includes(p.role) && !here.has(p.id)).sort((a, c) => String(a.first).localeCompare(String(c.first), 'he'));
     const sh = portalSheet(`<h2>הוספה למשמרת ה${CTL_SHIFTS.find(x => x[0] === code)[1]}</h2>
       <input type="search" class="ctl-search" id="ctl-search" placeholder="חיפוש שם" autocomplete="off">
       <div class="ctl-pick">${people.map(p => `<button type="button" class="ctl-pick-item" data-pick="${p.id}" data-name="${pEsc(p.first)}"><img src="${p.photo}" alt=""><span>${pEsc(instrName(p, st.instructors))}</span><small>${KIND_WORD[p.role] || ''}</small></button>`).join('')}</div>
@@ -8601,10 +8781,12 @@ async function adminStaff(box, body){
   ]);
   const extra = !priv.error;          // (personal minimums, the day colleague and the language come with scheduling-v25.sql)
   if(!extra) priv = await sbPersonal.from('staff_private').select(BASE);
+  const thr = await sbPersonal.from('staff_private').select('staff_id,is_therapist'), mercury = !thr.error;          // (Mercury: "also a therapist", scheduling-v31.sql)
+  const isTh = {}; if(mercury) (thr.data || []).forEach(r => { isTh[r.staff_id] = !!r.is_therapist; });
   if(staff.error || priv.error) throw staff.error || priv.error;
   const pv = {}; (priv.data || []).forEach(p => { pv[p.staff_id] = p; });
-  const KIND = { instructor:'מדריך/ה', service:'בת שירות', teacher:'מורה / גננת', coordinator:'רכזת', admin:'מנהל' };
-  const flags = (s, p) => [p.is_admin ? 'מנהל' : '', p.is_leader ? 'מוביל/ה' : '', p.ahmash_rank ? `אחמ"ש ${p.ahmash_rank}` : '', p.no_nights ? 'בלי לילות' : '', p.latest_end_hour ? `עד ${p.latest_end_hour}:00` : '', p.manual_only ? 'שיבוץ ידני בלבד' : '', p.only_long_weekend ? 'רק סופ"ש ארוך' : '', p.female === false ? 'גבר' : '',
+  const KIND = { instructor:'מדריך/ה', service:'בת שירות', teacher:'מורה / גננת', coordinator:'רכזת', therapist:'איש/אשת טיפול', admin:'מנהל' };
+  const flags = (s, p) => [p.is_admin ? 'מנהל' : '', isTh[s.id] && s.kind !== 'therapist' ? 'גם איש/אשת טיפול' : '', p.is_leader ? 'מוביל/ה' : '', p.ahmash_rank ? `אחמ"ש ${p.ahmash_rank}` : '', p.no_nights ? 'בלי לילות' : '', p.latest_end_hour ? `עד ${p.latest_end_hour}:00` : '', p.manual_only ? 'שיבוץ ידני בלבד' : '', p.only_long_weekend ? 'רק סופ"ש ארוך' : '', p.female === false ? 'גבר' : '',
     [p.min_mid, p.min_nights, p.min_weekend].some(x => x != null) ? `מינימום אישי ${p.min_mid ?? 2}/${p.min_nights ?? 1}/${p.min_weekend ?? 4}` : '', p.day_buddy ? `יום עדיף עם ${nameOf(p.day_buddy)}` : '', p.lang === 'ar' ? 'ערבית' : ''].filter(Boolean).join(' · ');
   box.innerHTML = (staff.data || []).map(s => { const p = pv[s.id] || {}; return `<div class="pmine-row adm-row${s.active ? '' : ' inactive'}"><span><b>${pEsc(s.display_name)}</b> <small>${KIND[s.kind] || s.kind}${s.active ? '' : ' · לא פעיל/ה'}</small><br><small>${pEsc(flags(s, p)) || '—'}</small></span><button type="button" class="btn ghost small" data-adm-edit="${s.id}">✏️ עריכה</button></div>`; }).join('');
   box.querySelectorAll('[data-adm-edit]').forEach(b => b.addEventListener('click', () => {
@@ -8612,8 +8794,9 @@ async function adminStaff(box, body){
     const yes = (id, label, on) => `<label class="adm-check"><input type="checkbox" id="${id}"${on ? ' checked' : ''}> ${label}</label>`;
     const sh = portalSheet(`<h2>עריכת ${pEsc(s.display_name)}</h2>
       <label class="pfield">השם (כפי שמוצג)<input type="text" id="ae-name" maxlength="40" value="${pEsc(s.display_name)}"></label>
-      <label class="pfield">תפקיד<select id="ae-kind">${Object.keys(KIND).filter(k => k !== 'admin').map(k => `<option value="${k}"${s.kind === k ? ' selected' : ''}>${KIND[k]}</option>`).join('')}</select></label>
+      <label class="pfield">תפקיד<select id="ae-kind">${Object.keys(KIND).filter(k => k !== 'admin' && (k !== 'therapist' || mercury)).map(k => `<option value="${k}"${s.kind === k ? ' selected' : ''}>${KIND[k]}</option>`).join('')}</select></label>
       <div class="adm-checks">${yes('ae-active', 'פעיל/ה', s.active)}${yes('ae-female', 'אישה', p.female !== false)}${yes('ae-leader', 'מוביל/ה', p.is_leader)}${yes('ae-nonights', 'לא עושה לילות', p.no_nights)}${yes('ae-manual', 'שיבוץ ידני בלבד', p.manual_only)}${yes('ae-long', 'רק סופ"ש ארוך', p.only_long_weekend)}${yes('ae-admin', 'מנהל (פורטל ניהול)', p.is_admin)}</div>
+      ${mercury ? `<div class="adm-checks">${yes('ae-therapist', 'גם איש/אשת טיפול (רואה את הילדים שבאחריותו בפורטל הטיפול)', s.kind === 'therapist' || isTh[s.id])}</div>` : ''}
       <label class="pfield">אחמ"ש<select id="ae-ahm"><option value="0"${!p.ahmash_rank ? ' selected' : ''}>לא</option><option value="1"${p.ahmash_rank === 1 ? ' selected' : ''}>כן, דרגה 1</option><option value="2"${p.ahmash_rank === 2 ? ' selected' : ''}>כן, דרגה 2 (רק כשאין אחר)</option></select></label>
       <label class="pfield">שעת סיום קבועה<select id="ae-end"><option value="">אין</option>${[19, 20, 21].map(h => `<option value="${h}"${p.latest_end_hour === h ? ' selected' : ''}>${h}:00</option>`).join('')}</select></label>
       ${extra && s.kind === 'instructor' ? `<h3 class="psec">מינימום אישי</h3>
@@ -8632,6 +8815,7 @@ async function adminStaff(box, body){
       const num = id => { const x = v(id); if(!x || x.value === '') return null; const n = Math.round(+x.value); return isNaN(n) ? null : Math.max(0, n); };
       if(v('ae-mmid')) Object.assign(row, { min_mid:num('ae-mmid'), min_nights:num('ae-mnight'), min_weekend:num('ae-mwk'), day_buddy:v('ae-buddy').value || null });
       if(v('ae-lang')) row.lang = v('ae-lang').value === 'ar' ? 'ar' : null;
+      if(v('ae-therapist')) row.is_therapist = v('ae-kind').value === 'therapist' || v('ae-therapist').checked;
       const c = pv[s.id] ? await sbPersonal.from('staff_private').update(row).eq('staff_id', s.id) : await sbPersonal.from('staff_private').insert(Object.assign({ staff_id:s.id }, row));
       if(a.error || c.error){ toast('השמירה נכשלה: ' + ((a.error || c.error).message || '')); return; }
 
@@ -9042,7 +9226,7 @@ const AR = {
   'לכל יום נשמח שתבחרו מתי נוח לכן. ביום ראשון מגיעות ב-11:00 (עד 19:00), וביום חמישי עד 16:00':'لكل يوم يسعدنا أن تخترن متى يناسبكن. يوم الأحد يكون الوصول الساعة 11:00 (حتى 19:00)، ويوم الخميس حتى 16:00',
   'אם לא תספיקו עד ה-24 בשעה 22:30, לא נורא: השעות הקבועות יישלחו בשבילכן אוטומטית':'إن لم تلحقن حتى 24 الساعة 22:30، لا بأس: الساعات الثابتة تُرسل عنكن تلقائيًا',
   // the gear
-  'באיזו שפה נדבר איתך?':'بأي أسلوب نتحدث معك؟', 'מראה':'المظهر', 'מצב כהה':'وضع داكن', 'מצב בהיר':'وضع فاتح', 'שפה והודעות':'اللغة والرسائل', 'ההעדפות שלי':'تفضيلاتي', 'תזכורות במייל להגשת ההעדפות':'تذكيرات بالبريد لتقديم التفضيلات', 'לקבל תזכורות':'استلام التذكيرات', 'בלי תזכורות':'بدون تذكيرات', 'איך מתחילות ההעדפות בכל חודש?':'كيف تبدأ التفضيلات في كل شهر؟', 'הכל לא סומן':'الكل غير محدد', 'הכל "כן"':'الكل "نعم"', 'הכל "לא"':'الكل "لا"', 'כשנפתח חודש חדש, כל המשמרות מסומנות אצלך כך מההתחלה, ומשנים רק את מה שצריך. ההעדפות הקבועות שלך נשארות "לא".':'عندما يُفتح شهر جديد، تكون كل المناوبات محددة هكذا من البداية، وتغيّر/ين فقط ما يلزم. تفضيلاتك الثابتة تبقى "لا".', 'מצב מנומר 🐆':'وضع النمر 🐆', 'טקסט רגיל':'نص عادي', 'טקסט גדול':'نص كبير', 'טקסט גדול מאוד':'نص كبير جدًا',
+  'באיזו שפה נדבר איתך?':'بأي أسلوب نتحدث معك؟', 'מראה':'المظهر', 'מצב כהה':'وضع داكن', 'מצב בהיר':'وضع فاتح', 'פורטל הטיפול':'بوابة العلاج', 'ספרייה':'المكتبة', 'איך לעדכן אותך על הילדים שלך?':'كيف نُبلغك عن أطفالك؟', 'מייל מיד':'بريد فورًا', 'סיכום יומי במייל':'ملخص يومي بالبريد', 'רק בפורטל':'في البوابة فقط', 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. לחיצה על ילד פותחת את התוכנית שלו.':'الأطفال الذين أنت المعالج/ة المسؤول/ة عنهم. الضغط على طفل يفتح خطته.', 'יש תוכנית טיפולית':'توجد خطة علاجية', 'מטרות נוספות':'أهداف إضافية', 'ממה להימנע':'ممّا نمتنع', 'במוקד':'في التركيز', '📝 תצפית לאיש/אשת הטיפול':'📝 ملاحظة للمعالج/ة', 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. בניית התוכניות תגיע בשלב הבא.':'الأطفال الذين أنت المعالج/ة المسؤول/ة عنهم. بناء الخطط سيأتي في المرحلة القادمة.', 'עוד לא שויכו אלייך ילדים. השיוך נעשה אצל הרכזת או מנהל המערכת.':'لم يُعيَّن لك أطفال بعد. التعيين تقوم به المنسقة أو مدير النظام.', 'לכל ילד איש/אשת טיפול אחראי/ת אחד/ת. רק הוא/היא רואה את המידע הטיפולי של הילד ובונה את התוכנית שלו. כל שינוי נרשם.':'لكل طفل معالج/ة مسؤول/ة واحد/ة. هو/هي فقط يرى المعلومات العلاجية للطفل ويبني خطته. كل تغيير يُسجَّل.', 'עוד אין אנשי טיפול במערכת. מוסיפים בהגדרות (תפקיד "איש/אשת טיפול"), או מסמנים "גם איש/אשת טיפול" בפורטל הניהול.':'لا يوجد معالجون في النظام بعد. يُضافون في الإعدادات (دور "معالج/ة")، أو بتحديد "معالج/ة أيضًا" في بوابة الإدارة.', 'התוכנית הטיפולית של כל ילד, והכוונה לצוות':'الخطة العلاجية لكل طفل، وتوجيه للطاقم', 'הילדים שבאחריותי':'الأطفال الذين في مسؤوليتي', 'כל הילדים':'كل الأطفال', 'שיוך אנשי טיפול':'تعيين المعالجين', 'עוד אין תוכנית טיפולית':'لا توجد خطة علاجية بعد', 'ללא':'بدون', 'ההכוונה של כל ילד, לפי התוכנית הטיפולית שלו: מה במוקד, מה לעשות וממה להימנע. התוכניות יופיעו כאן כשאנשי הטיפול יפרסמו אותן.':'توجيه لكل طفل حسب خطته العلاجية: ما في التركيز، ماذا نفعل وممّا نمتنع. ستظهر الخطط هنا عندما ينشرها المعالجون.', 'פורטל הטיפול עוד לא מוכן בשרת הזה, או שאין חיבור כרגע. אפשר לנסות שוב בעוד רגע.':'بوابة العلاج غير جاهزة بعد أو لا يوجد اتصال الآن. يمكن المحاولة بعد قليل.', 'שפה והודעות':'اللغة والرسائل', 'ההעדפות שלי':'تفضيلاتي', 'תזכורות במייל להגשת ההעדפות':'تذكيرات بالبريد لتقديم التفضيلات', 'לקבל תזכורות':'استلام التذكيرات', 'בלי תזכורות':'بدون تذكيرات', 'איך מתחילות ההעדפות בכל חודש?':'كيف تبدأ التفضيلات في كل شهر؟', 'הכל לא סומן':'الكل غير محدد', 'הכל "כן"':'الكل "نعم"', 'הכל "לא"':'الكل "لا"', 'כשנפתח חודש חדש, כל המשמרות מסומנות אצלך כך מההתחלה, ומשנים רק את מה שצריך. ההעדפות הקבועות שלך נשארות "לא".':'عندما يُفتح شهر جديد، تكون كل المناوبات محددة هكذا من البداية، وتغيّر/ين فقط ما يلزم. تفضيلاتك الثابتة تبقى "لا".', 'מצב מנומר 🐆':'وضع النمر 🐆', 'טקסט רגיל':'نص عادي', 'טקסט גדול':'نص كبير', 'טקסט גדול מאוד':'نص كبير جدًا',
   'סופי שבוע':'نهايات الأسبوع', 'שפת הפורטל':'لغة البوابة', 'שפה':'اللغة',
   // a new day for sign-up
   'נפתח יום נוסף לשיבוץ':'فُتح يوم إضافي للجدولة', 'נרשמת ליום הנוסף ✓':'سجّلت لليوم الإضافي ✓', 'אני רוצה להשתבץ':'أريد الانضمام', 'נשאר מקום אחד':'بقي مكان واحد',
@@ -9087,6 +9271,13 @@ const AR_DOW_LETTER = { 'א':'ح', 'ב':'ن', 'ג':'ث', 'ד':'ر', 'ה':'خ', '
 const AR_SHIFT_LETTER = { 'ב':'ص', 'צ':'ظ', 'ל':'ل', 'ע':'م' };
 // texts with details inside (numbers, dates, names): [pattern, the Arabic]
 const AR_RX = [
+  [/^חסר (\d+)$/, (m, n) => `ينقص ${n}`],
+  [/^במוקד: (.+)$/, (m, g) => `في التركيز: ${g}`],
+  [/^גרסה (\d+)(.*)$/, (m, v, r) => `نسخة ${v}${r}`],
+  [/^מטרות נוספות \((\d+)\)$/, (m, n) => `أهداف إضافية (${n})`],
+  [/^מה רואים כשמצליח\/ה:$/, () => 'ما نراه عند النجاح:'],
+  [/^מה עושים:$/, () => 'ماذا نفعل:'],
+  [/^עוד אין תוכנית טיפולית ל(.+?)\. כשאיש\/אשת הטיפול יפרסמו אותה, יופיעו כאן מה במוקד, מה לעשות וממה להימנע\.$/, (m, n) => `لا توجد بعد خطة علاجية لـ${n}. عندما ينشرها المعالج ستظهر هنا: ما في التركيز، ماذا نفعل وممّا نمتنع.`],
   [/^שלום (.+)$/, (m, n) => `مرحبًا ${n}`],
   [/^עוד (\d+) משמרות לסימון$/, (m, n) => `بقيت ${n} مناوبات للاختيار`],
   [/^נשארו (\d+) ימים לבחירה$/, (m, n) => `بقيت ${n} أيام للاختيار`],
@@ -9156,7 +9347,7 @@ function arText(t, names){
   return s === core ? t : t.replace(core, s);
 }
 // ---- the translation of what is on the screen (only the portal's parts; the Ramzor and the coordinator stay in Hebrew)
-const AR_ROOTS = '#view-portal, #view-apphome, .psheet, .confirm-sheet, #install-sheet, .toast, #toast, .plogin, .bottom-nav';
+const AR_ROOTS = '#view-portal, #view-apphome, #view-therapy, .psheet, .confirm-sheet, #install-sheet, .toast, #toast, .plogin, .bottom-nav';
 const AR_KEEP = 'script, style, textarea, input, select option.ar-keep, .ar-keep, .pannounce > div, .pnotice > span, .preq-note, .ar-data';          // (what people wrote: notices, messages, notes)
 const arMissing = new Set();          // (what stayed in Hebrew: the checks list it, so that the dictionary can be completed)
 let arObserver = null, arQueued = false;
@@ -9174,7 +9365,7 @@ function arTranslateIn(root){
   }
   (root.querySelectorAll ? root.querySelectorAll('[placeholder], [title], [aria-label]') : []).forEach(el => ['placeholder', 'title', 'aria-label'].forEach(a => { const v = el.getAttribute(a); if(v && AR_HE.test(v)){ const o = arText(v, names); if(o !== v) el.setAttribute(a, o); } }));
 }
-function arSweep(){ arQueued = false; if(!arOn()) return; document.querySelectorAll(AR_ROOTS).forEach(r => { if(!portalServerOn && (r.id === 'view-portal' || r.id === 'view-apphome')) return; arTranslateIn(r); }); }
+function arSweep(){ arQueued = false; if(!arOn()) return; document.querySelectorAll(AR_ROOTS).forEach(r => { if(!portalServerOn && (r.id === 'view-portal' || r.id === 'view-apphome' || r.id === 'view-therapy')) return; arTranslateIn(r); }); }
 function arApply(){
   const on = arOn();
   document.documentElement.lang = on ? 'ar' : 'he'; document.body.classList.toggle('lang-ar', on);
@@ -9188,6 +9379,691 @@ function arApply(){
 async function srvSaveLang(lang){
   srv.lang = lang; try { localStorage.setItem('ramzor-portal-lang', lang); } catch(e){}
   try { const r = await sbPersonal.from('staff_settings').upsert({ staff_id:srv.me, lang }); return !r.error; } catch(e){ return false; }
+}
+// ---------- MERCURY: THE THERAPY PORTAL (stage 1: the frame) ----------
+// A third card on the app home, "פורטל הטיפול", with the personal sign-in only. Everybody on the staff sees every child (the guidance of
+// the plans comes in stage 2); a therapist sees the children they are responsible for; the admin and the coordinator assign the
+// responsible therapist of every child. (scheduling-v31.sql; Mercury spec, decisions 1-6, 44-46)
+const thp = { loaded:false, ok:false, mine:[], assign:{}, therapists:[], tab:null, guidance:{}, plans:{}, planets:[], library:[], v32:false, editing:null };
+const therapyAvailable = () => typeof portalServerOn !== 'undefined' && portalServerOn && !!srv.profile && 'therapist' in srv.profile;          // (my_profile carries "therapist" from v31)
+const isTherapistMe = () => !!(srv.profile && srv.profile.therapist);
+const isPureTherapist = () => (portalMe() || {}).role === 'therapist';
+const canAssignTherapist = () => !!(srv.meRow && (srv.meRow.role === 'coordinator' || srv.meRow.admin));
+
+async function thpLoad(){
+  thp.ok = false;
+  try {
+    const mine = await sbPersonal.rpc('my_therapy_children'); if(mine.error) throw mine.error;
+    thp.mine = (mine.data || []).map(r => typeof r === 'string' ? r : r.my_therapy_children);
+    thp.assign = {}; thp.therapists = [];
+    if(canAssignTherapist()){
+      const [a, s, p] = await Promise.all([
+        sbPersonal.from('child_therapist').select('child_id,staff_id'),
+        sbPersonal.from('staff').select('id,display_name,kind,active'),
+        sbPersonal.from('staff_private').select('staff_id,is_therapist')
+      ]);
+      if(a.error || s.error || p.error) throw (a.error || s.error || p.error);
+      (a.data || []).forEach(r => { thp.assign[r.child_id] = r.staff_id; });
+      const flag = {}; (p.data || []).forEach(r => { flag[r.staff_id] = !!r.is_therapist; });
+      thp.therapists = (s.data || []).filter(x => x.active && (x.kind === 'therapist' || flag[x.id])).sort((x, y) => String(x.display_name).localeCompare(String(y.display_name), 'he'));
+    }
+    thp.ok = true;
+  } catch(e){ thp.ok = false; }
+  // stage 2: the plans (scheduling-v32.sql): the guidance every staff member sees, the plans this person may edit, the planets and the libraries
+  thp.guidance = {}; thp.plans = {}; thp.planets = []; thp.library = []; thp.v32 = false;
+  if(thp.ok) try {
+    const [g, pl, pn, lb] = await Promise.all([sbPersonal.rpc('plan_guidance'), sbPersonal.from('child_plans').select('*'), sbPersonal.from('journey_planets').select('*').order('created_at'), sbPersonal.from('mercury_library').select('*').order('title')]);
+    if(g.error || pl.error || pn.error || lb.error) throw (g.error || pl.error || pn.error || lb.error);
+    (g.data || []).forEach(r => { thp.guidance[r.child_id] = r; });
+    (pl.data || []).forEach(r => { thp.plans[r.child_id] = r; });
+    thp.planets = pn.data || []; thp.library = lb.data || []; thp.v32 = true;
+    if(isTherapistMe()) await obsLoadNotify();
+  } catch(e){ thp.v32 = false; }
+  thp.loaded = true;
+}
+
+// the tabs: a therapist starts with their own children; the rest of the staff with all the children; the admin and the coordinator also assign
+function thpTabs(){
+  const t = [];
+  if(isTherapistMe()) t.push(['mine', 'הילדים שבאחריותי']);
+  if(!isPureTherapist()) t.push(['all', 'כל הילדים']);
+  if(canAssignTherapist()) t.push(['assign', 'שיוך אנשי טיפול']);
+  if(thp.v32 && (isTherapistMe() || (srv.profile && srv.profile.admin))) t.push(['library', 'ספרייה']);
+  return t;
+}
+async function showTherapyPortal(){
+  portalActivateView('view-therapy');
+  const view = document.getElementById('view-therapy');
+  thp.tab = null; thp.editing = null;          // (every entry starts on the first tab of this person)
+  view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${portalLoad().settings.theme || 'dark'}"><div class="pnote">טוען...</div></div>`;
+  await thpLoad();
+  thpRender();
+}
+const thpKids = () => (typeof roster !== 'undefined' ? roster : []).slice().sort((a, b) => displayName(a).localeCompare(displayName(b), 'he'));
+const thpAvatar = c => { const k = typeof characterFor === 'function' && characterFor(c.id); return k ? `<span class="th-av">${charImgHtml(k)}</span>` : `<span class="th-av th-av-name ar-keep">${pEsc(displayName(c).slice(0, 2))}</span>`; };
+function thpRender(){
+  const view = document.getElementById('view-therapy'); if(!view) return;
+  const tabs = thpTabs(); if(!tabs.some(t => t[0] === thp.tab)) thp.tab = tabs.length ? tabs[0][0] : null;
+  const me = portalMe() || {}, kids = thpKids(), mine = new Set(thp.mine);
+  const card = c => `<button type="button" class="th-kid${thp.guidance[c.id] ? ' has-plan' : ''}" data-th-kid="${pEsc(c.id)}">${thpAvatar(c)}<span class="th-kid-text"><b class="ar-keep">${pEsc(displayName(c))}</b><small>${planCardSub(c.id)}</small></span></button>`;
+  let inner = '';
+  if(!thp.ok) inner = '<div class="pnote">פורטל הטיפול עוד לא מוכן בשרת הזה, או שאין חיבור כרגע. אפשר לנסות שוב בעוד רגע.</div>';
+  else if(thp.tab === 'mine'){
+    const list = kids.filter(c => mine.has(c.id));
+    inner = `${thp.v32 ? obsNotifyHtml() : ''}<div class="pnote">${thp.v32 ? 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. לחיצה על ילד פותחת את התוכנית שלו.' : 'הילדים שאת/ה איש/אשת הטיפול האחראי/ת שלהם. בניית התוכניות תגיע בשלב הבא.'}</div>${list.length ? `<div class="th-kids">${list.map(card).join('')}</div>` : '<div class="pnote">עוד לא שויכו אלייך ילדים. השיוך נעשה אצל הרכזת או מנהל המערכת.</div>'}`;
+  } else if(thp.tab === 'all'){
+    inner = `<div class="pnote">ההכוונה של כל ילד, לפי התוכנית הטיפולית שלו: מה במוקד, מה לעשות וממה להימנע. התוכניות יופיעו כאן כשאנשי הטיפול יפרסמו אותן.</div><div class="th-kids">${kids.map(card).join('')}</div>`;
+  } else if(thp.tab === 'library'){
+    inner = planLibraryHtml();
+  } else if(thp.tab === 'assign'){
+    const opts = sel => `<option value="">ללא</option>${thp.therapists.map(t => `<option value="${t.id}"${sel === t.id ? ' selected' : ''}>${pEsc(t.display_name)}</option>`).join('')}`;
+    inner = `<div class="pnote">לכל ילד איש/אשת טיפול אחראי/ת אחד/ת. רק הוא/היא רואה את המידע הטיפולי של הילד ובונה את התוכנית שלו. כל שינוי נרשם.</div>
+      ${thp.therapists.length ? '' : '<div class="pnote">עוד אין אנשי טיפול במערכת. מוסיפים בהגדרות (תפקיד "איש/אשת טיפול"), או מסמנים "גם איש/אשת טיפול" בפורטל הניהול.</div>'}
+      <div class="th-assign">${kids.map(c => `<div class="th-assign-row">${thpAvatar(c)}<b class="ar-keep">${pEsc(displayName(c))}</b><select data-th-assign="${pEsc(c.id)}" aria-label="איש/אשת הטיפול של ${pEsc(displayName(c))}">${opts(thp.assign[c.id] || '')}</select></div>`).join('')}</div>`;
+  }
+  view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${portalLoad().settings.theme || 'dark'}">
+      <div class="portal-top"><button type="button" class="back-btn portal-back" id="therapy-home">→ מסך ראשי</button><h1 class="portal-title">פורטל הטיפול</h1><span></span></div>
+      <div class="portal-hello">שלום ${pEsc(me.first || '')}</div>
+      ${tabs.length > 1 ? `<nav class="portal-tabs" role="tablist">${tabs.map(t => `<button type="button" role="tab" data-th-tab="${t[0]}" class="${t[0] === thp.tab ? 'active' : ''}">${t[1]}</button>`).join('')}</nav>` : ''}
+      <div id="therapy-body">${inner}</div>
+    </div>`;
+  view.querySelector('#therapy-home').addEventListener('click', () => { if(typeof personalRamzorKind === 'function' && !personalRamzorKind()) srvOpenPortal(); else showAppHome(); });
+  view.querySelectorAll('[data-th-tab]').forEach(b => b.addEventListener('click', () => { thp.tab = b.dataset.thTab; thp.editing = null; thpRender(); }));
+  view.querySelectorAll('[data-th-kid]').forEach(b => b.addEventListener('click', () => { if(thp.v32 && thp.tab === 'mine' && planCanEdit(b.dataset.thKid)) planOpenEditor(b.dataset.thKid); else thpOpenChild(b.dataset.thKid); }));
+  if(thp.tab === 'library') planWireLibrary(view.querySelector('#therapy-body'));
+  if(thp.tab === 'mine' && thp.v32) obsWireNotify(view.querySelector('#therapy-body'));
+  if(thp.editing && thp.v32 && planCanEdit(thp.editing)) planOpenEditor(thp.editing);
+  view.querySelectorAll('[data-th-assign]').forEach(s => s.addEventListener('change', async () => {
+    const child = s.dataset.thAssign, to = s.value || null, was = thp.assign[child] || null; s.disabled = true;
+    const r = to ? await sbPersonal.from('child_therapist').upsert({ child_id:child, staff_id:to }) : await sbPersonal.from('child_therapist').delete().eq('child_id', child);
+    s.disabled = false;
+    if(r.error){ s.value = was || ''; toast('השיוך לא נשמר. אפשר לנסות שוב בעוד רגע'); return; }
+    if(to) thp.assign[child] = to; else delete thp.assign[child];
+    const c = roster.find(x => x.id === child), t = thp.therapists.find(x => x.id === to);
+    toast(to ? `${t ? t.display_name : ''} אחראי/ת עכשיו על ${c ? displayName(c) : ''}` : 'השיוך הוסר');
+  }));
+}
+// one child (stage 1: the frame; the plan, the guidance and the observations come in the next stages)
+function thpOpenChild(id){
+  const c = roster.find(x => x.id === id); if(!c) return;
+  const g = thp.guidance && thp.guidance[id], edit = thp.v32 && planCanEdit(id);
+  const sh = portalSheet(`<div class="th-child-head">${thpAvatar(c)}<h2 class="ar-keep">${pEsc(displayName(c))}</h2></div>
+    ${g ? planGuidanceHtml(g) : `<div class="pnote">עוד אין תוכנית טיפולית ל${pEsc(displayName(c))}. כשאיש/אשת הטיפול יפרסמו אותה, יופיעו כאן מה במוקד, מה לעשות וממה להימנע.</div>`}
+    ${thp.v32 ? '<button type="button" class="btn ghost" id="th-observe" style="width:100%;margin-top:8px">📝 תצפית לאיש/אשת הטיפול</button>' : ''}
+    ${thp.v32 && srv.profile && srv.profile.admin ? '<button type="button" class="btn ghost" id="th-place" style="width:100%;margin-top:8px">מיקום במסע בחלל (מנהל)</button>' : ''}
+    <div class="confirm-actions" style="grid-template-columns:${edit ? '1fr 1fr' : '1fr'}">${edit ? '<button type="button" class="btn ghost" id="th-edit-plan">עריכת התוכנית</button>' : ''}<button type="button" class="btn" data-close>סגירה</button></div>`);
+  const pl = sh.querySelector('#th-place'); if(pl) pl.addEventListener('click', () => { sh.close(); journeyPlaceSheet(id); });
+  const ob = sh.querySelector('#th-observe'); if(ob) ob.addEventListener('click', () => { sh.close(); obsOpen(id); });
+  const ed = sh.querySelector('#th-edit-plan'); if(ed) ed.addEventListener('click', () => { sh.close(); planOpenEditor(id); });
+}
+// ---------- MERCURY: TREATMENT PLANS (stage 2) ----------
+// The therapist builds a plan per child: a short summary for the staff, "what to avoid", goals (up to 3 in focus) with what we see when
+// the child succeeds and what the staff does, a planet of the space journey and the strengths of the temple per goal, the optional
+// "what we see / what may be needed / why" thinking (never shown to the staff), an attached document and a review date.
+// A draft until "פרסום"; every publish is kept; the staff sees the published plan only (plan_guidance). (scheduling-v32.sql; decisions 7-17, 46, 47, 56-58)
+const PLAN_FOCUS_MAX = 3;
+const planNewGoal = () => ({ id:'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title:'', library_id:null, focus:false, targets:'', interventions:'', seen:'', needs:'', why:'', planet_id:null, strengths:[] });
+const planEmpty = () => ({ summary:'', avoid:'', goals:[planNewGoal()] });
+const planCanEdit = id => !!(srv.profile && (srv.profile.admin || (srv.profile.therapist && thp.mine.includes(id))));
+const thpLib = kind => (thp.library || []).filter(x => x.kind === kind && x.active);
+
+// ---- the staff's view of one child: what to avoid first, then the goals in focus, the rest folded
+function planGuidanceHtml(g){
+  if(!g || !g.content) return '';
+  const c = g.content, goals = c.goals || [], focus = goals.filter(x => x.focus), rest = goals.filter(x => !x.focus);
+  const goalHtml = x => `<div class="th-g"><b class="ar-keep">${pEsc(x.title || '')}</b>
+      ${x.targets ? `<div class="th-g-row"><span>מה רואים כשמצליח/ה:</span> <em class="ar-keep">${pEsc(x.targets)}</em></div>` : ''}
+      ${x.interventions ? `<div class="th-g-row"><span>מה עושים:</span> <em class="ar-keep">${pEsc(x.interventions)}</em></div>` : ''}
+      ${(x.strengths || []).length ? `<div class="th-chips ar-keep">${x.strengths.map(s => `<span class="th-chip">${pEsc(s)}</span>`).join('')}</div>` : ''}</div>`;
+  return `${c.avoid ? `<div class="th-avoid"><b>ממה להימנע</b><div class="ar-keep">${pEsc(c.avoid)}</div></div>` : ''}
+    ${c.summary ? `<div class="th-summary ar-keep">${pEsc(c.summary)}</div>` : ''}
+    ${focus.length ? `<h3 class="psec">במוקד</h3>${focus.map(goalHtml).join('')}` : ''}
+    ${rest.length ? `<details class="pfold th-rest"><summary><span>מטרות נוספות (${rest.length})</span></summary><div class="pfold-body">${rest.map(goalHtml).join('')}</div></details>` : ''}
+    <div class="th-ver">גרסה ${g.version}${g.published_at ? ' · ' + pEsc(dayLabel(String(g.published_at).slice(0, 10))) : ''}</div>`;
+}
+const planCardSub = id => { const g = thp.guidance && thp.guidance[id]; if(!g) return 'עוד אין תוכנית טיפולית'; const f = (g.content.goals || []).filter(x => x.focus).map(x => x.title).filter(Boolean); return f.length ? 'במוקד: <span class="ar-keep">' + pEsc(f.join(' · ')) + '</span>' : 'יש תוכנית טיפולית'; };          // (html: the therapist's words stay as written, decision 35)
+
+// one goal box of the editor
+function planGoalHtml(g, i){
+  const planets = (thp.planets || []).filter(p => p.active);
+  return `<div class="th-goal" data-gi="${i}" data-gid="${pEsc(g.id)}">
+      <div class="th-goal-top"><input type="text" class="pe-g-title" list="th-lib-goals" maxlength="80" placeholder="שם המטרה (מהספרייה או חופשי)" value="${pEsc(g.title || '')}" aria-label="שם המטרה">
+        <label class="th-focus"><input type="checkbox" class="pe-g-focus"${g.focus ? ' checked' : ''}> במוקד</label>
+        <button type="button" class="btn ghost small pe-g-rm" aria-label="הסרת המטרה">✕</button></div>
+      <label class="pfield">יעדים נצפים: מה רואים כשהילד/ה מצליח/ה<textarea class="pe-g-targets" rows="2">${pEsc(g.targets || '')}</textarea></label>
+      <label class="pfield">דרכי התערבות: מה הצוות עושה<textarea class="pe-g-int" rows="2">${pEsc(g.interventions || '')}</textarea></label>
+      <label class="pfield">כוכב לכת במסע בחלל<select class="pe-g-planet"><option value="">ללא</option>${planets.map(p => `<option value="${pEsc(p.id)}"${g.planet_id === p.id ? ' selected' : ''}>${pEsc(p.name)} · ${pEsc(p.skill)}</option>`).join('')}</select></label>
+      <div class="pfield"><span>חוזקות במקדש (מוצעות למדריך כשנותנים לבנה)</span>
+        <div class="th-chips pe-g-strengths">${(g.strengths || []).map(s => `<span class="th-chip" data-str="${pEsc(s)}">${pEsc(s)} <button type="button" class="th-chip-x" aria-label="הסרה">✕</button></span>`).join('')}</div>
+        <div class="th-add-row"><input type="text" class="pe-g-str-new" list="th-lib-strengths" maxlength="20" placeholder="חוזקה (עד 20 תווים)" aria-label="חוזקה חדשה"><button type="button" class="btn ghost small pe-g-str-add">הוספה</button></div></div>
+      <details class="pfold th-think"${g.seen || g.needs || g.why ? ' open' : ''}><summary><span>עוזר חשיבה (רשות, לא מוצג לצוות)</span></summary><div class="pfold-body">
+        <label class="pfield">מה רואים אצל הילד/ה?<textarea class="pe-g-seen" rows="2">${pEsc(g.seen || '')}</textarea></label>
+        <label class="pfield">מה הוא/היא אולי צריך/ה?<textarea class="pe-g-needs" rows="2">${pEsc(g.needs || '')}</textarea></label>
+        <label class="pfield">למה המטרה הזו תעזור?<textarea class="pe-g-why" rows="2">${pEsc(g.why || '')}</textarea></label></div></details>
+    </div>`;
+}
+// ---- the plan editor (the responsible therapist, or the admin)
+function planEditorHtml(id){
+  const c = roster.find(x => x.id === id), row = thp.plans[id] || {}, d = row.draft || row.published || planEmpty();
+  const status = row.published_version ? `פורסמה גרסה ${row.published_version}${row.draft && JSON.stringify(row.draft) !== JSON.stringify(row.published) ? ' · יש שינויים שלא פורסמו' : ''}` : (row.draft ? 'טיוטה, עוד לא פורסמה' : 'תוכנית חדשה');
+  return `<div class="th-editor" data-plan="${pEsc(id)}">
+    <datalist id="th-lib-goals">${thpLib('goal').map(x => `<option value="${pEsc(x.title)}">`).join('')}</datalist>
+    <datalist id="th-lib-strengths">${thpLib('strength').map(x => `<option value="${pEsc(x.title)}">`).join('')}</datalist>
+    <div class="th-ed-head"><button type="button" class="btn ghost small" id="pe-back">→ חזרה</button><div class="th-child-head">${thpAvatar(c)}<h2 class="ar-keep">${pEsc(displayName(c))}</h2></div><span class="th-status">${status}</span></div>
+    <label class="pfield">תקציר קצר לצוות<textarea id="pe-summary" rows="3" placeholder="בכמה משפטים: מה חשוב לדעת על הילד/ה עכשיו">${pEsc(d.summary || '')}</textarea></label>
+    <label class="pfield th-avoid-field">ממה להימנע (מצבים או מילים שמעוררים את הילד/ה)<textarea id="pe-avoid" rows="2">${pEsc(d.avoid || '')}</textarea></label>
+    <h3 class="psec">מטרות <small>(עד ${PLAN_FOCUS_MAX} במוקד)</small></h3>
+    <div id="pe-goals">${(d.goals || []).map(planGoalHtml).join('')}</div>
+    <button type="button" class="btn ghost" id="pe-add-goal">+ מטרה</button>
+    <div class="th-ed-grid">
+      <label class="pfield">תאריך לבדיקה מחדש<input type="date" id="pe-review" value="${pEsc(row.review_date || '')}"></label>
+      <div class="pfield"><span>קובץ מצורף (Word או PDF)</span><div class="th-file">${d.file ? `<button type="button" class="btn ghost small" id="pe-file-open">📎 ${pEsc(d.file.name)}</button><button type="button" class="btn ghost small" id="pe-file-rm" aria-label="הסרת הקובץ">✕</button>` : ''}<input type="file" id="pe-file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div></div>
+    </div>
+    <label class="th-important"><input type="checkbox" id="pe-important"> שינוי חשוב: לשלוח לצוות גם מייל</label>
+    <div class="th-actions"><button type="button" class="btn ghost" id="pe-save">שמירת טיוטה</button><button type="button" class="btn" id="pe-publish">פרסום</button>
+      <button type="button" class="btn ghost" id="pe-versions"${row.published_version ? '' : ' disabled'}>גרסאות קודמות</button><button type="button" class="btn ghost" id="pe-print">הדפסה / PDF</button></div>
+    <div id="pe-temple" class="th-temple"></div>
+    <h3 class="psec">המסע בחלל</h3><div id="pe-journey"></div>
+    <h3 class="psec">תצפיות מהצוות</h3><div id="pe-obs"></div>
+    <h3 class="psec">מעקב, 8 שבועות</h3><div id="pe-track"></div>
+  </div>`;
+}
+// the editor as it is on the screen now -> the draft
+function planRead(root){
+  const goals = [...root.querySelectorAll('.th-goal')].map(el => {
+    const title = el.querySelector('.pe-g-title').value.trim(), lib = thpLib('goal').find(x => x.title === title);
+    return { id:el.dataset.gid, title, library_id:lib ? lib.id : null, focus:el.querySelector('.pe-g-focus').checked,
+      targets:el.querySelector('.pe-g-targets').value.trim(), interventions:el.querySelector('.pe-g-int').value.trim(),
+      seen:el.querySelector('.pe-g-seen').value.trim(), needs:el.querySelector('.pe-g-needs').value.trim(), why:el.querySelector('.pe-g-why').value.trim(),
+      planet_id:el.querySelector('.pe-g-planet').value || null, strengths:[...el.querySelectorAll('.pe-g-strengths [data-str]')].map(s => s.dataset.str) };
+  }).filter(g => g.title || g.targets || g.interventions);
+  const row = thp.plans[root.dataset.plan] || {}, base = row.draft || row.published || {};
+  return { summary:root.querySelector('#pe-summary').value.trim(), avoid:root.querySelector('#pe-avoid').value.trim(), goals, file:base.file || null };
+}
+async function planSave(id, draft, review){
+  const r = await sbPersonal.from('child_plans').upsert({ child_id:id, draft, review_date:review || null }).select('*').single();
+  if(r.error) return false;
+  thp.plans[id] = r.data; return true;
+}
+function planOpenEditor(id){
+  thp.editing = id;
+  const body = document.getElementById('therapy-body'); if(!body) return;
+  body.innerHTML = planEditorHtml(id);
+  const root = body.querySelector('.th-editor'), goalsBox = root.querySelector('#pe-goals');
+  const wireGoal = el => {
+    el.querySelector('.pe-g-rm').addEventListener('click', () => { el.remove(); });
+    el.querySelector('.pe-g-focus').addEventListener('change', e => { if(e.target.checked && root.querySelectorAll('.pe-g-focus:checked').length > PLAN_FOCUS_MAX){ e.target.checked = false; toast(`אפשר עד ${PLAN_FOCUS_MAX} מטרות במוקד`); } });
+    const strBox = el.querySelector('.pe-g-strengths'), strIn = el.querySelector('.pe-g-str-new');
+    const addStr = () => { const v = cleanStrength(strIn.value); if(!v) return; if([...strBox.querySelectorAll('[data-str]')].some(s => s.dataset.str === v)){ strIn.value = ''; return; }
+      strBox.insertAdjacentHTML('beforeend', `<span class="th-chip" data-str="${pEsc(v)}">${pEsc(v)} <button type="button" class="th-chip-x" aria-label="הסרה">✕</button></span>`); strIn.value = ''; };
+    el.querySelector('.pe-g-str-add').addEventListener('click', addStr);
+    strIn.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); addStr(); } });
+    strBox.addEventListener('click', e => { const x = e.target.closest('.th-chip-x'); if(x) x.parentElement.remove(); });
+  };
+  root.querySelectorAll('.th-goal').forEach(wireGoal);
+  root.querySelector('#pe-add-goal').addEventListener('click', () => {
+    const tmp = document.createElement('div'); const g = planNewGoal();
+    tmp.innerHTML = planGoalHtml(g, goalsBox.children.length); const el = tmp.firstElementChild; goalsBox.appendChild(el); wireGoal(el); el.querySelector('.pe-g-title').focus();
+  });
+  root.querySelector('#pe-back').addEventListener('click', () => { thp.editing = null; thpRender(); });
+  const save = async () => { const ok = await planSave(id, planRead(root), root.querySelector('#pe-review').value); if(!ok) toast('השמירה נכשלה. אפשר לנסות שוב בעוד רגע'); return ok; };
+  root.querySelector('#pe-save').addEventListener('click', async e => { e.target.disabled = true; if(await save()){ toast('הטיוטה נשמרה. הצוות עוד רואה את הגרסה שפורסמה'); planOpenEditor(id); } else e.target.disabled = false; });
+  root.querySelector('#pe-publish').addEventListener('click', async e => {
+    const d = planRead(root); if(!d.goals.length && !d.summary){ toast('צריך לפחות מטרה אחת או תקציר'); return; }
+    const imp = root.querySelector('#pe-important').checked;
+    if(!(await confirmSheet({ title:'לפרסם את התוכנית?', text:`היא נכנסת לתוקף מיד, והצוות מקבל הודעה בפורטל${imp ? ' וגם מייל' : ''}. הגרסה הקודמת נשמרת.`, okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
+    e.target.disabled = true;
+    if(!(await save())){ e.target.disabled = false; return; }
+    const r = await sbPersonal.rpc('plan_publish', { p_child:id, p_important:imp });
+    if(r.error){ e.target.disabled = false; toast('הפרסום נכשל. אפשר לנסות שוב בעוד רגע'); return; }
+    toast(`התוכנית פורסמה (גרסה ${r.data}). הצוות קיבל הודעה.`);
+    await thpLoad(); thp.editing = id; planOpenEditor(id);
+  });
+  root.querySelector('#pe-versions').addEventListener('click', () => planVersions(id));
+  planTemple(id, root.querySelector('#pe-temple'));
+  { const jb = root.querySelector('#pe-journey'), draw = async () => { jb.innerHTML = await journeyAdminHtml(id); journeyWireAdmin(jb, id, draw); }; draw(); }
+  obsSection(id, root.querySelector('#pe-obs')); trackSection(id, root.querySelector('#pe-track'));
+  root.querySelector('#pe-print').addEventListener('click', () => planPrint(id, planRead(root)));
+  const fin = root.querySelector('#pe-file');
+  fin.addEventListener('change', async () => {
+    const f = fin.files && fin.files[0]; if(!f) return;
+    if(f.size > 20 * 1024 * 1024){ toast('הקובץ גדול מדי (עד 20MB)'); fin.value = ''; return; }
+    const path = `plans/${id}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g, '_').slice(-60)}`;
+    const up = await sbPersonal.storage.from('mercury').upload(path, f, { upsert:false, contentType:f.type || undefined });
+    if(up.error){ toast('ההעלאה נכשלה'); return; }
+    const d = planRead(root); d.file = { path, name:f.name };
+    if(await planSave(id, d, root.querySelector('#pe-review').value)){ toast('הקובץ צורף לטיוטה'); planOpenEditor(id); }
+  });
+  const fo = root.querySelector('#pe-file-open'); if(fo) fo.addEventListener('click', async () => { const f = (thp.plans[id].draft || thp.plans[id].published || {}).file; if(!f) return; const s = await sbPersonal.storage.from('mercury').createSignedUrl(f.path, 300); if(s.error){ toast('לא הצלחנו לפתוח את הקובץ'); return; } window.open(s.data.signedUrl, '_blank', 'noopener'); });
+  const fr = root.querySelector('#pe-file-rm'); if(fr) fr.addEventListener('click', async () => { const d = planRead(root); d.file = null; if(await planSave(id, d, root.querySelector('#pe-review').value)){ toast('הקובץ הוסר מהטיוטה'); planOpenEditor(id); } });
+}
+// the versions published before (read only)
+async function planVersions(id){
+  const r = await sbPersonal.from('child_plan_versions').select('version,content,published_at').eq('child_id', id).order('version', { ascending:false });
+  if(r.error){ toast('לא הצלחנו לקרוא את הגרסאות'); return; }
+  const sh = portalSheet(`<h2>גרסאות קודמות</h2><div class="th-versions">${(r.data || []).map(v => `<details class="pfold"><summary><span>גרסה ${v.version} · ${pEsc(dayLabel(String(v.published_at).slice(0, 10)))}</span></summary><div class="pfold-body">${planGuidanceHtml({ version:v.version, published_at:v.published_at, content:v.content })}</div></details>`).join('') || '<div class="pnote">עוד אין גרסאות.</div>'}</div>
+    <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סגירה</button></div>`);
+  return sh;
+}
+// print / PDF (the therapist and the admin): the plan as on the screen, the thinking included
+function planPrint(id, d){
+  const c = roster.find(x => x.id === id), row = thp.plans[id] || {};
+  let el = document.getElementById('print-sheet'); if(!el){ el = document.createElement('div'); el.id = 'print-sheet'; document.body.appendChild(el); }
+  el.innerHTML = `<div class="th-print"><h1>תוכנית טיפולית · ${pEsc(displayName(c))}</h1>
+    <div class="th-print-meta">${row.published_version ? 'גרסה ' + row.published_version : 'טיוטה'} · הודפס ${pEsc(dayLabel(isoDate(new Date())))}${row.review_date ? ' · בדיקה מחדש ' + pEsc(dayLabel(row.review_date)) : ''}</div>
+    ${d.summary ? `<h2>תקציר</h2><p>${pEsc(d.summary)}</p>` : ''}${d.avoid ? `<h2>ממה להימנע</h2><p>${pEsc(d.avoid)}</p>` : ''}
+    <h2>מטרות</h2>${(d.goals || []).map(g => `<div class="th-print-goal"><h3>${pEsc(g.title)}${g.focus ? ' · במוקד' : ''}</h3>
+      ${g.targets ? `<p><b>יעדים נצפים:</b> ${pEsc(g.targets)}</p>` : ''}${g.interventions ? `<p><b>דרכי התערבות:</b> ${pEsc(g.interventions)}</p>` : ''}
+      ${g.planet_id ? `<p><b>כוכב לכת:</b> ${pEsc(((thp.planets || []).find(p => p.id === g.planet_id) || {}).name || g.planet_id)}</p>` : ''}
+      ${(g.strengths || []).length ? `<p><b>חוזקות:</b> ${g.strengths.map(pEsc).join(', ')}</p>` : ''}
+      ${g.seen || g.needs || g.why ? `<p><b>חשיבה:</b> ${[g.seen, g.needs, g.why].filter(Boolean).map(pEsc).join(' · ')}</p>` : ''}</div>`).join('')}</div>`;
+  document.body.classList.add('printing');
+  const done = () => { document.body.classList.remove('printing'); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  try { window.print(); } catch(e){ done(); }
+  setTimeout(done, 60000);
+}
+
+// ---- the libraries: Mercury's (only the admin adds to it) and the center's (every therapist adds)
+function planLibraryHtml(){
+  const KIND = { goal:'מטרות', skill:'מיומנויות', strength:'חוזקות' }, admin = !!(srv.profile && srv.profile.admin);
+  const item = x => `<div class="th-lib-item${x.active ? '' : ' off'}"><span><b>${pEsc(x.title)}</b>${x.description ? `<small>${pEsc(x.description)}</small>` : ''}</span><span class="th-lib-scope ${x.scope}">${x.scope === 'mercury' ? 'מרקורי' : 'המרכז'}</span>${admin || (x.scope === 'center' && x.created_by === srv.me) ? `<button type="button" class="btn ghost small" data-lib-toggle="${x.id}">${x.active ? 'הסתרה' : 'החזרה'}</button>` : ''}</div>`;
+  return `<div class="pnote">שתי ספריות: של מרקורי (לכל המוסדות; מנהל המערכת מחליט מה נכנס אליה) ושל המרכז (כל איש/אשת טיפול מוסיפים). מה שמוסתר לא מוצע יותר.</div>
+    <div class="th-lib-add"><select id="lib-kind" aria-label="סוג"><option value="goal">מטרה</option><option value="skill">מיומנות</option><option value="strength">חוזקה</option></select>
+      <input type="text" id="lib-title" maxlength="60" placeholder="שם" aria-label="שם"><input type="text" id="lib-desc" maxlength="200" placeholder="הסבר קצר (רשות)" aria-label="הסבר">
+      ${admin ? '<select id="lib-scope" aria-label="ספרייה"><option value="center">ספריית המרכז</option><option value="mercury">ספריית מרקורי</option></select>' : ''}<button type="button" class="btn" id="lib-add">הוספה</button></div>
+    ${Object.keys(KIND).map(k => `<details class="pfold"${k === 'goal' ? ' open' : ''}><summary><span>${KIND[k]}</span><span class="pcount">${(thp.library || []).filter(x => x.kind === k && x.active).length}</span></summary><div class="pfold-body">${(thp.library || []).filter(x => x.kind === k).map(item).join('')}</div></details>`).join('')}`;
+}
+function planWireLibrary(body){
+  const add = body.querySelector('#lib-add'); if(!add) return;
+  add.addEventListener('click', async () => {
+    const title = body.querySelector('#lib-title').value.trim(); if(!title){ toast('צריך שם'); return; }
+    const kind = body.querySelector('#lib-kind').value, scopeSel = body.querySelector('#lib-scope');
+    const row = { kind, title:kind === 'strength' ? cleanStrength(title) : title, description:body.querySelector('#lib-desc').value.trim() || null, scope:scopeSel ? scopeSel.value : 'center' };
+    const r = await sbPersonal.from('mercury_library').insert(row);
+    if(r.error){ toast(/duplicate|unique/i.test(r.error.message) ? 'כבר יש כזה בספרייה' : 'ההוספה נכשלה'); return; }
+    toast('נוסף לספרייה'); await thpLoad(); thpRender();
+  });
+  body.querySelectorAll('[data-lib-toggle]').forEach(b => b.addEventListener('click', async () => {
+    const x = (thp.library || []).find(y => y.id === b.dataset.libToggle); if(!x) return;
+    const r = await sbPersonal.from('mercury_library').update({ active:!x.active }).eq('id', x.id);
+    if(r.error){ toast('השינוי נכשל'); return; }
+    await thpLoad(); thpRender();
+  }));
+}
+
+// ---- stage 3: the child's temple as the staff sees it (only here, never on the kids' screen): every brick and its strength, a mark where the
+// plan changed, and the child's strengths: the main ones, the new ones (chosen once), and the ones taken down (decisions 26, 27, 48)
+async function planTemple(id, box){
+  if(!box) return;
+  try {
+    const [st, ev, vs, ss] = await Promise.all([getChildState(id), sb.from('feedback_events').select('created_at').eq('child_id', id).eq('type', 'bricks').order('created_at'),
+      sbPersonal.from('child_plan_versions').select('version,published_at').eq('child_id', id).order('version'), sbPersonal.from('child_strengths').select('*').eq('child_id', id).order('picks', { ascending:false })]);
+    const n = (st && st.bricks) || 0, why = (st && st.brickWhy) || [], times = (ev.data || []).map(r => r.created_at).slice(-n);
+    while(times.length < n) times.unshift(null);
+    const marks = (vs.data || []).map(v => ({ v:v.version, at:v.published_at, before:times.filter(x => x && x < v.published_at).length + times.filter(x => !x).length }));
+    let bricks = '';
+    for(let i = 0; i < n; i++){
+      marks.filter(m => m.before === i && i > 0).forEach(m => { bricks += `<span class="th-plan-mark" title="${pEsc(dayLabel(String(m.at).slice(0, 10)))}">התוכנית ${m.v === 1 ? 'פורסמה' : 'עודכנה'} · גרסה ${m.v}</span>`; });
+      bricks += `<span class="th-brick"><small>${i + 1}</small>${pEsc(why[i] || '')}</span>`;
+    }
+    marks.filter(m => m.before >= n && n > 0).forEach(m => { bricks += `<span class="th-plan-mark">התוכנית ${m.v === 1 ? 'פורסמה' : 'עודכנה'} · גרסה ${m.v}</span>`; });
+    const rows = ss.data || [], group = (status, title, btns) => { const l = rows.filter(r => r.status === status); return l.length ? `<div class="th-str-group"><b>${title}</b>${l.map(r => `<div class="th-str-row"><span>${pEsc(r.strength)} <small>(${r.picks})</small></span>${btns.map(([to, w]) => `<button type="button" class="btn ghost small" data-str-set="${pEsc(r.strength)}" data-to="${to}">${w}</button>`).join('')}</div>`).join('')}</div>` : ''; };
+    box.innerHTML = `<h3 class="psec">המקדש של ${pEsc(displayName(roster.find(c => c.id === id)))} <small>(${n} לבנים)</small></h3>
+      ${n ? `<div class="th-bricks">${bricks}</div>` : '<div class="pnote">עוד אין לבנים.</div>'}
+      <h3 class="psec">החוזקות של הילד/ה</h3>
+      <div class="pnote">חוזקה שנבחרה פעמיים על ידי שני מדריכים שונים עולה להצעות המרכזיות לבד. אפשר להוריד או להחזיר.</div>
+      ${group('main', 'מרכזיות', [['removed', 'הורדה']])}${group('extra', 'הצעות נוספות', [['main', 'למרכזיות'], ['removed', 'הורדה']])}${group('removed', 'שהורדו', [['extra', 'החזרה']])}
+      ${rows.length ? '' : '<div class="pnote">עוד לא נבחרו חוזקות על לבנים.</div>'}`;
+    box.querySelectorAll('[data-str-set]').forEach(b => b.addEventListener('click', async () => {
+      const r = await sbPersonal.rpc('strength_set', { p_child:id, p_strength:b.dataset.strSet, p_status:b.dataset.to });
+      if(r.error){ toast('השינוי נכשל'); return; }
+      planTemple(id, box);
+    }));
+  } catch(e){ box.innerHTML = ''; }
+}
+// ---------- MERCURY: THE SPACE JOURNEY BY SKILLS (stage 4: the frame + the moon route) ----------
+// Every child travels their own route of planets (one skill each; the therapist sets the route). The moon route: 7 steps up the mountain ->
+// the child chooses a ship -> 7 steps to the moon -> a symbol on arrival -> an adventure of 10 steps on the moon -> on to the next planet.
+// At most one step a day (the day starts at 05:00). After an adventure the next planet waits for the therapist's approval; meanwhile more
+// adventures, never a failure. The look of the journey is decided in a design session; here: the working frame with simple pictures.
+// A child already on the old moon / word-planet journey stays there until the admin places them (journey_place). (scheduling-v32.sql; decisions 19-24, 29, 30, 40-42, 50, 62)
+const JOURNEY_LEN = { climb:7, fly:7, adventure:10, extra:10 };
+const journeyToday = () => new Date(Date.now() - 5 * 3600e3).toLocaleDateString('en-CA', { timeZone:'Asia/Jerusalem' });
+let journeyPlanetsCache = null;
+async function journeyPlanets(){
+  if(journeyPlanetsCache) return journeyPlanetsCache;
+  const r = await sb.from('journey_planets').select('id,name,skill,question,art,active');
+  if(r.error) return null;
+  journeyPlanetsCache = {}; (r.data || []).forEach(p => { journeyPlanetsCache[p.id] = p; });
+  return journeyPlanetsCache;
+}
+const journeyDefault = id => ({ child_id:id, route:['moon', 'mercury'], planet_idx:0, stage:'climb', step:0, ship:null, symbols:[], next_approved:false, last_step_day:null });
+// the words of where the child is
+function journeyWhere(j, planets){
+  const p = planets[j.route[j.planet_idx]] || { name:j.route[j.planet_idx] || '' };
+  const n = `${j.step} מתוך ${JOURNEY_LEN[j.stage]}`;
+  return j.stage === 'climb' ? `עלייה לראש ההר · ${n}` : j.stage === 'fly' ? `בחללית אל ${p.name} · ${n}` : j.stage === 'adventure' ? `הרפתקה על ${p.name} · ${n}` : `הרפתקאות נוספות על ${p.name} · ${n}`;
+}
+// is this child on the new journey? (a row, or a child who never started the old one)
+async function journeyOf(childId){
+  const r = await sb.from('child_journeys').select('*').eq('child_id', childId).maybeSingle();
+  if(r.error) return null;                                         // (scheduling-v32.sql not run: the old journey)
+  if(r.data) return r.data;
+  const s = await getChildState(childId);
+  return (s.moonSteps || 0) === 0 && (s.mercurySteps || 0) === 0 ? journeyDefault(childId) : null;
+}
+// the panel in the Ramzor (where the instructor gives a step). Returns false when the child is still on the old journey.
+async function journeyPanel(child, fb, containerId){
+  const j = await journeyOf(child.id), planets = j && await journeyPlanets();
+  if(!j || !planets) return false;
+  const p = planets[j.route[j.planet_idx]] || {}, done = j.last_step_day === journeyToday();
+  fb.innerHTML = `<div class="protocol prot-gold journey-panel" style="margin-top:14px;">
+      <div class="light-title">🚀 המסע בחלל · ${escapeHtml(displayName(child))}</div>
+      <div class="journey-where">${escapeHtml(journeyWhere(j, planets))}</div>
+      <div class="journey-dots" aria-hidden="true">${Array.from({ length:JOURNEY_LEN[j.stage] }, (_, i) => `<i class="${i < j.step ? 'on' : ''}"></i>`).join('')}</div>
+      ${done ? '<div class="note" style="color:var(--gold);">✅ כבר נרשם היום צעד. הצעד הבא מחר (מ-05:00).</div>'
+             : `<div class="proj-criterion">${escapeHtml(p.question || 'היום הילד/ה התקדם/ה?')}</div><button class="gold-btn moon-main" id="journey-yes">כן, צעד קדימה</button>`}
+    </div>`;
+  const yes = fb.querySelector('#journey-yes'); if(!yes) return true;
+  yes.addEventListener('click', async () => {
+    yes.disabled = true;
+    const r = await sb.rpc('journey_step', { p_child:child.id });
+    if(r.error){ toast(/already today/.test(r.error.message) ? 'כבר נרשם היום צעד לילד/ה הזה' : '⚠ הצעד לא נשמר — בדקו חיבור ונסו שוב'); journeyPanel(child, fb, containerId); return; }
+    const res = r.data || {}, nm = displayName(child);
+    const words = { ship:`⛰️ ${nm} הגיע/ה לראש ההר! עכשיו בוחרים חללית`, arrive:`🌙 ${nm} הגיע/ה ל${(planets[res.planet] || {}).name || 'כוכב'} וקיבל/ה סמל!`, adventure_done:`✨ ${nm} סיים/ה הרפתקה! ממשיכים בהרפתקאות נוספות`, extra_done:`✨ ${nm} סיים/ה עוד הרפתקה!`, next:`🚀 ${nm} יוצא/ת לכוכב הבא!` };
+    logFeedbackEvent(child.id, 'journey', `🚀 ${nm} התקדם/ה צעד במסע · ${res.stage}:${res.step}${res.milestone ? ' · ' + res.milestone : ''}`);
+    toast(words[res.milestone] || `🚀 ${nm} התקדם/ה צעד במסע`);
+    if(res.milestone) await journeyMilestone(child, res, planets);
+    journeyPanel(child, fb, containerId);
+  });
+  return true;
+}
+// a milestone: "can the child watch now?"; the ship is chosen by the child and entered by the adult (decisions 30, 41)
+async function journeyMilestone(child, res, planets){
+  const nm = displayName(child);
+  if(res.milestone === 'ship'){
+    const ship = await journeyPickShip(child); if(ship){ const r = await sb.rpc('journey_set_ship', { p_child:child.id, p_ship:ship }); toast(r.error ? 'החללית לא נשמרה' : `${nm} בחר/ה חללית!`); }
+  }
+  const watch = await confirmSheet({ title:`${nm} הגיע/ה לאבן דרך`, text:'הילד/ה יכול/ה לצפות עכשיו במסך הילדים?', okLabel:'כן, להציג במסך', cancelLabel:'אחר כך' });
+  if(watch && !sendTvCommand('journey', { child:child.id, milestone:res.milestone, planet:res.planet })) toast('אין חיבור למסך בחדר');
+}
+function journeyPickShip(child){
+  return new Promise(resolve => {
+    const keys = typeof SHIP_OPTIONS !== 'undefined' ? Object.keys(SHIP_OPTIONS) : [];
+    if(!keys.length){ resolve(null); return; }
+    const sh = portalSheet(`<h2>איזו חללית ${escapeHtml(displayName(child))} בוחר/ת?</h2><div class="ship-grid journey-ships">${keys.map(k => `<button type="button" class="ship-option" data-jship="${k}"><img src="${SHIP_OPTIONS[k]}" alt=""></button>`).join('')}</div>
+      <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>אחר כך</button></div>`);
+    sh.querySelectorAll('[data-jship]').forEach(b => b.addEventListener('click', () => { sh.close(); resolve(b.dataset.jship); }));
+    sh.querySelector('[data-close]').addEventListener('click', () => resolve(null));
+  });
+}
+
+// ---- the kids' TV: a step celebrates; a milestone is shown big when the instructor says the child may watch; a board of every child on the journey
+async function journeyCelebrate(ev, child){
+  const m = (ev.message || '').match(/· (climb|fly|adventure|extra):(\d+)/), stage = m ? m[1] : 'fly', step = m ? +m[2] : 1;
+  const j = (await journeyTvRows()).find(r => r.child_id === child.id), planet = (j && j.planet) || 'moon';
+  queueCelebration(async () => { await playCelebration(planet === 'moon' ? 'moon' : 'mercury', child, Math.max(1, Math.min(step, typeof CELEBRATION_TRACK_STEPS !== 'undefined' ? CELEBRATION_TRACK_STEPS : 7))); });
+}
+async function journeyTvRows(){
+  try { const r = await sb.rpc('tv_journeys', { p_token:(typeof tvToken === 'function' ? tvToken() : null) }); return r.error ? [] : (r.data || []); } catch(e){ return []; }
+}
+function journeyShowMilestone(childId, milestone){
+  const child = roster.find(c => c.id === childId); if(!child) return;
+  const words = { ship:'הגיע/ה לראש ההר!', arrive:'הגיע/ה לכוכב וקיבל/ה סמל!', adventure_done:'סיים/ה הרפתקה!', extra_done:'סיים/ה עוד הרפתקה!', next:'יוצא/ת לכוכב הבא!' };
+  const view = document.getElementById('view-display'); let el = document.getElementById('tv-journey-ms');
+  if(!el){ el = document.createElement('div'); el.id = 'tv-journey-ms'; view.appendChild(el); }
+  const k = typeof characterFor === 'function' && characterFor(child.id);
+  el.innerHTML = `<div class="tvj-ms"><div class="tvj-ms-char">${k ? charImgHtml(k) : ''}</div><div class="tvj-ms-name">${escapeHtml(displayName(child))}</div><div class="tvj-ms-words">${words[milestone] || ''}</div></div>`;
+  el.hidden = false; if(typeof tvHold === 'function') tvHold();
+  if(typeof playTones === 'function' && typeof SOUND_FANFARE !== 'undefined') playTones(SOUND_FANFARE);
+  clearTimeout(journeyShowMilestone.t); journeyShowMilestone.t = setTimeout(() => { el.hidden = true; if(typeof tvRelease === 'function') tvRelease(); }, 12000);
+}
+async function renderJourneyBoard(){
+  const el = document.getElementById('tv-journey'); if(!el) return;
+  const rows = await journeyTvRows(), planets = await journeyPlanets() || {};
+  const kids = rows.map(r => ({ r, c:roster.find(c => c.id === r.child_id) })).filter(x => x.c);
+  el.innerHTML = kids.length ? `<div class="tvj-rows">${kids.map(({ r, c }) => { const k = typeof characterFor === 'function' && characterFor(c.id), len = JOURNEY_LEN[r.stage] || 7;
+    return `<div class="tvj-row"><span class="tvj-char">${k ? charImgHtml(k) : ''}</span><span class="tvj-name">${escapeHtml(displayName(c))}</span>
+      <span class="tvj-track">${Array.from({ length:len }, (_, i) => `<i class="${i < r.step ? 'on' : ''}"></i>`).join('')}</span>
+      <span class="tvj-goal">${r.stage === 'climb' ? '⛰️' : (planets[r.planet] || {}).art === 'moon' ? '🌙' : '🪐'}</span></div>`; }).join('')}</div>` : '';
+}
+if(typeof SLIDES !== 'undefined' && SLIDES.length === 13){
+  SLIDES.push({ id:13, label:'המסע בחלל', render: renderJourneyBoard, hidden:true });
+  const before = refreshJourneyBoards;
+  refreshJourneyBoards = async function(){ await before(); try { SLIDES[13].hidden = !(await journeyTvRows()).length; } catch(e){} };
+}
+
+// ---- the therapist (and the admin): the route, the approval to move on, and (the admin) where a child really is
+async function journeyAdminHtml(id){
+  const planets = await journeyPlanets() || {}, j = await journeyOf(id);
+  if(!j) return `<div class="pnote">הילד/ה עוד במסע הישן (ירח וכוכב המילים). מנהל המערכת ממקם אותו/ה במסע החדש.</div>`;
+  const list = Object.values(planets).filter(p => p.active);
+  return `<div class="journey-admin" data-jchild="${pEsc(id)}">
+    <div class="pnote">עכשיו: ${pEsc(journeyWhere(j, planets))}</div>
+    <div class="pfield"><span>המסלול (הכוכבים לפי הסדר)</span><div class="th-chips" id="ja-route">${j.route.map((pid, i) => `<span class="th-chip" data-rp="${pEsc(pid)}">${i + 1}. ${pEsc((planets[pid] || {}).name || pid)} <button type="button" class="th-chip-x" data-rp-up aria-label="למעלה">▲</button><button type="button" class="th-chip-x" data-rp-x aria-label="הסרה">✕</button></span>`).join('')}</div>
+      <div class="th-add-row"><select id="ja-add">${list.filter(p => !j.route.includes(p.id)).map(p => `<option value="${pEsc(p.id)}">${pEsc(p.name)} · ${pEsc(p.skill)}</option>`).join('')}</select><button type="button" class="btn ghost small" id="ja-add-go">הוספה</button></div></div>
+    <details class="pfold"><summary><span>כוכב חדש</span></summary><div class="pfold-body">
+      <label class="pfield">שם הכוכב<input type="text" id="ja-new-name" maxlength="30"></label><label class="pfield">המיומנות<input type="text" id="ja-new-skill" maxlength="60"></label>
+      <label class="pfield">השאלה למדריך בכל צעד<input type="text" id="ja-new-q" maxlength="100" placeholder="למשל: היום הילד/ה ביקש/ה עזרה כשהיה קשה?"></label><button type="button" class="btn ghost" id="ja-new-go">יצירה</button></div></details>
+    <label class="th-important"><input type="checkbox" id="ja-approve"${j.next_approved ? ' checked' : ''}> מאשר/ת מעבר לכוכב הבא בסוף ההרפתקה</label>
+    <div class="th-actions"><button type="button" class="btn" id="ja-save">שמירת המסלול</button>${srv.profile && srv.profile.admin ? '<button type="button" class="btn ghost" id="ja-place">מיקום במסע (מנהל)</button>' : ''}</div>
+  </div>`;
+}
+function journeyWireAdmin(box, id, redraw){
+  const root = box.querySelector('.journey-admin'); if(!root) return;
+  const route = () => [...root.querySelectorAll('#ja-route [data-rp]')].map(x => x.dataset.rp);
+  root.querySelector('#ja-route').addEventListener('click', e => { const chip = e.target.closest('[data-rp]'); if(!chip) return;
+    if(e.target.closest('[data-rp-x]')) chip.remove(); else if(e.target.closest('[data-rp-up]') && chip.previousElementSibling) chip.parentElement.insertBefore(chip, chip.previousElementSibling); });
+  root.querySelector('#ja-add-go').addEventListener('click', async () => { const v = root.querySelector('#ja-add').value; if(!v) return; const r = route().concat(v); const s = await sbPersonal.rpc('journey_set_route', { p_child:id, p_route:r }); if(s.error){ toast('השמירה נכשלה'); return; } redraw(); });
+  root.querySelector('#ja-new-go').addEventListener('click', async () => {
+    const name = root.querySelector('#ja-new-name').value.trim(), skill = root.querySelector('#ja-new-skill').value.trim(), q = root.querySelector('#ja-new-q').value.trim();
+    if(!name || !skill || !q){ toast('צריך שם, מיומנות ושאלה'); return; }
+    const pid = 'p' + Date.now().toString(36);
+    const r = await sbPersonal.from('journey_planets').insert({ id:pid, name, skill, question:q, art:'planet' });
+    if(r.error){ toast('היצירה נכשלה'); return; }
+    journeyPlanetsCache = null; toast('הכוכב נוצר. אפשר להוסיף אותו למסלול'); redraw();
+  });
+  root.querySelector('#ja-save').addEventListener('click', async () => {
+    const r = route(); if(!r.length){ toast('המסלול ריק'); return; }
+    const a = await sbPersonal.rpc('journey_set_route', { p_child:id, p_route:r }), b = await sbPersonal.rpc('journey_approve_next', { p_child:id, p_ok:root.querySelector('#ja-approve').checked });
+    toast(a.error || b.error ? 'השמירה נכשלה' : 'נשמר'); redraw();
+  });
+  const pl = root.querySelector('#ja-place'); if(pl) pl.addEventListener('click', () => journeyPlaceSheet(id, redraw));
+}
+async function journeyPlaceSheet(id, redraw){
+  const planets = await journeyPlanets() || {}, j = (await journeyOf(id)) || journeyDefault(id);
+  const sh = portalSheet(`<h2>מיקום במסע</h2><div class="pnote">לשים את הילד/ה איפה שהוא/היא באמת (למשל לפי הלוח שעל הקיר). נרשם ביומן.</div>
+    <label class="pfield">כוכב<select id="jp-idx">${j.route.map((pid, i) => `<option value="${i}"${i === j.planet_idx ? ' selected' : ''}>${pEsc((planets[pid] || {}).name || pid)}</option>`).join('')}</select></label>
+    <label class="pfield">שלב<select id="jp-stage">${[['climb', 'עלייה להר'], ['fly', 'בחללית'], ['adventure', 'הרפתקה'], ['extra', 'הרפתקאות נוספות']].map(([k, w]) => `<option value="${k}"${j.stage === k ? ' selected' : ''}>${w}</option>`).join('')}</select></label>
+    <label class="pfield">צעד<input type="number" id="jp-step" min="0" max="9" value="${j.step}"></label>
+    <div class="confirm-actions"><button type="button" class="btn ghost" data-close>ביטול</button><button type="button" class="btn" id="jp-go">שמירה</button></div>`);
+  sh.querySelector('#jp-go').addEventListener('click', async () => {
+    const r = await sbPersonal.rpc('journey_place', { p_child:id, p_planet_idx:+sh.querySelector('#jp-idx').value, p_stage:sh.querySelector('#jp-stage').value, p_step:+sh.querySelector('#jp-step').value });
+    if(r.error){ toast('המיקום לא נשמר (בדקו את מספר הצעד)'); return; }
+    sh.close(); toast('המיקום נשמר'); if(redraw) redraw();
+  });
+}
+// ---------- MERCURY: THE KIDS' TV WITHOUT THE STAFF PASSWORD (stage 6) ----------
+// The kids' screen (#tv) needs nobody's sign-in: it only shows what anybody may see. To keep strangers out, a screen joins once with a
+// short code: the coordinator or the admin asks for it in the portal settings ("מסכי הילדים בחדר"), it arrives by e-mail (15 minutes),
+// and is typed here. The screen keeps its own token; disconnected from the portal, it asks for a code again. A screen that is signed in
+// (a person, or the old staff password still on it) goes straight in. (scheduling-v32.sql; decisions 32, 60)
+const TV_TOKEN_KEY = 'ramzor-tv-token';
+function tvToken(){ try { return localStorage.getItem(TV_TOKEN_KEY) || null; } catch(e){ return null; } }
+// true = this screen may show; a missing function on the server (before scheduling-v32.sql) or a moment without the network never locks a known screen
+async function tvTokenOk(){
+  const tok = tvToken();
+  try {
+    const r = await sb.rpc('tv_check', { p_token:tok || '' });
+    if(r.error) return /could not find|does not exist|schema cache/i.test(r.error.message) ? true : !!tok;
+    return r.data === true;
+  } catch(e){ return !!tok; }
+}
+function tvPairScreen(){
+  return new Promise(resolve => {
+    let el = document.getElementById('tv-pair');
+    if(!el){ el = document.createElement('div'); el.id = 'tv-pair'; document.body.appendChild(el); }
+    el.innerHTML = `<div class="tvp-card"><div class="tvp-emoji" aria-hidden="true">📺</div><h1>חיבור מסך הילדים</h1>
+      <p>מבקשים קוד בפורטל הרכזת: הגדרות ← מסכי הילדים בחדר ← "שליחת קוד למסך חדש". הקוד מגיע במייל ותקף ל-15 דקות.</p>
+      <input type="text" id="tvp-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="הקוד (6 ספרות)" aria-label="הקוד">
+      <button type="button" class="btn" id="tvp-go">חיבור</button><div class="tvp-err" id="tvp-err" aria-live="polite"></div></div>`;
+    el.hidden = false;
+    const input = el.querySelector('#tvp-code'), err = el.querySelector('#tvp-err'), go = el.querySelector('#tvp-go');
+    const tryCode = async () => {
+      const code = input.value.replace(/\D/g, ''); if(code.length !== 6){ err.textContent = 'צריך 6 ספרות'; return; }
+      go.disabled = true; err.textContent = '';
+      let r; try { r = await sb.rpc('tv_pair', { p_code:code, p_name:'מסך הילדים' }); } catch(e){ r = { error:e }; }
+      go.disabled = false;
+      if(r.error || !r.data){ err.textContent = 'הקוד לא נכון או שפג תוקפו. אפשר לבקש קוד חדש.'; input.select(); return; }
+      try { localStorage.setItem(TV_TOKEN_KEY, r.data); } catch(e){}
+      el.hidden = true; resolve(true);
+    };
+    go.addEventListener('click', tryCode);
+    input.addEventListener('keydown', e => { if(e.key === 'Enter') tryCode(); });
+    setTimeout(() => input.focus(), 50);
+  });
+}
+// the TV starts: a known screen goes in; otherwise the code first. Every 10 minutes: a screen that was disconnected asks again.
+async function tvGate(){
+  if(!(await tvTokenOk())) await tvPairScreen();
+  clearInterval(tvGate.t);
+  tvGate.t = setInterval(async () => { if(!(await tvTokenOk())){ try { localStorage.removeItem(TV_TOKEN_KEY); } catch(e){} location.reload(); } }, 10 * 60 * 1000);
+  return true;
+}
+// ---------- MERCURY: OBSERVATIONS AND TRACKING (stage 5) ----------
+// Anybody on the staff (with the personal sign-in) sends a short free observation on a child to the responsible therapist: words, or a
+// recording (kept in private storage, never in the phone's gallery), optionally tied to a goal in focus. The therapist answers
+// "ראיתי, תודה" (+ a sentence); the writer is told. No report is required at the end of a shift. The therapist sees a weekly summary
+// per goal over 8 weeks (steps, bricks, stars, frequent strengths, a fixed sentence from the numbers, the observations) and a few
+// simple charts. Nothing here draws conclusions. (scheduling-v32.sql; decisions 17, 18, 31, 43, 52-55, 64)
+const OBS_MAX_SECONDS = 120;
+const obsClient = () => (typeof portalServerOn !== 'undefined' && portalServerOn && sbPersonal) ? sbPersonal : sb;
+async function obsFocusGoals(childId){
+  try { if(thp.guidance && thp.guidance[childId]) return (thp.guidance[childId].content.goals || []).filter(g => g.focus);
+    const r = await obsClient().rpc('plan_guidance'); const g = (r.data || []).find(x => x.child_id === childId); return g ? (g.content.goals || []).filter(x => x.focus) : []; } catch(e){ return []; }
+}
+// the observation sheet (from the therapy portal and from the Ramzor)
+async function obsOpen(childId){
+  const c = roster.find(x => x.id === childId); if(!c) return;
+  const client = obsClient(), me = (await client.rpc('is_staff_person')).data;
+  if(!me){ toast('תצפית נשלחת רק בכניסה אישית (מייל וסיסמה)'); return; }
+  const goals = await obsFocusGoals(childId);
+  const sh = portalSheet(`<h2>תצפית על ${escapeHtml(displayName(c))}</h2>
+    <div class="pnote">מה ראית? כמה מילים מספיקות. מגיע רק לאיש/אשת הטיפול האחראי/ת (ולמנהל המערכת).</div>
+    <textarea id="obs-text" class="obs-text" rows="4" maxlength="2000" placeholder="למשל: ביקש עזרה כשנתקע בפאזל, בלי לצעוק"></textarea>
+    <div class="obs-rec"><button type="button" class="btn ghost" id="obs-rec">🎙️ הקלטה</button><span id="obs-rec-state" class="obs-rec-state"></span><audio id="obs-audio" controls hidden></audio><button type="button" class="btn ghost small" id="obs-rec-x" hidden>מחיקת ההקלטה</button></div>
+    ${goals.length ? `<div class="pfield"><span>קשור למטרה? (רשות)</span><div class="pchoice wrap obs-goals">${goals.map(g => `<button type="button" data-obs-goal="${escapeHtml(g.id)}">${escapeHtml(g.title)}</button>`).join('')}</div></div>` : ''}
+    <div class="confirm-actions"><button type="button" class="btn ghost" data-close>ביטול</button><button type="button" class="btn" id="obs-send">שליחה</button></div>`);
+  let goal = null, blob = null, rec = null, chunks = [], timer = null;
+  sh.querySelectorAll('[data-obs-goal]').forEach(b => b.addEventListener('click', () => { goal = goal === b.dataset.obsGoal ? null : b.dataset.obsGoal; sh.querySelectorAll('[data-obs-goal]').forEach(x => x.classList.toggle('on', x.dataset.obsGoal === goal)); }));
+  const recBtn = sh.querySelector('#obs-rec'), state = sh.querySelector('#obs-rec-state'), audio = sh.querySelector('#obs-audio'), recX = sh.querySelector('#obs-rec-x');
+  const stopRec = () => { if(rec && rec.state !== 'inactive') rec.stop(); clearInterval(timer); };
+  recBtn.addEventListener('click', async () => {
+    if(rec && rec.state === 'recording'){ stopRec(); return; }
+    if(!navigator.mediaDevices || !window.MediaRecorder){ toast('המכשיר הזה לא מאפשר הקלטה'); return; }
+    let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio:true }); } catch(e){ toast('אין הרשאה למיקרופון'); return; }
+    chunks = []; rec = new MediaRecorder(stream); const t0 = Date.now();
+    rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = () => { stream.getTracks().forEach(t => t.stop()); blob = new Blob(chunks, { type:rec.mimeType || 'audio/webm' }); audio.src = URL.createObjectURL(blob); audio.hidden = false; recX.hidden = false; recBtn.textContent = '🎙️ הקלטה מחדש'; state.textContent = ''; };
+    rec.start(); recBtn.textContent = '⏹ עצירה';
+    timer = setInterval(() => { const s = Math.round((Date.now() - t0) / 1000); state.textContent = `${s} שניות`; if(s >= OBS_MAX_SECONDS) stopRec(); }, 500);
+  });
+  recX.addEventListener('click', () => { blob = null; audio.hidden = true; audio.removeAttribute('src'); recX.hidden = true; recBtn.textContent = '🎙️ הקלטה'; });
+  sh.querySelector('#obs-send').addEventListener('click', async e => {
+    const text = sh.querySelector('#obs-text').value.trim();
+    if(!text && !blob){ toast('צריך לכתוב משהו או להקליט'); return; }
+    e.target.disabled = true; let audio_path = null;
+    if(blob){
+      const ext = /mp4|aac|m4a/.test(blob.type) ? 'm4a' : /ogg/.test(blob.type) ? 'ogg' : 'webm';
+      audio_path = `audio/${childId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const up = await client.storage.from('mercury').upload(audio_path, blob, { contentType:blob.type || 'audio/webm' });
+      if(up.error){ e.target.disabled = false; toast('ההקלטה לא נשמרה. אפשר לנסות שוב'); return; }
+    }
+    const r = await client.from('observations').insert({ child_id:childId, text:text || null, audio_path, goal_id:goal });
+    if(r.error){ e.target.disabled = false; toast('התצפית לא נשלחה. אפשר לנסות שוב'); return; }
+    stopRec(); sh.close(); toast('התצפית נשלחה לאיש/אשת הטיפול. תודה!');
+  });
+  sh.querySelector('[data-close]').addEventListener('click', stopRec);
+}
+
+// ---- the therapist: the observations on a child, newest first; "ראיתי, תודה"; a recording plays from a short-lived link
+async function obsSection(childId, box){
+  if(!box) return;
+  const r = await sbPersonal.from('observations').select('*').eq('child_id', childId).order('created_at', { ascending:false }).limit(60);
+  if(r.error){ box.innerHTML = ''; return; }
+  const names = {}; (portalLoad().instructors || []).forEach(p => { names[p.id] = p.first; });
+  const goals = {}; ((thp.plans[childId] && (thp.plans[childId].published || thp.plans[childId].draft)) || { goals:[] }).goals.forEach(g => { goals[g.id] = g.title; });
+  const list = r.data || [];
+  box.innerHTML = list.length ? list.map(o => `<div class="obs-item${o.seen_at ? '' : ' new'}" data-obs="${o.id}">
+      <div class="obs-head"><b>${pEsc(names[o.author] || 'צוות')}</b><small>${pEsc(dayLabel(String(o.created_at).slice(0, 10)))} ${String(o.created_at).slice(11, 16)}</small>${o.goal_id && goals[o.goal_id] ? `<span class="th-chip">${pEsc(goals[o.goal_id])}</span>` : ''}</div>
+      ${o.text ? `<div class="obs-body">${pEsc(o.text)}</div>` : ''}${o.audio_path ? `<button type="button" class="btn ghost small" data-obs-play="${pEsc(o.audio_path)}">▶ להאזנה</button>` : ''}
+      ${o.reply != null ? `<div class="obs-reply">התשובה שלך: ${pEsc(o.reply || 'ראיתי, תודה')}</div>` : `<div class="th-add-row"><input type="text" maxlength="200" placeholder="משפט קצר (רשות)" data-obs-msg aria-label="תשובה"><button type="button" class="btn small" data-obs-ok>ראיתי, תודה</button></div>`}
+    </div>`).join('') : '<div class="pnote">עוד אין תצפיות על הילד/ה.</div>';
+  box.querySelectorAll('[data-obs-play]').forEach(b => b.addEventListener('click', async () => {
+    const s = await sbPersonal.storage.from('mercury').createSignedUrl(b.dataset.obsPlay, 300); if(s.error){ toast('לא הצלחנו לפתוח את ההקלטה'); return; }
+    const a = document.createElement('audio'); a.controls = true; a.src = s.data.signedUrl; b.replaceWith(a); a.play().catch(() => {});
+  }));
+  box.querySelectorAll('[data-obs-ok]').forEach(b => b.addEventListener('click', async () => {
+    const item = b.closest('[data-obs]'), msg = item.querySelector('[data-obs-msg]').value.trim();
+    const u = await sbPersonal.from('observations').update({ reply:msg, seen_at:new Date().toISOString() }).eq('id', item.dataset.obs);
+    if(u.error){ toast('לא נשמר'); return; }
+    toast('נשלח לכותב/ת התצפית'); obsSection(childId, box);
+  }));
+  const unseen = list.filter(o => !o.seen_at).map(o => o.id);          // (seen once the therapist opened them)
+  if(unseen.length) sbPersonal.from('observations').update({ seen_at:new Date().toISOString() }).in('id', unseen).then(() => {}, () => {});
+}
+
+// ---- tracking: 8 weeks, per goal; from what was given (steps, bricks, stars), not a conclusion
+const obsWeekStart = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - x.getDay()); return x; };
+async function trackSection(childId, box){
+  if(!box) return;
+  const since = obsWeekStart(Date.now() - 7 * 7 * 864e5);
+  const [ev, steps, obs] = await Promise.all([
+    sb.from('feedback_events').select('type,message,created_at').eq('child_id', childId).in('type', ['star', 'bricks']).gte('created_at', since.toISOString()),
+    sbPersonal.from('journey_steps').select('planet_id,at').eq('child_id', childId).gte('at', since.toISOString()),
+    sbPersonal.from('observations').select('created_at').eq('child_id', childId).gte('created_at', since.toISOString())]);
+  if(ev.error || steps.error){ box.innerHTML = ''; return; }
+  const weeks = Array.from({ length:8 }, (_, i) => new Date(since.getTime() + i * 7 * 864e5));
+  const wk = t => Math.min(7, Math.max(0, Math.floor((new Date(t) - since) / (7 * 864e5))));
+  const plan = (thp.plans[childId] && (thp.plans[childId].published || thp.plans[childId].draft)) || { goals:[] };
+  const brickWhy = m => ((m || '').match(/ · כוח: (.+)$/) || [])[1] || '';
+  const stars = Array(8).fill(0), bricks = Array(8).fill(0), obsN = Array(8).fill(0), freq = {};
+  (ev.data || []).forEach(e => { if(e.type === 'star') stars[wk(e.created_at)]++; else { bricks[wk(e.created_at)]++; const w = brickWhy(e.message); if(w) freq[w] = (freq[w] || 0) + 1; } });
+  (obs.data || []).forEach(o => { obsN[wk(o.created_at)]++; });
+  const perGoal = plan.goals.filter(g => g.title).map(g => {
+    const s = Array(8).fill(0), b = Array(8).fill(0);
+    (steps.data || []).forEach(x => { if(g.planet_id && x.planet_id === g.planet_id) s[wk(x.at)]++; });
+    (ev.data || []).forEach(e => { if(e.type === 'bricks' && (g.strengths || []).includes(brickWhy(e.message))) b[wk(e.created_at)]++; });
+    return { g, s, b };
+  });
+  const last = 7, top = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const sentence = `השבוע: ${stars[last]} כוכבים, ${bricks[last]} לבנים${perGoal.length ? ', ' + perGoal.map(x => `${x.g.title}: ${x.s[last]} צעדים ו-${x.b[last]} לבנים`).join(', ') : ''}${obsN[last] ? `, ${obsN[last]} תצפיות` : ''}.`;
+  const head = `<tr><th></th>${weeks.map(w => `<th>${w.getDate()}/${w.getMonth() + 1}</th>`).join('')}</tr>`;
+  const row = (label, arr) => `<tr><th>${pEsc(label)}</th>${arr.map(v => `<td>${v || ''}</td>`).join('')}</tr>`;
+  const max = Math.max(1, ...stars, ...bricks);
+  const bars = (label, arr) => `<div class="trk-chart"><b>${pEsc(label)}</b><div class="trk-bars">${arr.map((v, i) => `<span title="${weeks[i].getDate()}/${weeks[i].getMonth() + 1}: ${v}"><i style="height:${Math.round(v / max * 100)}%"></i></span>`).join('')}</div></div>`;
+  box.innerHTML = `<div class="trk-sentence">${pEsc(sentence)}</div>
+    <div class="pnote">אלה הנתונים שנרשמו (צעדים, לבנים, כוכבים): אינדיקציה חלקית בלבד, לא מסקנה טיפולית.</div>
+    <div class="trk-scroll"><table class="trk-table"><thead>${head}</thead><tbody>
+      ${perGoal.map(x => row(x.g.title + ' · צעדים', x.s) + row(x.g.title + ' · לבנים', x.b)).join('')}
+      ${row('כוכבים', stars)}${row('לבנים (הכול)', bricks)}${row('תצפיות', obsN)}</tbody></table></div>
+    ${top.length ? `<div class="pnote">חוזקות נפוצות: ${top.map(([w, n]) => `${pEsc(w)} (${n})`).join(' · ')}</div>` : ''}
+    <details class="pfold"><summary><span>גרפים פשוטים</span></summary><div class="pfold-body">${bars('כוכבים בשבוע', stars)}${bars('לבנים בשבוע', bricks)}</div></details>`;
+}
+
+// ---- the therapist's choice: how to be told (now by e-mail / a daily summary / only in the portal)
+function obsNotifyHtml(){
+  const v = srv.therapistNotify || 'daily';
+  return `<div class="pfield th-notify"><span>איך לעדכן אותך על הילדים שלך?</span><div class="pchoice wrap">${[['now', 'מייל מיד'], ['daily', 'סיכום יומי במייל'], ['portal', 'רק בפורטל']].map(([k, w]) => `<button type="button" class="${v === k ? 'on' : ''}" data-th-notify="${k}">${w}</button>`).join('')}</div></div>`;
+}
+async function obsLoadNotify(){ try { const r = await sbPersonal.from('staff_settings').select('therapist_notify').eq('staff_id', srv.me).maybeSingle(); srv.therapistNotify = (!r.error && r.data && r.data.therapist_notify) || 'daily'; } catch(e){ srv.therapistNotify = 'daily'; } }
+function obsWireNotify(box){
+  box.querySelectorAll('[data-th-notify]').forEach(b => b.addEventListener('click', async () => {
+    const r = await sbPersonal.from('staff_settings').upsert({ staff_id:srv.me, therapist_notify:b.dataset.thNotify });
+    if(r.error){ toast('לא נשמר'); return; }
+    srv.therapistNotify = b.dataset.thNotify; box.querySelectorAll('[data-th-notify]').forEach(x => x.classList.toggle('on', x === b)); toast('נשמר');
+  }));
 }
 // ---------- bottom navigation bar (phones) ----------
 // One button, "בית": back to the first screen — the choice between the Ramzor and the portal (when the portal is on), or the Ramzor's home.
@@ -9318,6 +10194,7 @@ const KIDS_QUICK_TITLES = {
   moon: 'בחרו ילד/ה — המסע בחלל',
   brick: 'בחרו ילד/ה — המקדש שלי',
   yellow: 'בחרו ילד/ה — רמזור צהוב',
+  observe: 'בחרו ילד/ה — תצפית לאיש/אשת הטיפול',
 };
 
 function kidsQuickShowColorPicker(){
@@ -9359,6 +10236,8 @@ function kidsQuickShowChildPicker(mode){
         document.getElementById('kids-quick-pick-child').style.display = 'none';
         document.getElementById('kids-quick-moon-panel').style.display = 'block';
         await renderMoonPanel('kids-quick-moon-feedback');
+      } else if(kidsQuickMode === 'observe'){
+        if(typeof obsOpen === 'function') obsOpen(selectedStaffChild);          // (Mercury: an observation for the responsible therapist)
       } else if(kidsQuickMode === 'yellow'){
         document.getElementById('kids-quick-pick-child').style.display = 'none';
         document.getElementById('kids-quick-yellow-list').style.display = 'block';
@@ -9380,6 +10259,7 @@ document.getElementById('hub-kids-btn').addEventListener('click', async ()=>{
 document.getElementById('kq-give-star-btn').addEventListener('click', ()=>{ kqOrigin = null; kidsQuickShowChildPicker('star'); });
 document.getElementById('kq-moon-journey-btn').addEventListener('click', ()=>{ kqOrigin = null; kidsQuickShowChildPicker('moon'); });
 document.getElementById('kq-brick-btn').addEventListener('click', ()=>{ kqOrigin = null; kidsQuickShowChildPicker('brick'); });
+document.getElementById('kq-observe-btn').addEventListener('click', ()=>{ kqOrigin = null; kidsQuickShowChildPicker('observe'); });
 // the daily-operations gold screen reaches those same two buttons (see openKidsQuickFrom)
 document.getElementById('gold-give-star-btn').addEventListener('click', ()=> openKidsQuickFrom('kq-give-star-btn', 'gold'));
 document.getElementById('gold-moon-journey-btn').addEventListener('click', ()=> openKidsQuickFrom('kq-moon-journey-btn', 'gold'));
@@ -9584,7 +10464,11 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
       if(session && await personalEnter()){ maybeShowManageFromHash(); return; }
     } catch(e){ /* the staff password screen, as usual */ }
   }
-  const authed = await checkAuth();
+  let authed = await checkAuth();
+  // Mercury stage 6: the shared staff password is gone. A device still signed in with it (not the kids' TV, not the checks of the test site) is signed out: the personal sign-in.
+  if(authed && !staffPasswordOn() && location.hash !== '#tv'){
+    try { const { data:{ session } } = await sb.auth.getSession(); if(session && session.user && session.user.email === STAFF_EMAIL){ await sb.auth.signOut(); authed = await checkAuth(); } } catch(e){}
+  }
   if(authed){
     await loadApp();
     maybeShowManageFromHash();
@@ -9594,7 +10478,7 @@ if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('protected-app').style.display = 'none';
     document.getElementById('feedback-back-to-hub').style.display = 'none';
-    if(!authed){ await initRoster(); await initMiniLists(); }
+    if(!authed){ await tvGate(); await initRoster(); await initMiniLists(); }          // (a screen without a sign-in joins by a code: 14za-tv-pair.js)
     activateDisplayView();
   }
 })();
