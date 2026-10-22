@@ -1566,6 +1566,7 @@
   .adm-viewas.act{ background:rgba(255,120,80,.16); border-color:rgba(255,120,80,.6); }
   .adm-act-coord{ width:100%; margin:0 0 12px; }
   .cs-count-table td.cs-count-w{ font-weight:700; }
+  .pshift.in-long{ opacity:.55; border-style:dashed; cursor:not-allowed; font-size:11px; }          /* inside a chosen long weekend: not chosen one by one */
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -6059,6 +6060,11 @@ const prefOther = () => portalServerOn && typeof srvEditingFor === 'function' &&
 const prefFixedKinds = () => { const o = prefOther(), st = portalLoad(), prof = o ? (st.priv || {})[o] : srv.profile; const k = new Set(portalServerOn ? (o ? (st.fixedNo || {})[o] || [] : srv.fixedNo || []) : []); if(portalServerOn && prof && prof.no_nights) k.add('n'); return k; };
 const prefFixedNo = key => portalServerOn && prefFixedKinds().has(String(key).split('|')[1]);
 const prefNoNight = prefFixedNo;
+// the long weekend is one package (Guy, 2026-10-22): with "כן" or "יכול" on it, Friday afternoon and night and Saturday morning and afternoon are
+// inside it and are not chosen one by one (the engine places them only as the whole weekend); Friday morning and Saturday night stay free
+const LONG_INSIDE = { 5:['e', 'n'], 6:['m', 'e'] };
+const prefLongFri = key => { const [d, s] = key.split('|'), w = dowOf(d); return (LONG_INSIDE[w] || []).includes(s) ? (w === 5 ? d : addDays(d, -1)) : null; };
+const prefInsideLong = (prefs, key) => { const fri = portalServerOn && prefLongFri(key); return !!fri && ['yes', 'can', 'avoid'].includes(prefs.slots[`${fri}|l`]); };
 const prefLevelOf = (prefs, key) => prefs.slots[key] || (portalServerOn ? (prefNoNight(key) ? 'no' : 'neutral') : 'yes');          // (on the server a shift nobody marked is "neutral": the person did not say)
 const DEFAULT_SHIFT_LEGEND = types => types.map(s => (s.letter || s.label.charAt(0)) + ' = ' + s.label);
 const FIXED_REASON = { vacation:'חופשה', sick:'מחלה', reserve:'מילואים', leave:'חופשה מיוחדת', other:'היעדרות', self:'היעדרות' };
@@ -6098,12 +6104,13 @@ function renderInstructorPrefs(body){
   for(let i = 0; i < lead; i++) cells += '<div class="pday blank"></div>';
   days.forEach(date => {
     const fx = fixedOn(date), absent = !!fx || prefs.absent.includes(date), hrs = portalServerOn && prefs.hours[date];
-    if(portalServerOn && !absent) neutral += prefShiftsFor(date).filter(s => !prefs.slots[`${date}|${s.id}`] && !prefNoNight(`${date}|${s.id}`)).length;
+    if(portalServerOn && !absent) neutral += prefShiftsFor(date).filter(s => !prefs.slots[`${date}|${s.id}`] && !prefNoNight(`${date}|${s.id}`) && !prefInsideLong(prefs, `${date}|${s.id}`)).length;
     cells += `<div class="pday${absent ? ' absent' : ''}${fx ? ' fixed' : ''}${hrs ? ' has-hours' : ''}${[5, 6].includes(dowOf(date)) ? ' weekend' : ''}${barOn && [5, 6].includes(dowOf(date)) && days.includes(dowOf(date) === 5 ? date : addDays(date, -1)) ? ' linked' : ''}"${fx ? ` title="${pEsc(FIXED_REASON[fx.reason] || 'היעדרות')}"` : ''}>
       <button type="button" class="pday-num" data-pday="${date}" aria-label="${dayLabel(date)}">${parseIso(date).getDate()}</button>
       ${fx ? `<span class="pday-fixed">${pEsc(FIXED_REASON[fx.reason] || 'היעדרות')}</span>` : ''}
       ${hrs ? `<span class="pday-hrs" title="שעות אחרות">${hrs.map(([a, b]) => a + '–' + b).join(', ')}</span>` : ''}
-      <div class="pday-shifts">${prefShiftsFor(date).map(s => { const lv = absent ? 'no' : prefLevelOf(prefs, `${date}|${s.id}`); return `<button type="button" class="pshift lv-${lv}" data-pslot="${date}|${s.id}" aria-label="${pEsc(s.label)}">${pEsc(s.letter || s.label.charAt(0))}</button>`; }).join('')}</div>
+      <div class="pday-shifts">${prefShiftsFor(date).map(s => { const key = `${date}|${s.id}`, inLong = !absent && prefInsideLong(prefs, key), lv = absent ? 'no' : inLong ? prefs.slots[`${prefLongFri(key)}|l`] : prefLevelOf(prefs, key);
+        return `<button type="button" class="pshift lv-${lv}${inLong ? ' in-long' : ''}" data-pslot="${key}" aria-label="${pEsc(s.label)}${inLong ? ' (בתוך הסופ&quot;ש הארוך)' : ''}">${inLong ? '🕯️' : pEsc(s.letter || s.label.charAt(0))}</button>`; }).join('')}</div>
     </div>`;
     if(portalServerOn && dowOf(date) === 6 && days.includes(addDays(date, -1))) cells += longBar(addDays(date, -1));
     else if(portalServerOn && dowOf(date) === 5 && date === days[days.length - 1]) cells += longBar(date);
@@ -6163,6 +6170,7 @@ function renderInstructorPrefs(body){
     if(locked) return;
     const shown = b.dataset.pslot.split('|')[0], key = prefKeyOf(b.dataset.pslot), date = key.split('|')[0], lv = portalUi.level;
     if(fixedOn(date) || fixedOn(shown)) return;
+    if(prefInsideLong(prefs, key) && lv !== 'absent'){ toast(tx('long_inside')); return; }
     if(lv === 'hours'){ openHoursSheet(shown, prefs, () => renderInstructorPrefs(body)); return; }
     if(lv === 'absent'){ toggleAbsent(prefs, date); }
     else if(lv === 'yes' && !portalServerOn){ delete prefs.slots[key]; }                      // (the demo: "כן" is the default, so nothing needs to be stored; on the server "כן" is a mark like the others)
@@ -6175,6 +6183,10 @@ function renderInstructorPrefs(body){
     if(fixedOn(fri) || prefs.absent.includes(fri)) return;
     if(lv === 'hours' || lv === 'absent'){ toast(tx('long_levels')); return; }
     if(prefs.slots[key] === lv) delete prefs.slots[key]; else prefs.slots[key] = lv;
+    if(['yes', 'can', 'avoid'].includes(prefs.slots[key])){          // (the shifts inside the long weekend: their own marks give way to it)
+      const sat = addDays(fri, 1), inside = [`${fri}|e`, `${fri}|n`, `${sat}|m`, `${sat}|e`].filter(k => prefs.slots[k]);
+      inside.forEach(k => delete prefs.slots[k]); if(inside.length) toast(tx('long_replaced'));
+    }
     portalSave(); renderInstructorPrefs(body);
   }));
   body.querySelectorAll('[data-ppick]').forEach(b => b.addEventListener('click', () => {          // "only one of these weekends": the Fridays that belong to the group
@@ -6184,7 +6196,7 @@ function renderInstructorPrefs(body){
   }));
   body.querySelectorAll('[data-pday]').forEach(b => b.addEventListener('click', () => {
     if(locked) return;
-    const date = b.dataset.pday, lv = portalUi.level, keys = prefShiftsFor(date).map(s => prefKeyOf(`${date}|${s.id}`)).filter(k => !prefFixedNo(k));          // (a shift of a fixed preference changes only when it is pressed by itself)
+    const date = b.dataset.pday, lv = portalUi.level, keys = prefShiftsFor(date).map(s => prefKeyOf(`${date}|${s.id}`)).filter(k => !prefFixedNo(k) && !prefInsideLong(prefs, k));          // (a shift of a fixed preference changes only when it is pressed by itself)
     if(fixedOn(date)) return;
     if(lv === 'hours'){ openHoursSheet(date, prefs, () => renderInstructorPrefs(body)); return; }
     if(lv === 'absent'){ toggleAbsent(prefs, date); }
@@ -8158,6 +8170,8 @@ const VOICES = {
   hint_low:   { warm:(f, m) => `שמנו לב שבסימונים הנוכחיים נשארו ${f} משמרות שמתאימות לך. כדי שנצליח לשבץ אותך במינימום (בערך ${m} משמרות) כדאי להשאיר קצת יותר גמישות. אם משהו מגביל אותך, נשמח לשמוע ולמצוא פתרון יחד.`, light:(f, m) => `ספרנו, ונשארו ${f} משמרות שמתאימות לך, והמינימום הוא בערך ${m}. קצת יותר גמישות והחשבון יסתדר. ואם משהו באמת מגביל, ספרו לנו.`, brief:(f, m) => `נשארו ${f} משמרות זמינות, והמינימום הוא ${m}. כדאי להוסיף גמישות.` },
   neutral_note:{ warm:(n) => `נשארו ${n} משמרות שעוד לא סימנתם. נשמח אם תעברו על כל החודש ותסמנו לכל משמרת "כן", "יכול" או "לא", כדי שנוכל לבנות סידור שמתאים לכם. משמרת שלא סומנה נשבץ רק אם לא תהיה ברירה אחרת.`, light:(n) => `נשארו ${n} משמרות בלי סימון. כל אחת מחכה ל"כן", ל"יכול" או ל"לא", ואז הסידור כבר יידע מה לעשות איתכם.`, brief:(n) => `${n} משמרות ללא סימון. יש למלא את כל החודש.` },
   submit_neutral:{ warm:(n) => `תודה, ההעדפות נשמרו. אבל ההגשה עדיין לא הושלמה: נשארו ${n} משמרות בלי סימון. נשמח מאוד שתשלימו אותן עד סגירת ההגשה`, light:(n) => `שמרנו, אבל עוד לא סיימנו: ${n} משמרות מחכות לסימון, וההגשה לא שלמה בלעדיהן. כדאי להשלים לפני הסגירה`, brief:(n) => `ההגשה לא שלמה: ${n} משמרות ללא סימון. יש להשלים עד הסגירה` },
+  long_inside:{ warm:() => 'המשמרת הזו היא חלק מהסופ"ש הארוך שבחרת. בסופ"ש הזה אפשר לבחור בנפרד רק את שישי בבוקר ואת שבת בלילה', light:() => 'זו כבר בתוך הסופ"ש הארוך שלך 🕯️ בנפרד אפשר רק שישי בוקר ושבת לילה', brief:() => 'בתוך הסופ"ש הארוך. בנפרד: רק שישי בוקר ושבת לילה' },
+  long_replaced:{ warm:() => 'הסימונים של שישי צהריים ולילה ושל שבת בוקר וצהריים הוחלפו בסופ"ש הארוך', light:() => 'שישי צהריים-לילה ושבת בוקר-צהריים עכשיו בתוך הסופ"ש הארוך 🕯️', brief:() => 'המשמרות שבתוך הסופ"ש הוחלפו בסופ"ש הארוך' },
   long_levels:{ warm:() => 'לסופ"ש ארוך אפשר לבחור "כן", "יכול" או "לא"', light:() => 'לסופ"ש ארוך בוחרים "כן", "יכול" או "לא". בלי שעות מיוחדות', brief:() => 'כאן: כן, יכול או לא' },
   long_setting:{ warm:() => 'סופ"ש ארוך (שישי אחר הצהריים עד אחרי צאת שבת) לא מוצג כברירת מחדל. כשמפעילים, מופיע מתחת לכל שישי ושבת כפתור אחד שמסומן בו אם מתאים לכם. לא נשבץ אתכם אליו בלי שסימנתם.', light:() => 'סופ"ש ארוך לא מופיע כברירת מחדל. מפעילים, ומתחת לכל שישי ושבת מופיע כפתור אחד. בלי סימון שלכם אנחנו לא נוגעים בו.', brief:() => 'מציג סופ"ש ארוך מתחת לשישי ולשבת. בלי סימון: לא משבצים.' },
   pick_setting:{ warm:() => 'כשהאפשרות פעילה, בכל סופ"ש במסך ההעדפות מופיע כפתור קטן "רק אחד מאלה". מסמנים כמה סופי שבוע שמתאימים לכם, והמערכת תשבץ אתכם באחד מהם בלבד.', light:() => 'כשזה פעיל, כל סופ"ש מקבל כפתור קטן "רק אחד מאלה". פותחים למערכת כמה אפשרויות, והיא בוחרת אחת בלבד.', brief:() => 'מוסיף כפתור "רק אחד מאלה" בסופי שבוע. המערכת תשבץ אחד מהם בלבד.' },
@@ -9249,6 +9263,8 @@ const AR_VOICES = {
   hint_low:(f, m) => `لاحظنا أنه حسب اختياراتك الحالية بقيت ${f} مناوبات تناسبك. لكي ننجح في جدولتك بالحد الأدنى (حوالي ${m} مناوبات) من الأفضل ترك مرونة أكثر قليلًا. إذا كان هناك ما يقيّدك، يسعدنا أن نسمع ونجد حلًّا معًا.`,
   neutral_note:(n) => `بقيت ${n} مناوبات لم تختاروا لها بعد. يسعدنا أن تمرّوا على الشهر كله وتختاروا لكل مناوبة "نعم" أو "ممكن" أو "لا"، لكي نبني جدولًا يناسبكم. المناوبة غير المحددة نجدولكم فيها فقط إذا لم يكن هناك خيار آخر.`,
   submit_neutral:(n) => `شكرًا، تم حفظ التفضيلات. لكن التقديم لم يكتمل بعد: بقيت ${n} مناوبات بدون اختيار. يسعدنا جدًا أن تكملوها حتى إغلاق التقديم`,
+  long_inside:() => 'هذه المناوبة جزء من نهاية الأسبوع الطويلة التي اخترتها. في نهاية الأسبوع هذه يمكن اختيار صباح الجمعة وليل السبت فقط بشكل منفصل',
+  long_replaced:() => 'اختيارات ما بعد ظهر وليل الجمعة وصباح وما بعد ظهر السبت استُبدلت بنهاية الأسبوع الطويلة',
   long_levels:() => 'لنهاية الأسبوع الطويلة يمكن اختيار "نعم" أو "ممكن" أو "لا"',
   long_setting:() => 'نهاية الأسبوع الطويلة (من الجمعة بعد الظهر حتى بعد خروج السبت) لا تظهر بشكل افتراضي. عند التفعيل يظهر تحت كل جمعة وسبت زر واحد تختارون فيه إن كان يناسبكم. لن نجدولكم لها بدون اختياركم.',
   pick_setting:() => 'عند تفعيل هذا الخيار يظهر في كل نهاية أسبوع زر صغير "واحدة فقط من هذه". تختارون عدة نهايات أسبوع تناسبكم، والنظام يجدولكم في واحدة منها فقط.',
