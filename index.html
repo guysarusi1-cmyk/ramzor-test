@@ -1547,6 +1547,22 @@
   .od-hours{ display:grid; grid-template-columns:1fr 1fr; gap:8px; } .od-hours[hidden]{ display:none; } .od-nums{ grid-template-columns:1fr 1fr; }
   body.lang-ar .portal-tabs{ flex-wrap:wrap; justify-content:center; }          /* (Arabic words are longer: the tabs go to a second row instead of being cut) */
   .plogin-staff-link{ display:block; margin:26px auto 0; background:none; border:0; padding:8px 12px; font:inherit; font-size:13px; color:var(--muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }          /* the staff password: a quiet link under the personal sign-in */
+  /* "צור סידור אוטומטי" and how many shifts each one got (14j-portal-server-coord.js) */
+  .cs-build{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:10px 0; padding:12px 14px; border-radius:14px; background:var(--p-panel); border:1px solid var(--p-line); }
+  .cs-build small{ color:var(--p-muted); font-size:13px; flex:1; min-width:200px; }
+  .cs-build.waiting{ border-color:var(--gold); } .cs-build.waiting > span{ font-size:26px; } .cs-build.waiting div{ display:flex; flex-direction:column; gap:2px; }
+  .cs-count-scroll{ overflow-x:auto; margin-top:8px; }
+  .cs-count-table{ border-collapse:collapse; width:100%; font-size:14px; font-variant-numeric:tabular-nums; }
+  .cs-count-table th, .cs-count-table td{ padding:6px 8px; text-align:center; border-bottom:1px solid var(--p-line); white-space:nowrap; }
+  .cs-count-table tbody th{ text-align:right; font-weight:600; }
+  .cs-count-table thead th{ color:var(--p-muted); font-size:12.5px; font-weight:700; }
+  .cs-count-table tr.zero{ color:var(--p-muted); }
+  .cs-count summary{ color:var(--p-text); }
+  /* the admin fills somebody's preferences (14s-portal-admin.js) */
+  .adm-viewas.edit{ background:rgba(90,160,255,.16); border-color:rgba(90,160,255,.55); }
+  .adm-va-mode{ margin:0 0 10px; }
+  .adm-people .adm-sub{ font-size:11.5px; color:var(--p-yes, #7be0a0); }
+  .tv-code-big{ font-size:44px; font-weight:800; letter-spacing:.18em; text-align:center; margin:10px 0 14px; font-variant-numeric:tabular-nums; color:var(--p-text); }
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -2296,7 +2312,10 @@ if(location.hash === '#t') history.replaceState(null, '', location.pathname + lo
 // ---------- ENVIRONMENT + SUPABASE CONFIG (filled in by build.ps1 from config/<env>.json) ----------
 const APP_ENV = 'test';   // 'live' (what staff use) or 'test' (the safe sandbox)
 // Mercury stage 6: the shared staff password is gone (decision 32); only the automatic checks and the demo of the test site still sign in with it
-const staffPasswordOn = () => APP_ENV === 'test' && !!window.__staffPasswordOn;          // (set by the test-only checks and demo, which are not in the live build)
+const staffPasswordOn = () => APP_ENV === 'test' && !!window.__staffPasswordOn;
+// Mercury (the therapy portals, observations, the new space journey, the plan's strengths in the temple): only on the test site for now (Guy, 2026-10-22).
+// The kids' screen code (no staff password) is not part of this: it is on everywhere.
+const mercuryOn = () => APP_ENV === 'test';          // (set by the test-only checks and demo, which are not in the live build)
 const SUPABASE_URL = 'https://anxisgqhaxhbfffmtcrc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFueGlzZ3FoYXhoYmZmZm10Y3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NjIyMDMsImV4cCI6MjEwNjUzODIwM30.G9SlMmctJ2wJtho3_93KT7E-hAzH0u3QPNgY4sYlusY';
 const STAFF_EMAIL = 'staff@merkaz-cherum.local';
@@ -2763,6 +2782,7 @@ async function setChildSocialWorker(childId, worker){
 // Mercury: the responsible therapist of every child, chosen next to the child (scheduling-v31.sql). null = not read yet, false = not available here
 let rosterTh = null;
 async function loadRosterTherapists(){
+  if(!mercuryOn()){ rosterTh = false; return; }          // (Mercury is on the test site only)
   const client = (typeof ramzorPersonal !== 'undefined' && ramzorPersonal) ? sb : (MANAGER_LOGIN && typeof sbAdmin !== 'undefined' ? sbAdmin : sb);
   try {
     const [a, s, p] = await Promise.all([client.from('child_therapist').select('child_id,staff_id'), client.from('staff').select('id,display_name,kind,active'), client.from('staff_private').select('staff_id,is_therapist')]);
@@ -3691,7 +3711,7 @@ async function renderMoonPanel(containerId){
   const child = roster.find(c=>c.id===selectedStaffChild);
   const state = await getChildState(selectedStaffChild);
   const fb = document.getElementById(containerId);
-  if(typeof journeyPanel === 'function' && await journeyPanel(child, fb, containerId)) return;          // (Mercury: the new journey by skills, 14y-journey.js; a child placed there or new)
+  if(typeof journeyPanel === 'function' && mercuryOn() && await journeyPanel(child, fb, containerId)) return;          // (Mercury: the new journey by skills, 14y-journey.js; a child placed there or new)
   const inStage2 = (state.moonSteps || 0) >= 7;
   const stage2Done = (state.mercurySteps || 0) >= 7;
 
@@ -3888,6 +3908,7 @@ const BRICK_STRENGTHS = ['אומץ', 'התמדה', 'גמישות', 'בקשת ע�
 const cleanStrength = s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 20);
 // Mercury (stage 3): the strengths offered are the plan's and the child's own; a child with no published plan gets the general list (decisions 26, 28)
 async function brickStrengthList(child){
+  if(!mercuryOn()) return { main:BRICK_STRENGTHS, extra:[] };
   try {
     const r = await sb.rpc('brick_strengths', { p_child:child.id });
     if(r.error || !r.data) return { main:BRICK_STRENGTHS, extra:[] };
@@ -5702,7 +5723,7 @@ function queueEmail(to, subject, body){
 // ---- the first screen after login: two cards
 function showAppHome(){
   stopCarousel(); document.body.classList.remove('leopard-bg');
-  if(portalUi.viewAs){ portalUi.viewAs = null; if(typeof srv !== 'undefined' && srv.me) portalUi.persona = srv.me; }          // (leaving "looking as somebody" by any way: back to being oneself)
+  if(portalUi.viewAs){ const was = portalUi.editPrefs; portalUi.viewAs = null; portalUi.editPrefs = false; if(typeof srv !== 'undefined' && srv.me) portalUi.persona = srv.me; if(was && typeof srvResnap === 'function') srvResnap(); }          // (leaving "looking as somebody" by any way: back to being oneself)
   portalActivateView('view-apphome');
   document.getElementById('view-apphome').innerHTML = `
     <div class="apphome">
@@ -5778,7 +5799,7 @@ function showPortal(tab){
         <span class="portal-demo-tag">דמו</span>
       </label>`}
       <nav class="portal-tabs" role="tablist">${tabs.map(t => `<button type="button" role="tab" data-ptab="${t[0]}" class="${t[0] === portalUi.tab ? 'active' : ''}">${t[1]}</button>`).join('')}</nav>
-      ${portalServerOn && portalUi.viewAs ? `<div class="adm-viewas"><span>👁️ צפייה כמו ש${pEsc(me.first)} רואה · רק לצפייה</span><button type="button" class="btn small" id="viewas-end">חזרה לפורטל הניהול</button></div>` : ''}
+      ${portalServerOn && portalUi.viewAs ? (portalUi.editPrefs ? `<div class="adm-viewas edit"><span>✏️ ממלא/ת העדפות עבור ${pEsc(me.first)} · נשמר אצלו/ה</span><button type="button" class="btn small" id="viewas-end">סיום</button></div>` : `<div class="adm-viewas"><span>👁️ צפייה כמו ש${pEsc(me.first)} רואה · רק לצפייה</span><button type="button" class="btn small" id="viewas-end">חזרה לפורטל הניהול</button></div>`) : ''}
       <div id="portal-body"></div>
       ${portalServerOn && srv.meRow && !['instructor', 'coordinator'].includes(srv.meRow.role) && !srv.meRow.admin ? installLinkHtml() : ''}
       ${portalServerOn ? '<button type="button" class="portal-problem" id="portal-problem">משהו לא עובד? דיווח על תקלה</button>' : ''}
@@ -5786,6 +5807,7 @@ function showPortal(tab){
   if(portalServerOn && portalUi.viewAs){          // (the admin looks at somebody's portal: folds, months and tabs work; nothing can be changed)
     document.getElementById('viewas-end').addEventListener('click', adminViewAsEnd);
     document.getElementById('portal-body').addEventListener('click', ev => {
+      if(portalUi.editPrefs) return;          // (filling somebody's preferences: the preference screen works as for them)
       if(ev.target.closest('summary, [data-pmonth], .pfold > summary')) return;
       if(ev.target.closest('button, input, select, textarea, a, [data-pslot], [data-pday], [role=button]')){ ev.preventDefault(); ev.stopPropagation(); toast('זו צפייה בלבד'); }
     }, true);
@@ -6030,7 +6052,8 @@ const prefShiftsFor = date => portalLoad().shiftTypes;
 const prefKeyOf = key => key;
 // fixed preferences (the gear: "does not do mornings / afternoons / nights"; and the admin's "does not do nights"): those shifts start as "no".
 // She can still change one of them by pressing that shift; pressing the whole day leaves them as they are.
-const prefFixedKinds = () => { const k = new Set(portalServerOn ? (srv.fixedNo || []) : []); if(portalServerOn && srv.profile && srv.profile.no_nights) k.add('n'); return k; };
+const prefOther = () => portalServerOn && typeof srvEditingFor === 'function' && srvEditingFor() ? portalUi.viewAs : null;          // (the admin fills somebody's preferences: that person's fixed preferences and minimums)
+const prefFixedKinds = () => { const o = prefOther(), st = portalLoad(), prof = o ? (st.priv || {})[o] : srv.profile; const k = new Set(portalServerOn ? (o ? (st.fixedNo || {})[o] || [] : srv.fixedNo || []) : []); if(portalServerOn && prof && prof.no_nights) k.add('n'); return k; };
 const prefFixedNo = key => portalServerOn && prefFixedKinds().has(String(key).split('|')[1]);
 const prefNoNight = prefFixedNo;
 const prefLevelOf = (prefs, key) => prefs.slots[key] || (portalServerOn ? (prefNoNight(key) ? 'no' : 'neutral') : 'yes');          // (on the server a shift nobody marked is "neutral": the person did not say)
@@ -6087,7 +6110,7 @@ function renderInstructorPrefs(body){
   const cons = prefs.consent || { extend:null, pull:null };
   const choice = (name, v) => `<div class="pchoice" role="group"><button type="button" class="${cons[name] === true ? 'on' : ''}" data-consent="${name}:1"${locked ? ' disabled' : ''}>כן</button><button type="button" class="${cons[name] === false ? 'on' : ''}" data-consent="${name}:0"${locked ? ' disabled' : ''}>לא</button></div>`;
   const levels = portalServerOn ? SRV_LEVEL_BUTTONS : LEVEL_BUTTONS;
-  const goal = portalServerOn ? ((m.goals || {})[me.id] || null) : null, minInfo = portalServerOn ? fbMinimum(srv.profile, mk) : null;
+  const goal = portalServerOn ? ((m.goals || {})[me.id] || null) : null, minInfo = portalServerOn ? fbMinimum(prefOther() ? (portalLoad().priv || {})[prefOther()] || {} : srv.profile, mk) : null;
   let availHint = '';
   if(portalServerOn && minInfo && minInfo.total){                  // a gentle word when the marks leave little room for the minimum
     const free = days.filter(d => !fixedOn(d) && !prefs.absent.includes(d)).reduce((n, d) => n + ['m', 'e', 'n'].filter(id => ['yes', 'avoid'].includes(prefs.slots[`${d}|${id}`])).length, 0);          // (only "yes" and "can": a shift that was not marked is used only when there is no other way)
@@ -6579,6 +6602,7 @@ function israelNow(){
 }
 // preferences for a month are open from the 1st of the previous month until the 24th of it at 22:30 (same rule as the database)
 function srvPrefsOpen(mk){
+  if(srvEditingFor()) return true;          // (the admin fills preferences for somebody: also after the closing time, e.g. from a paper)
   const n = israelNow(), prev = addMonths(mk, -1), end = prev + '-24';
   if(n.date < prev + '-01' || n.date > end) return false;
   return !(n.date === end && n.minutes >= 22 * 60 + 30);
@@ -6700,29 +6724,33 @@ function srvAddRow(st, r){
   if(r.shift !== 'L'){ const key = keys[0].join('|'); st.assignmentIds[r.id] = { key, staff:r.staff_id }; st.assignmentIds[`${key}|${r.staff_id}`] = r.id; }       // (both ways: id -> shift, and shift + person -> id)
 }
 const srvPrefsOf = (m, id) => (m.prefs[id] = m.prefs[id] || { slots:{}, absent:[] }, Object.assign(m.prefs[id], { fixed:m.prefs[id].fixed || [], hours:m.prefs[id].hours || {}, pick:m.prefs[id].pick || [], consent:m.prefs[id].consent || { extend:null, pull:null } }));
-const srvSnapshot = mk => { const p = srvPrefsOf(portalMonth(mk), srv.me); return JSON.stringify({ s:Object.keys(p.slots).sort().map(k => k + '=' + p.slots[k]), a:p.absent.slice().sort(), h:Object.keys(p.hours).sort().map(k => k + '=' + JSON.stringify(p.hours[k])), k:p.pick.slice().sort(), c:p.consent.extend !== null && p.consent.pull !== null ? p.consent : null }); };
+// whose preferences the screen writes: the person's own, or (the admin, "מילוי העדפות עבור") the one the admin fills them for (scheduling-v33.sql)
+const srvEditingFor = () => !!(portalUi.viewAs && portalUi.editPrefs);
+const srvWho = () => srvEditingFor() ? portalUi.viewAs : srv.me;
+function srvResnap(){ srv.saved = {}; Object.keys(portalLoad().months || {}).forEach(mk => { srv.saved[mk] = srvSnapshot(mk); }); }          // (after switching whose preferences are on the screen)
+const srvSnapshot = mk => { const p = srvPrefsOf(portalMonth(mk), srvWho()); return JSON.stringify({ s:Object.keys(p.slots).sort().map(k => k + '=' + p.slots[k]), a:p.absent.slice().sort(), h:Object.keys(p.hours).sort().map(k => k + '=' + JSON.stringify(p.hours[k])), k:p.pick.slice().sort(), c:p.consent.extend !== null && p.consent.pull !== null ? p.consent : null }); };
 
 // ---- writing the person's own preferences (the database accepts only their own rows, only while the month is open)
 async function srvSyncPrefs(mk){
-  const p = portalPrefsOf(mk, srv.me), days = daysOfMonth(mk), first = days[0], last = days[days.length - 1], snap = srvSnapshot(mk);
-  let r = await sbPersonal.from('prefs_slot').delete().eq('staff_id', srv.me).gte('day', first).lte('day', last);
+  const p = portalPrefsOf(mk, srvWho()), days = daysOfMonth(mk), first = days[0], last = days[days.length - 1], snap = srvSnapshot(mk);
+  let r = await sbPersonal.from('prefs_slot').delete().eq('staff_id', srvWho()).gte('day', first).lte('day', last);
   if(r.error) throw r.error;
-  r = await sbPersonal.from('prefs_absence').delete().eq('staff_id', srv.me).gte('day', first).lte('day', last);
+  r = await sbPersonal.from('prefs_absence').delete().eq('staff_id', srvWho()).eq('reason', 'self').gte('day', first).lte('day', last);
   if(r.error) throw r.error;
-  const slotRows = Object.keys(p.slots).map(k => { const [d, s] = k.split('|'); return { staff_id:srv.me, day:d, shift:SRV_SHIFT_DB[s], level:p.slots[k] === 'avoid' ? 'can' : p.slots[k] }; });
+  const slotRows = Object.keys(p.slots).map(k => { const [d, s] = k.split('|'); return { staff_id:srvWho(), day:d, shift:SRV_SHIFT_DB[s], level:p.slots[k] === 'avoid' ? 'can' : p.slots[k] }; });
   if(slotRows.length){ r = await sbPersonal.from('prefs_slot').insert(slotRows); if(r.error) throw r.error; }
-  if(p.absent.length){ r = await sbPersonal.from('prefs_absence').insert(p.absent.map(d => ({ staff_id:srv.me, day:d, reason:'self' }))); if(r.error) throw r.error; }
-  r = await sbPersonal.from('prefs_hours').delete().eq('staff_id', srv.me).gte('day', first).lte('day', last);
+  if(p.absent.length){ r = await sbPersonal.from('prefs_absence').insert(p.absent.map(d => ({ staff_id:srvWho(), day:d, reason:'self' }))); if(r.error) throw r.error; }
+  r = await sbPersonal.from('prefs_hours').delete().eq('staff_id', srvWho()).gte('day', first).lte('day', last);
   if(r.error) throw r.error;
-  const hourRows = []; Object.keys(p.hours).forEach(d => p.hours[d].forEach(([a, b]) => hourRows.push({ staff_id:srv.me, day:d, from_time:String(a).padStart(2, '0') + ':00', to_time:b >= 24 ? '23:59' : String(b).padStart(2, '0') + ':00' })));
+  const hourRows = []; Object.keys(p.hours).forEach(d => p.hours[d].forEach(([a, b]) => hourRows.push({ staff_id:srvWho(), day:d, from_time:String(a).padStart(2, '0') + ':00', to_time:b >= 24 ? '23:59' : String(b).padStart(2, '0') + ':00' })));
   if(hourRows.length){ r = await sbPersonal.from('prefs_hours').insert(hourRows); if(r.error) throw r.error; }
   if(srv.pickOk !== false){                                          // ("only one of these weekends"; before scheduling-v8.sql the table does not exist, and nothing is lost)
-    r = await sbPersonal.from('prefs_pickone').delete().eq('staff_id', srv.me).gte('friday', first).lte('friday', last);
+    r = await sbPersonal.from('prefs_pickone').delete().eq('staff_id', srvWho()).gte('friday', first).lte('friday', last);
     if(r.error){ if(/prefs_pickone|relation|schema cache/i.test(r.error.message || '')) srv.pickOk = false; else throw r.error; }
-    else if((p.pick || []).length){ r = await sbPersonal.from('prefs_pickone').insert(p.pick.map(f => ({ staff_id:srv.me, friday:f }))); if(r.error) throw r.error; }
+    else if((p.pick || []).length){ r = await sbPersonal.from('prefs_pickone').insert(p.pick.map(f => ({ staff_id:srvWho(), friday:f }))); if(r.error) throw r.error; }
   }
   if(p.consent.extend !== null && p.consent.pull !== null){          // the two consents are asked again every month; saved once both are answered
-    r = await sbPersonal.from('prefs_consent').upsert({ staff_id:srv.me, month:firstOf(mk), extend_morning:p.consent.extend, pull_to_sunday:p.consent.pull, answered_at:new Date().toISOString() });
+    r = await sbPersonal.from('prefs_consent').upsert({ staff_id:srvWho(), month:firstOf(mk), extend_morning:p.consent.extend, pull_to_sunday:p.consent.pull, answered_at:new Date().toISOString() });
     if(r.error) throw r.error;
   }
   srv.saved[mk] = snap;
@@ -6733,7 +6761,7 @@ function srvQueueSave(){
   srv.timer = setTimeout(srvFlush, 500);
 }
 async function srvFlush(){
-  if(!srv.me || srv.busy) { if(srv.busy) srvQueueSave(); return; }
+  if(!srvWho() || srv.busy) { if(srv.busy) srvQueueSave(); return; }
   srv.busy = true;
   try {
     for(const mk of Object.keys(srv.saved)){
@@ -6754,18 +6782,19 @@ async function srvSubmit(mk, note, goal){
   // first everything on the screen must be saved (a save that is already running is waited for, not skipped)
   for(let i = 0; i < 80 && (srv.busy || srvSnapshot(mk) !== srv.saved[mk]); i++){ if(!srv.busy) await srvFlush(); else await new Promise(r => setTimeout(r, 150)); }
   if(srv.failed || srvSnapshot(mk) !== srv.saved[mk]) throw new Error('not saved');
-  const row = { staff_id:srv.me, month:firstOf(mk), submitted_at:new Date().toISOString() };
+  const row = { staff_id:srvWho(), month:firstOf(mk), submitted_at:new Date().toISOString() };
   if(note !== undefined) row.note = note || null;
-  if(goal !== undefined && (goal || portalMonth(mk).goals[srv.me])) row.goal = goal || null;          // (sent only when there is something to say, so that it works before and after scheduling-v5.sql)
+  if(goal !== undefined && (goal || portalMonth(mk).goals[srvWho()])) row.goal = goal || null;          // (sent only when there is something to say, so that it works before and after scheduling-v5.sql)
   const r = await sbPersonal.from('prefs_submission').upsert(row);
   if(r.error) throw r.error;
-  portalMonth(mk).submitted[srv.me] = true;
-  if(note) portalMonth(mk).notes[srv.me] = note;
-  if(goal !== undefined){ if(goal) portalMonth(mk).goals[srv.me] = goal; else delete portalMonth(mk).goals[srv.me]; }
+  portalMonth(mk).submitted[srvWho()] = true;
+  if(note) portalMonth(mk).notes[srvWho()] = note;
+  if(goal !== undefined){ if(goal) portalMonth(mk).goals[srvWho()] = goal; else delete portalMonth(mk).goals[srvWho()]; }
 }
 
 // ---- the screens in server mode
 function srvTabs(me){
+  if(srvEditingFor()) return [['prefs', 'העדפות']];          // (the admin fills somebody's preferences: only that tab)
   if(portalAsCoord(me)) return [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);          // (the admin: one more tab, 14s-portal-admin.js)
   if(me.role === 'instructor' && srv.profile && srv.profile.manual_only) return [['schedule', 'הסידור'], ['open', 'משמרות חסרות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];          // (not scheduled automatically: she places herself where somebody is missing)
   if(me.role === 'instructor') return [['schedule', 'הסידור'], ['prefs', 'העדפות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];
@@ -7269,22 +7298,31 @@ function srvShiftWarnings(day, shift, rows){
 // ---- the coordinator's data that only she may read
 async function srvLoadCoord(){
   const st = portalLoad();
-  const [priv, flags, vac] = await Promise.all([
+  // everything is read at the same time (one after the other made the coordinator's sign-in slow); a part that fails or is missing (an older database) is just empty
+  const q = build => Promise.resolve().then(build).catch(e => ({ error:e }));
+  const [priv, flags, vac, ph, pm, wm, sv, sr, br, orq] = await Promise.all([
     srvAll(() => sbPersonal.from('staff_private').select('staff_id,email,female,is_leader,ahmash_rank,leader_priority,no_nights,manual_only,only_long_weekend,latest_end_hour,auth_user_id')),
     srvAll(() => sbPersonal.from('coordinator_flags').select('id,month,day,kind,text,staff_id,resolved').eq('resolved', false).order('day', { nullsFirst:true })),
-    srvAll(() => sbPersonal.from('vacation_requests').select('id,staff_id,from_day,to_day,note,status,created_at').order('created_at', { ascending:false }).limit(60))
+    srvAll(() => sbPersonal.from('vacation_requests').select('id,staff_id,from_day,to_day,note,status,created_at').order('created_at', { ascending:false }).limit(60)),
+    q(() => sbPersonal.from('staff_private').select('staff_id,phone')),                                                        // (the phones: scheduling-v21.sql)
+    q(() => sbPersonal.from('staff_private').select('staff_id,min_mid,min_nights,min_weekend,day_buddy,lang')),                // (personal minimums, the day colleague, the language: scheduling-v25.sql)
+    q(() => sbPersonal.from('sched_settings').select('value').eq('key', 'wa_messages').maybeSingle()),                         // (the WhatsApp messages as the coordinator wrote them)
+    q(() => sbPersonal.from('staff_settings').select('*')),                                                                     // (each person's voice, fixed preferences (v27) and language (v25))
+    q(() => sbPersonal.from('sick_reports').select('assignment_id,note').order('created_at')),                                 // (the reason an instructor gave when she reported that she cannot come)
+    q(() => sbPersonal.from('sched_requests').select('id,month,at,done_at,result').order('at', { ascending:false }).limit(12)),  // ("צור סידור אוטומטי": scheduling-v33.sql)
+    q(() => sbPersonal.from('open_shift_requests').select('id,staff_id,day,shift,created_at').eq('status', 'pending').order('created_at')),  // (the requests to join an open shift: scheduling-v11.sql)
+    srvOdLoad()                                                                                                                 // (the open days for sign-up and who took them: scheduling-v25.sql)
   ]);
+  const rows = r => (r && !r.error && r.data) || [];
   st.priv = {}; priv.forEach(r => { st.priv[r.staff_id] = r; });
-  try { const ph = await sbPersonal.from('staff_private').select('staff_id,phone'); if(!ph.error) (ph.data || []).forEach(r => { if(st.priv[r.staff_id]) st.priv[r.staff_id].phone = r.phone; }); } catch(e){}          // (the phones: scheduling-v21.sql)
-  try { const pm = await sbPersonal.from('staff_private').select('staff_id,min_mid,min_nights,min_weekend,day_buddy,lang'); if(!pm.error) (pm.data || []).forEach(r => { if(st.priv[r.staff_id]) Object.assign(st.priv[r.staff_id], r); }); } catch(e){}          // (personal minimums, the day colleague, the language: scheduling-v25.sql)
-  st.waMsg = {}; try { const wm = await sbPersonal.from('sched_settings').select('value').eq('key', 'wa_messages').maybeSingle(); if(!wm.error && wm.data && wm.data.value) st.waMsg = wm.data.value; } catch(e){}          // (the WhatsApp messages as the coordinator wrote them)
-  st.voices = {}; try { const sv = await sbPersonal.from('staff_settings').select('staff_id,voice'); (sv.data || []).forEach(r => { if(r.voice) st.voices[r.staff_id] = r.voice; }); } catch(e){}
-  st.fixedNo = {}; try { const sf = await sbPersonal.from('staff_settings').select('staff_id,fixed_no'); if(!sf.error) (sf.data || []).forEach(r => { if((r.fixed_no || []).length) st.fixedNo[r.staff_id] = r.fixed_no; }); } catch(e){}          // (fixed preferences: scheduling-v27.sql)
-  st.langs = {}; try { const sl = await sbPersonal.from('staff_settings').select('staff_id,lang'); if(!sl.error) (sl.data || []).forEach(r => { if(r.lang) st.langs[r.staff_id] = r.lang; }); } catch(e){}          // (each person's own choice of language; scheduling-v25.sql)          // (each person's chosen voice, so that her feedback is written in it)
+  rows(ph).forEach(r => { if(st.priv[r.staff_id]) st.priv[r.staff_id].phone = r.phone; });
+  rows(pm).forEach(r => { if(st.priv[r.staff_id]) Object.assign(st.priv[r.staff_id], r); });
+  st.waMsg = (wm && !wm.error && wm.data && wm.data.value) || {};
+  st.voices = {}; st.fixedNo = {}; st.langs = {};
+  rows(sv).forEach(r => { if(r.voice) st.voices[r.staff_id] = r.voice; if((r.fixed_no || []).length) st.fixedNo[r.staff_id] = r.fixed_no; if(r.lang) st.langs[r.staff_id] = r.lang; });
   st.flags = flags; st.vacations = vac;
-  st.reasons = {}; try { const sr = await sbPersonal.from('sick_reports').select('assignment_id,note').order('created_at'); (sr.data || []).forEach(x => { if(x.note) st.reasons[x.assignment_id] = x.note; }); } catch(e){}          // (the reason an instructor gave when she reported that she cannot come)
-  await srvOdLoad();          // (the open days for sign-up and who took them: scheduling-v25.sql)
-  st.openReqs = []; try { const r = await sbPersonal.from('open_shift_requests').select('id,staff_id,day,shift,created_at').eq('status', 'pending').order('created_at'); st.openReqs = r.error ? [] : (r.data || []); } catch(e){}          // (the requests to join an open shift; they come with scheduling-v11.sql)
+  st.reasons = {}; rows(sr).forEach(x => { if(x.note) st.reasons[x.assignment_id] = x.note; });
+  st.buildReqs = rows(br); st.openReqs = rows(orq);
 }
 
 // the shifts that are below the minimum number of instructors (the same standard numbers as the database): after publishing they are offered to the instructors who could fill them
@@ -7314,7 +7352,8 @@ function srvRenderCoordSchedule(body){
   const odAlerts = m.published ? srvOdAlerts(mk) : [], lookCount = needLook.length + odAlerts.length;
   body.innerHTML = `
     ${monthNavHtml(mk, `<span class="pchip ${m.published ? 'lv-yes' : 'lv-avoid'}">${has ? SRV_STATUS_WORD[m.status] : 'אין סידור'}</span>`)}
-    ${has ? '' : '<div class="pnote">עוד אין סידור לחודש הזה. המערכת בונה אותו אוטומטית פעם אחת: טיוטה ב-24 בחודש ב-23:00, והסידור הסופי בלילה שבין ה-24 ל-25 (בין חצות ל-06:00), והוא נשלח אלייך. מכאן אפשר לערוך אותו ידנית.</div>'}
+    ${has ? '' : '<div class="pnote">עוד אין סידור לחודש הזה. כשההגשה נסגרת, לוחצים על "צור סידור אוטומטי" והמערכת בונה אותו לפי ההעדפות והחוקים. מכאן אפשר לערוך אותו ידנית.</div>'}
+    ${srvBuildBoxHtml(mk)}
     ${has ? `<div class="pactions">
       <button type="button" class="btn" id="cs-publish"${m.published ? ' disabled' : ''}>${m.published ? 'הסידור פורסם' : 'פרסום הסידור'}</button>
       <button type="button" class="btn ghost" id="cs-xlsx">ייצוא לאקסל</button>
@@ -7325,10 +7364,13 @@ function srvRenderCoordSchedule(body){
     ${lookCount ? `<details class="pissues"><summary>${lookCount} דברים שדורשים תשומת לב</summary>${odAlerts.map(a => `<div class="pflag"><span><b>יום פתוח לשיבוץ</b> · ${pEsc(a)}</span></div>`).join('')}${needLook.map(f => `<div class="pflag"><span><b>${SRV_FLAG_KIND[f.kind] || f.kind}</b> · ${pEsc(f.text)}</span><button type="button" class="btn ghost small" data-flag-done="${f.id}">טופל</button></div>`).join('')}</details>` : '<div class="pstatus ok">אין דברים שדורשים תשומת לב ✓</div>'}
     ${info.length ? `<details class="pissues"><summary>${info.length} הודעות על בנות שירות</summary>${info.map(f => `<div class="pflag"><span>${pEsc(f.text)}</span></div>`).join('')}</details>` : ''}
     ${m.published ? srvOdFoldHtml(mk) : ''}
+    ${srvCountFoldHtml(mk)}
     <div class="pnote cs-note-row"><span>לחיצה על משמרת בלוח פותחת עריכה.</span><button type="button" class="btn ghost small" id="cs-others">${csHideOthers() ? 'הצגת בנות שירות ומורות' : 'הסתרת בנות שירות ומורות'}</button></div>
     <div class="cs-layout"><div class="cs-main">${monthCalHtml(ctx, m.assignments, { edit:true, colour:true, ahmash:srv.ahmash, sel:portalUi.csOpen ? portalUi.csPerson : null, others:!csHideOthers() })}</div>${srvSidePanelHtml(mk)}</div>` : ''}`;
   wireMonthNav(body);
+  srvBuildWire(body, mk);
   if(!has) return;
+  { const cf = body.querySelector('#cs-count'); if(cf) cf.addEventListener('toggle', () => { portalUi.csCount = cf.open; }); }
   { const ob = body.querySelector('#cs-others'); if(ob) ob.addEventListener('click', () => { try { localStorage.setItem('ramzor-cs-hide-others', csHideOthers() ? '0' : '1'); } catch(e){} srvRenderCoordSchedule(body); }); }
   if(m.published) srvOdWire(body, mk);
   const csOpen = document.getElementById('cs-open'), csClose = document.getElementById('cs-close');
@@ -7367,6 +7409,47 @@ function srvRenderCoordSchedule(body){
   });
   document.getElementById('cs-xlsx').addEventListener('click', () => { downloadScheduleXlsx(ctx, m.assignments); toast('קובץ האקסל נוצר'); });
   document.getElementById('cs-print').addEventListener('click', () => printSchedule(ctx, m.assignments));
+}
+
+// ---- "צור סידור אוטומטי": the schedule is built only when the coordinator asks, after the submission closed (the hourly job builds it,
+// within an hour; a published month is never built again). (scheduling-v33.sql; the engine's monthly build is off unless sched_settings.auto_build)
+const srvBuildReqOf = mk => (portalLoad().buildReqs || []).find(r => r.month && r.month.slice(0, 7) === mk);
+function srvBuildBoxHtml(mk){
+  const m = portalMonth(mk); if(m.published) return '';
+  const req = srvBuildReqOf(mk), waiting = req && !req.done_at, failed = req && req.done_at && /^נכשל/.test(req.result || '');
+  if(waiting) return `<div class="cs-build waiting" id="cs-build"><span aria-hidden="true">⏳</span><div><b>הסידור בבנייה</b><small>יהיה מוכן תוך שעה לכל היותר, ותקבלי הודעה. אפשר לסגור את הפורטל בינתיים.</small></div></div>`;
+  if(srvPrefsOpen(mk)){
+    const end = addMonths(mk, -1) + '-24';
+    return `<div class="cs-build" id="cs-build"><button type="button" class="btn" disabled>צור סידור אוטומטי</button><small>אפשר אחרי שההגשה נסגרת: ${pEsc(dayLabel(end))} בשעה 22:30.</small></div>`;
+  }
+  const missing = portalLoad().instructors.filter(p => p.active && p.role === 'instructor' && !m.submitted[p.id]).length;
+  return `<div class="cs-build" id="cs-build"><button type="button" class="btn${m.status ? ' ghost' : ''}" id="cs-build-go">${m.status ? 'בנייה מחדש של הסידור' : 'צור סידור אוטומטי'}</button>
+    <small>${failed ? `הבנייה הקודמת לא הצליחה (${pEsc(req.result.replace(/^נכשל:\s*/, '').slice(0, 80))}). אפשר לנסות שוב.` : m.status ? 'בונה סידור חדש במקום הנוכחי, כולל השינויים הידניים שנעשו בו.' : `לוקח עד שעה.${missing ? ` ${missing} מדריכים לא הגישו העדפות.` : ''}`}</small></div>`;
+}
+function srvBuildWire(body, mk){
+  const go = body.querySelector('#cs-build-go'); if(!go) return;
+  go.addEventListener('click', async () => {
+    const m = portalMonth(mk);
+    if(m.status && !(await confirmSheet({ title:`לבנות מחדש את ${monthLabel(mk)}?`, text:'הסידור הנוכחי יוחלף בסידור חדש, כולל שינויים ידניים שנעשו בו.', okLabel:'כן, לבנות מחדש', cancelLabel:'חזרה', danger:true }))) return;
+    go.disabled = true;
+    const r = await sbPersonal.from('sched_requests').insert({ month:firstOf(mk), requested_by:srv.me }).select('id,month,at,done_at,result').single();
+    if(r.error){ go.disabled = false; toast('הבקשה לא נשלחה. אפשר לנסות שוב בעוד רגע'); return; }
+    const st = portalLoad(); st.buildReqs = [r.data].concat(st.buildReqs || []);
+    toast('הסידור בבנייה. יהיה מוכן תוך שעה לכל היותר, ותקבלי הודעה.', 5000); srvRenderCoordSchedule(body);
+  });
+}
+// ---- how many shifts each instructor got this month (folded: one short line; opened: everybody, with the kinds of shifts)
+function srvCountFoldHtml(mk){
+  const st = portalLoad(), people = st.instructors.filter(p => p.role === 'instructor'), c = {};
+  (st.rows || []).forEach(r => { if(monthKeyOf(r.day) !== mk || !people.some(p => p.id === r.staff)) return;
+    const x = c[r.staff] = c[r.staff] || { all:0, M:0, A:0, N:0, L:0 }; x.all++; x[r.shift === 'S' ? 'M' : r.shift] = (x[r.shift === 'S' ? 'M' : r.shift] || 0) + 1; });
+  const list = people.filter(p => p.active || c[p.id]).map(p => ({ p, x:c[p.id] || { all:0, M:0, A:0, N:0, L:0 } })).sort((a, b) => b.x.all - a.x.all || String(a.p.first).localeCompare(String(b.p.first), 'he'));
+  if(!list.length) return '';
+  const nums = list.map(r => r.x.all), lo = Math.min(...nums), hi = Math.max(...nums), total = nums.reduce((a, b) => a + b, 0);
+  return `<details class="pissues cs-count" id="cs-count"${portalUi.csCount ? ' open' : ''}><summary>כמה משמרות לכל אחד · ${total} משמרות, ${lo === hi ? lo : `${lo}–${hi}`} לאדם</summary>
+    <div class="cs-count-scroll"><table class="cs-count-table"><thead><tr><th>שם</th><th>סה"כ</th><th>בוקר</th><th>צהריים</th><th>לילה</th><th>סופ"ש ארוך</th></tr></thead><tbody>
+    ${list.map(({ p, x }) => `<tr${x.all ? '' : ' class="zero"'}><th>${pEsc(instrName(p, st.instructors))}</th><td><b>${x.all}</b></td><td>${x.M || ''}</td><td>${x.A || ''}</td><td>${x.N || ''}</td><td>${x.L || ''}</td></tr>`).join('')}
+    </tbody></table></div><div class="pnote">סופ"ש ארוך נספר כמשמרת אחת. בנות שירות ומורות לא נכללות.</div></details>`;
 }
 
 // ---- edit one shift: who is on it (with hours), remove, add (with warnings; the coordinator may override them)
@@ -7736,7 +7819,7 @@ function srvRenderCoordSettings(body){
         <input type="email" dir="ltr" placeholder="מייל" value="${pEsc((priv[p.id] || {}).email || '')}" data-mail="${p.id}"><input type="tel" dir="ltr" placeholder="טלפון" value="${pEsc((priv[p.id] || {}).phone || '')}" data-phone="${p.id}">
         ${(priv[p.id] || {}).auth_user_id ? '<em class="pst pst-approved">מחובר/ת</em>' : `<button type="button" class="btn ghost small" data-login="${p.id}">יצירת התחברות</button>`}</div>`).join('')}
       <h3 class="psec">הוספת איש צוות</h3>
-      <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם (כפי שיוצג)"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option>${srv.profile && 'therapist' in srv.profile ? '<option value="therapist">איש/אשת טיפול</option>' : ''}</select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
+      <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם (כפי שיוצג)"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option>${mercuryOn() && srv.profile && 'therapist' in srv.profile ? '<option value="therapist">איש/אשת טיפול</option>' : ''}</select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
       const wire = box => {
         box.querySelectorAll('[data-phone]').forEach(inp => inp.addEventListener('change', async () => {          // (for a WhatsApp chat from the schedule; scheduling-v21.sql)
           const phone = inp.value.trim() || null;
@@ -7875,11 +7958,15 @@ function srvRenderCoordSettings(body){
       const r = await sbPersonal.from('tv_devices').select('id,name,created_at,last_seen,active').order('created_at', { ascending:false });
       if(r.error) return { html:'<div class="pnote">צריך את SQL 32.</div>', wire:() => {} };
       const when = x => x ? new Date(x).toLocaleString('he-IL', { dateStyle:'short', timeStyle:'short' }) : 'עוד לא';
-      const html = `<div class="pnote">מסך ילדים מתחבר פעם אחת בקוד קצר. הקוד נשלח במייל אלייך, תקף ל-15 דקות, ומקלידים אותו במסך (בכתובת של מסך הילדים).</div>
-        <button type="button" class="btn" id="tv-code-new">שליחת קוד למסך חדש</button>
+      const html = `<div class="pnote">מסך ילדים מתחבר פעם אחת בקוד קצר. הקוד מופיע כאן מיד (ונשלח גם במייל), תקף ל-15 דקות, ומקלידים אותו במסך (בכתובת של מסך הילדים).</div>
+        <button type="button" class="btn" id="tv-code-new">קוד למסך חדש</button>
         ${(r.data || []).map(d => `<div class="pmine-row"><span><b>${pEsc(d.name)}</b><br><small>חובר ${when(d.created_at)} · נראה לאחרונה ${when(d.last_seen)}${d.active ? '' : ' · מנותק'}</small></span>${d.active ? `<button type="button" class="btn ghost small" data-tv-off="${d.id}">ניתוק</button>` : ''}</div>`).join('') || '<div class="pnote">עוד אין מסכים מחוברים.</div>'}`;
       return { html, wire:box => {
-        box.querySelector('#tv-code-new').addEventListener('click', async e => { e.target.disabled = true; const x = await sbPersonal.rpc('tv_code_new'); e.target.disabled = false; toast(x.error ? 'שליחת הקוד נכשלה' : 'הקוד נשלח למייל שלך. הוא תקף ל-15 דקות'); });
+        box.querySelector('#tv-code-new').addEventListener('click', async e => { e.target.disabled = true; const x = await sbPersonal.rpc('tv_code_new'); e.target.disabled = false; if(x.error){ toast('יצירת הקוד נכשלה'); return; }
+          // the code at once on the screen (the e-mail goes out with the hourly sending, later than the 15 minutes): read from her own notice
+          const n = await sbPersonal.from('notices').select('text').eq('to_staff', srv.me).eq('kind', 'tv').order('created_at', { ascending:false }).limit(1), code = ((((n.data || [])[0] || {}).text || '').match(/\b(\d{6})\b/) || [])[1];
+          if(!code){ toast('הקוד נשלח למייל שלך. הוא תקף ל-15 דקות'); return; }
+          portalSheet(`<h2>הקוד למסך הילדים</h2><div class="tv-code-big" dir="ltr">${code}</div><div class="pnote">מקלידים אותו במסך הילדים (בכתובת של מסך הילדים). תקף ל-15 דקות, לשימוש אחד. נשלח גם למייל שלך.</div><div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סגירה</button></div>`); });
         box.querySelectorAll('[data-tv-off]').forEach(b => b.addEventListener('click', async () => { if(!(await confirmSheet({ title:'לנתק את המסך?', text:'המסך יפסיק להציג עד שיחובר מחדש בקוד.', okLabel:'כן, לנתק', cancelLabel:'חזרה', danger:true }))) return; const x = await sbPersonal.rpc('tv_revoke', { p_id:b.dataset.tvOff }); toast(x.error ? 'הניתוק נכשל' : 'המסך נותק'); again(); }));
       } };
     }]
@@ -8813,7 +8900,7 @@ async function adminStaff(box, body){
   ]);
   const extra = !priv.error;          // (personal minimums, the day colleague and the language come with scheduling-v25.sql)
   if(!extra) priv = await sbPersonal.from('staff_private').select(BASE);
-  const thr = await sbPersonal.from('staff_private').select('staff_id,is_therapist'), mercury = !thr.error;          // (Mercury: "also a therapist", scheduling-v31.sql)
+  const thr = await sbPersonal.from('staff_private').select('staff_id,is_therapist'), mercury = !thr.error && mercuryOn();          // (Mercury: "also a therapist", scheduling-v31.sql)
   const isTh = {}; if(mercury) (thr.data || []).forEach(r => { isTh[r.staff_id] = !!r.is_therapist; });
   if(staff.error || priv.error) throw staff.error || priv.error;
   const pv = {}; (priv.data || []).forEach(p => { pv[p.staff_id] = p; });
@@ -8858,12 +8945,21 @@ async function adminStaff(box, body){
 
 // ---- 2. the portal as one person sees it (only to look: nothing can be changed there)
 function adminViewAs(box){
-  const st = portalLoad(), people = st.instructors.filter(p => p.active && p.id !== srv.me).sort((a, b) => String(a.first).localeCompare(String(b.first), 'he'));
-  box.innerHTML = `<div class="pnote">בחירה באדם פותחת את הפורטל בדיוק כמו שהוא רואה אותו: הסידור, ההעדפות, ההחלפות. רק לצפייה, בלי אפשרות לשנות דבר.</div>
-    <div class="adm-people">${people.map(p => `<button type="button" class="cs-name" data-view-as="${p.id}"><img src="${p.photo}" alt=""><span>${pEsc(instrName(p, st.instructors))}</span></button>`).join('')}</div>`;
-  box.querySelectorAll('[data-view-as]').forEach(b => b.addEventListener('click', () => { portalUi.viewAs = b.dataset.viewAs; portalUi.persona = b.dataset.viewAs; portalUi.manager = false; portalUi.tab = null; showPortal(); }));
+  const st = portalLoad(), fill = !!portalUi.admFill;
+  const people = st.instructors.filter(p => p.active && p.id !== srv.me && (!fill || p.role === 'instructor')).sort((a, b) => String(a.first).localeCompare(String(b.first), 'he'));
+  box.innerHTML = `<div class="pchoice adm-va-mode" role="group" aria-label="מה לעשות"><button type="button" class="${fill ? '' : 'on'}" data-va-mode="look">👁️ צפייה</button><button type="button" class="${fill ? 'on' : ''}" data-va-mode="fill">✏️ מילוי העדפות</button></div>
+    <div class="pnote">${fill ? 'בחירה במדריך/ה פותחת את מסך ההעדפות שלו/ה, ואפשר למלא ולהגיש בשבילו/ה (למשל מדף שמסר/ה). נשמר אצלו/ה, גם אחרי סגירת ההגשה. כל שינוי נרשם.' : 'בחירה באדם פותחת את הפורטל בדיוק כמו שהוא רואה אותו: הסידור, ההעדפות, ההחלפות. רק לצפייה, בלי אפשרות לשנות דבר.'}</div>
+    <div class="adm-people">${people.map(p => `<button type="button" class="cs-name" data-view-as="${p.id}"><img src="${p.photo}" alt=""><span>${pEsc(instrName(p, st.instructors))}</span>${fill && portalMonth(addMonths(monthKeyOf(srvToday()), 1)).submitted[p.id] ? ' <small class="adm-sub">✓ הגיש/ה</small>' : ''}</button>`).join('')}</div>`;
+  box.querySelectorAll('[data-va-mode]').forEach(b => b.addEventListener('click', () => { portalUi.admFill = b.dataset.vaMode === 'fill'; adminViewAs(box); }));
+  box.querySelectorAll('[data-view-as]').forEach(b => b.addEventListener('click', () => {
+    portalUi.viewAs = b.dataset.viewAs; portalUi.persona = b.dataset.viewAs; portalUi.manager = false; portalUi.editPrefs = fill;
+    portalUi.tab = fill ? 'prefs' : null; portalUi.pmonth = null; if(fill) srvResnap(); showPortal(fill ? 'prefs' : undefined);
+  }));
 }
-function adminViewAsEnd(){ portalUi.viewAs = null; portalUi.persona = srv.me; portalUi.manager = true; portalUi.tab = 'admin'; showPortal('admin'); }
+async function adminViewAsEnd(){
+  if(portalUi.editPrefs){ clearTimeout(srv.timer); await srvFlush(); }          // (what was filled is saved before leaving)
+  portalUi.viewAs = null; portalUi.editPrefs = false; portalUi.persona = srv.me; portalUi.manager = true; portalUi.tab = 'admin'; portalUi.pmonth = null; srvResnap(); showPortal('admin');
+}
 
 // ---- 3. the system settings: the hours of the shifts, how early a long vacation is asked for, the numbers of the rules
 async function adminSystem(box){
@@ -9423,7 +9519,7 @@ async function srvSaveLang(lang){
 // child (in the staff portal). The personal sign-in only. (scheduling-v31.sql, v32.sql; Mercury spec, decisions 1-6, 44-46)
 const thp = { loaded:false, ok:false, mode:'staff', mine:[], assign:{}, therapists:[], tab:null, guidance:{}, plans:{}, planets:[], library:[], v32:false,
   editing:null, wtab:null, unseen:{}, journeys:{}, risen:[], myObs:[], q:'' };
-const therapyAvailable = () => typeof portalServerOn !== 'undefined' && portalServerOn && !!srv.profile && 'therapist' in srv.profile;          // (my_profile carries "therapist" from v31)
+const therapyAvailable = () => mercuryOn() && typeof portalServerOn !== 'undefined' && portalServerOn && !!srv.profile && 'therapist' in srv.profile;          // (my_profile carries "therapist" from v31)
 const isTherapistMe = () => !!(srv.profile && srv.profile.therapist);
 const isPureTherapist = () => (portalMe() || {}).role === 'therapist';
 const canAssignTherapist = () => !!(srv.meRow && (srv.meRow.role === 'coordinator' || srv.meRow.admin));
@@ -9972,7 +10068,7 @@ async function renderJourneyBoard(){
       <span class="tvj-track">${Array.from({ length:len }, (_, i) => `<i class="${i < r.step ? 'on' : ''}"></i>`).join('')}</span>
       <span class="tvj-goal">${r.stage === 'climb' ? '⛰️' : (planets[r.planet] || {}).art === 'moon' ? '🌙' : '🪐'}</span></div>`; }).join('')}</div>` : '';
 }
-if(typeof SLIDES !== 'undefined' && SLIDES.length === 13){
+if(mercuryOn() && typeof SLIDES !== 'undefined' && SLIDES.length === 13){
   SLIDES.push({ id:13, label:'המסע בחלל', render: renderJourneyBoard, hidden:true });
   const before = refreshJourneyBoards;
   refreshJourneyBoards = async function(){ await before(); try { SLIDES[13].hidden = !(await journeyTvRows()).length; } catch(e){} };
@@ -10049,7 +10145,7 @@ function tvPairScreen(){
     let el = document.getElementById('tv-pair');
     if(!el){ el = document.createElement('div'); el.id = 'tv-pair'; document.body.appendChild(el); }
     el.innerHTML = `<div class="tvp-card"><div class="tvp-emoji" aria-hidden="true">📺</div><h1>חיבור מסך הילדים</h1>
-      <p>מבקשים קוד בפורטל הרכזת: הגדרות ← מסכי הילדים בחדר ← "שליחת קוד למסך חדש". הקוד מגיע במייל ותקף ל-15 דקות.</p>
+      <p>מבקשים קוד בפורטל הרכזת: הגדרות ← מסכי הילדים בחדר ← "קוד למסך חדש". הקוד תקף ל-15 דקות.</p>
       <input type="text" id="tvp-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="הקוד (6 ספרות)" aria-label="הקוד">
       <button type="button" class="btn" id="tvp-go">חיבור</button><div class="tvp-err" id="tvp-err" aria-live="polite"></div></div>`;
     el.hidden = false;
@@ -10403,6 +10499,7 @@ document.getElementById('hub-kids-btn').addEventListener('click', async ()=>{
 document.getElementById('kq-give-star-btn').addEventListener('click', ()=>{ kqOrigin = null; kidsQuickShowChildPicker('star'); });
 document.getElementById('kq-moon-journey-btn').addEventListener('click', ()=>{ kqOrigin = null; kidsQuickShowChildPicker('moon'); });
 document.getElementById('kq-brick-btn').addEventListener('click', ()=>{ kqOrigin = null; kidsQuickShowChildPicker('brick'); });
+if(!mercuryOn()) document.getElementById('kq-observe-btn').style.display = 'none';          // (Mercury is on the test site only)
 document.getElementById('kq-observe-btn').addEventListener('click', ()=>{ kqOrigin = null; kidsQuickShowChildPicker('observe'); });
 // the daily-operations gold screen reaches those same two buttons (see openKidsQuickFrom)
 document.getElementById('gold-give-star-btn').addEventListener('click', ()=> openKidsQuickFrom('kq-give-star-btn', 'gold'));
