@@ -1583,6 +1583,7 @@
   /* the preferences handed in for this month, to look at (14f-portal-instructor.js) */
   .prefs-past-btn{ display:block; margin:0 auto 10px; }
   .pprefs-past{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:0 0 10px; padding:8px 12px; border-radius:12px; background:rgba(90,160,255,.14); border:1px solid rgba(90,160,255,.5); font-weight:700; }
+  .unmarked-choices{ display:flex; flex-direction:column; gap:8px; margin-top:12px; } .unmarked-choices .btn{ width:100%; min-height:48px; }          /* the question about unmarked shifts (14f) */
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -6107,6 +6108,24 @@ function prefStartApplyNow(lv){
   if(n) portalSave();
   return n;
 }
+// shifts still unmarked when handing in (Guy, 2026-10-24): the person is asked how to treat them — "יכול", "לא", or back to marking
+function prefUnmarkedKeys(mk, prefs){
+  const ks = [];
+  daysOfMonth(mk).forEach(date => {
+    if(prefs.absent.includes(date) || (prefs.fixed || []).some(f => f.day === date)) return;
+    prefShiftsFor(date).forEach(s => { const k = `${date}|${s.id}`; if(!prefs.slots[k] && !prefNoNight(k) && !prefInsideLong(prefs, k)) ks.push(k); });
+  });
+  return ks;
+}
+function prefAskUnmarked(n){
+  return new Promise(resolve => {
+    let done = false; const end = v => { if(done) return; done = true; sh.close(); resolve(v); };
+    const sh = portalSheet(`<h2>${tx('unmarked_title', n)}</h2><div class="pnote">${tx('unmarked_q')}</div>
+      <div class="unmarked-choices"><button type="button" class="btn" data-um="can">${tx('unmarked_can')}</button><button type="button" class="btn ghost" data-um="no">${tx('unmarked_no')}</button><button type="button" class="btn ghost" data-um="back">${tx('unmarked_back')}</button></div>`);
+    sh.querySelectorAll('[data-um]').forEach(b => b.addEventListener('click', () => end(b.dataset.um)));
+    sh.addEventListener('click', e => { if(e.target === sh) end('back'); });
+  });
+}
 function renderInstructorPrefs(body){
   if(!body.isConnected) return;                                   // (a screen that finished loading after the person left it must not draw)
   const me = portalMe(), st = portalLoad();
@@ -6246,6 +6265,12 @@ function renderInstructorPrefs(body){
     if(locked) return;
     if(portalServerOn){
       if(cons.extend === null || cons.pull === null){ toast(tx('consent_needed')); const box = body.querySelector('.pconsents'); if(box) box.scrollIntoView({ block:'center' }); return; }
+      const um = prefUnmarkedKeys(mk, prefs);
+      if(um.length){
+        const how = await prefAskUnmarked(um.length);
+        if(how === 'back'){ const first = body.querySelector('.pshift.lv-neutral'); if(first) first.scrollIntoView({ block:'center' }); return; }
+        um.forEach(k => { prefs.slots[k] = how === 'can' ? 'avoid' : 'no'; }); portalSave(); renderInstructorPrefs(body);          // ("avoid" is the "יכול" of the screen)
+      }
       try { await srvSubmit(mk, (document.getElementById('prefs-note').value || '').trim(), m.goals[me.id] || null); } catch(e){ toast(tx('submit_fail')); return; }
       if(neutral > 0) toast(tx('submit_neutral', neutral), 8000); else toast(tx('submit_ok'));          // (the "not complete yet" message stays long enough to be read)
       renderInstructorPrefs(body); return;
@@ -8217,6 +8242,11 @@ const VOICES = {
   st_sub:     { warm:() => 'ההעדפות שלך אצלנו, תודה! אפשר לעדכן עד סגירת ההגשה.', light:() => 'קיבלנו, ושמנו במקום בטוח. אפשר לעדכן עד סגירת ההגשה.', brief:() => 'ההעדפות הוגשו. אפשר לעדכן עד הסגירה.' },
   locked:     { warm:() => 'ההגשה לחודש הזה סגורה (הרכזת כבר בונה את הסידור). לשינוי אפשר לפנות לרכזת, והיא תשמח לעזור.', light:() => 'ההגשה לחודש הזה סגורה, הסידור כבר בבנייה. לשינויים הרכזת היא הכתובת, והיא מבטיחה לא לנשוך.', brief:() => 'ההגשה סגורה. לשינוי: הרכזת.' },
   late:       { warm:() => 'מועד ההגשה (ה-24 ב-22:30) עבר, אבל עוד אפשר להגיש ולעדכן, עד שהרכזת מתחילה לבנות את הסידור.', light:() => 'איחרת קצת, אבל עוד לא מאוחר מדי: אפשר להגיש עד שהרכזת מתחילה לבנות את הסידור.', brief:() => 'המועד עבר. עוד אפשר להגיש עד שהסידור נבנה.' },
+  unmarked_title:{ warm:(n) => `לא סימנת ${n} משמרות`, light:(n) => `נשארו ${n} משמרות בלי סימון`, brief:(n) => `${n} משמרות לא סומנו` },
+  unmarked_q: { warm:() => 'איך להתייחס אליהן?', light:() => 'מה עושים איתן?', brief:() => 'מה לעשות בהן?' },
+  unmarked_can:{ warm:() => 'אפשר לשבץ אותי בהן (יכול)', light:() => 'אפשר לשבץ אותי בהן (יכול)', brief:() => 'אפשר (יכול)' },
+  unmarked_no:{ warm:() => 'אי אפשר לשבץ אותי בהן (לא)', light:() => 'אי אפשר לשבץ אותי בהן (לא)', brief:() => 'אי אפשר (לא)' },
+  unmarked_back:{ warm:() => 'חזרה לסימון', light:() => 'חזרה לסימון', brief:() => 'חזרה לסימון' },
   submit_ok:  { warm:() => 'תודה! ההעדפות שלך הוגשו ✓', light:() => 'הוגש! שמנו על זה חותמת ✓', brief:() => 'הוגש ✓' },
   consent_needed:{ warm:() => 'נשמח אם תענו על שתי השאלות הקטנות לפני ההגשה. זה עוזר לנו לתכנן', light:() => 'עוד שתי שאלות קטנטנות ואנחנו שם. נשמח לתשובות לפני ההגשה', brief:() => 'יש לענות על שתי השאלות לפני ההגשה' },
   save_later: { warm:() => 'לא הצלחנו לשמור כרגע, ננסה שוב אוטומטית בעוד רגע', light:() => 'השמירה נתקעה לרגע. ננסה שוב לבד, בלי לקחת ללב', brief:() => 'השמירה נכשלה. ננסה שוב' },
@@ -9313,6 +9343,11 @@ const AR_VOICES = {
   st_sub:() => 'تفضيلاتك وصلتنا، شكرًا! يمكن تعديلها حتى إغلاق التقديم.',
   locked:() => 'التقديم لهذا الشهر مغلق (المركّزة تبني الجدول الآن). لأي تغيير يمكن التوجه للمركّزة، ويسعدها أن تساعد.',
   late:() => 'موعد التقديم (24 الساعة 22:30) قد مضى، لكن لا يزال بالإمكان التقديم والتعديل حتى تبدأ المركّزة ببناء الجدول.',
+  unmarked_title:(n) => `لم تحدّد ${n} مناوبات`,
+  unmarked_q:() => 'كيف نتعامل معها؟',
+  unmarked_can:() => 'يمكن جدولتي فيها (ممكن)',
+  unmarked_no:() => 'لا يمكن جدولتي فيها (لا)',
+  unmarked_back:() => 'العودة إلى التحديد',
   submit_ok:() => 'شكرًا! تم تقديم تفضيلاتك ✓',
   consent_needed:() => 'يسعدنا أن تجيبوا على السؤالين الصغيرين قبل التقديم. هذا يساعدنا في التخطيط',
   save_later:() => 'لم ننجح في الحفظ الآن، سنحاول مرة أخرى تلقائيًا بعد لحظة',
