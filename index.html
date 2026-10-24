@@ -5568,9 +5568,9 @@ function scheduleOthersOf(ctx){
 }
 // The export looks like the paper schedule the staff knows (Guy, 2026-10-24): a monthly calendar, the days of the week across (Sunday on the
 // right), a row per week; in every day the morning, the noon and the night, one line each. In a line the ahmash comes first, marked (אחמ"ש);
-// in the morning a teacher / kindergarten teacher comes first, marked; the service girls come last, marked; hours that are not the shift's
+// in the morning a teacher comes first, marked (מורה); the service girls come last (not marked: Guy); hours that are not the shift's
 // usual ones are in brackets ("עד 10", "מ-10"). The same in the Excel file and in the print / PDF.
-const CAL_ROLE = { teacher:'מורה', service:'בת שירות' };          // (a kindergarten teacher will be added when there is one, Guy 2026-10-24)
+const CAL_ROLE = { teacher:'מורה', service:'' };          // (a kindergarten teacher will be added when there is one, Guy 2026-10-24)
 function calHours(note, s){
   const m = String(note || '').match(/^(\d{1,2})[–-](\d{1,2})$/); if(!m) return note || '';
   const a = +m[1], b = +m[2], st = parseInt(s.start, 10), en = parseInt(s.end, 10);
@@ -5582,13 +5582,13 @@ function scheduleCalendarDays(ctx, assignments){
   return table.map(r => ({ date:r.date, lines:ctx.shiftTypes.map((s, i) => {
     const c = r.cells[i], oth = others[`${r.date}|${s.id}`] || [], items = [];
     const nm = (name, tag, note) => { const extra = [tag, note].filter(Boolean).join(', '); return extra ? `${name} (${extra})` : name; };
-    oth.filter(x => x.role === 'teacher').forEach(x => items.push({ text:nm(x.name, CAL_ROLE.teacher, calHours(x.note, s)) }));
+    oth.filter(x => x.role === 'teacher').forEach(x => items.push({ text:nm(x.name, CAL_ROLE.teacher, calHours(x.note, s)), kind:'teacher' }));
     if(c.slot){
       const lead = c.people.filter(p => picks[c.slot.key] === p.iid), rest = c.people.filter(p => !lead.includes(p));
-      lead.forEach(p => items.push({ text:nm(p.name, 'אחמ"ש', calHours(p.note, s)), ahm:true }));
-      rest.forEach(p => items.push({ text:nm(p.name, '', calHours(p.note, s)) }));
+      lead.forEach(p => items.push({ text:nm(p.name, 'אחמ"ש', calHours(p.note, s)), ahm:true, kind:'instructor' }));
+      rest.forEach(p => items.push({ text:nm(p.name, '', calHours(p.note, s)), kind:'instructor' }));
     }
-    oth.filter(x => x.role === 'service').forEach(x => items.push({ text:nm(x.name, CAL_ROLE.service, calHours(x.note, s)) }));
+    oth.filter(x => x.role === 'service').forEach(x => items.push({ text:nm(x.name, CAL_ROLE.service, calHours(x.note, s)), kind:'service' }));
     return { label:s.label, items, missing:c.slot ? c.missing : 0 };
   }).filter(l => l.items.length || l.missing) }));
 }
@@ -6733,6 +6733,15 @@ function srvPrefsDeadlinePassed(mk){
   const n = israelNow(), end = addMonths(mk, -1) + '-24';
   return n.date > end || (n.date === end && n.minutes >= 22 * 60 + 30);
 }
+// Two windows of the same browser share one sign-in: signing in as somebody else in another window silently changed who this window is
+// (Guy saw "not allowed" in the coordinator's window after signing in as an instructor in a second one). Now this window notices and reloads.
+if(PORTAL_ENABLED) window.addEventListener('storage', e => {
+  if(e.key !== 'ramzor-personal-auth' || !srv.authUid) return;
+  let uid = null; try { const v = e.newValue && JSON.parse(e.newValue); uid = v && (v.user || (v.currentSession || {}).user || {}).id || null; } catch(err){}
+  if(uid === srv.authUid) return;          // (only the token was renewed)
+  srv.authUid = null; toast(uid ? 'נכנסת בחלון אחר עם משתמש אחר. הדף מתרענן כדי להמשיך עם המשתמש החדש' : 'יצאת מהמערכת בחלון אחר. הדף מתרענן', 4000);
+  setTimeout(() => location.reload(), 2500);
+});
 async function srvLoadPrefsOpen(){
   srv.prefsOpenSrv = srv.prefsOpenSrv || {};
   const nm = prefsMonthNow();
@@ -6755,6 +6764,7 @@ async function srvLoad(){
   const epoch = srv.epoch = (srv.epoch || 0) + 1, fresh = () => epoch === srv.epoch;
   const meId = (await sbPersonal.rpc('my_staff_id')).data;
   if(!meId) return false;
+  try { const { data:{ session } } = await sbPersonal.auth.getSession(); srv.authUid = session && session.user ? session.user.id : null; } catch(e){}          // (who this window signed in as: see the watcher below)
   const staff = await srvAll(() => sbPersonal.from('staff').select('id,display_name,kind,active,sort_order').order('sort_order').order('display_name'));
   const today = monthKeyOf(israelNow().date), months = [-1, 0, 1, 2].map(n => addMonths(today, n));
   const from = firstOf(months[0]), to = daysOfMonth(months[3]).slice(-1)[0];
@@ -7499,7 +7509,7 @@ function srvRenderCoordSchedule(body){
     ${m.published ? srvOdFoldHtml(mk) : ''}
     ${srvCountFoldHtml(mk)}
     <div class="cs-note-row"><button type="button" class="btn ghost small" id="cs-others">${csHideOthers() ? 'הצגת בנות שירות ומורות' : 'הסתרת בנות שירות ומורות'}</button></div>
-    <div class="cs-layout"><div class="cs-main">${monthCalHtml(ctx, m.assignments, { edit:true, colour:true, ahmash:srv.ahmash, sel:portalUi.csOpen ? portalUi.csPerson : null, others:!csHideOthers() })}</div>${srvSidePanelHtml(mk)}</div>` : ''}
+    <div class="cs-layout"><div class="cs-main">${monthCalHtml(ctx, m.assignments, { edit:true, colour:true, ahmash:srv.ahmash, sel:portalUi.csOpen ? portalUi.csPerson : null, others:false, othersInCells:!csHideOthers() })}</div>${srvSidePanelHtml(mk)}</div>` : ''}
     ${srvHelpFoldHtml(m, has)}`;
   wireMonthNav(body);
   srvBuildWire(body, mk);
@@ -9481,7 +9491,7 @@ const AR = {
   'הסידור':'الجدول', 'העדפות':'التفضيلات', 'החלפות':'الاستبدالات', 'חופשה':'إجازة', 'הודעות':'الرسائل', 'זמינות':'التوفّر', 'שעות':'الساعات', 'משמרות חסרות':'مناوبات ناقصة',
   'פורטל המדריך':'بوابة المرشد', 'פורטל בנות השירות':'بوابة متطوعات الخدمة', 'מרכז חירום':'مركز الطوارئ', 'מה תרצו לפתוח?':'ماذا تريدون أن تفتحوا؟',
   'הרמזור':'الإشارة الضوئية', 'תפעול יומיומי ומסך הילדים':'التشغيل اليومي وشاشة الأطفال', 'משמרות, העדפות והודעות':'مناوبات، تفضيلات ورسائل',
-  'יציאה':'خروج', '→ מסך ראשי':'→ الشاشة الرئيسية', 'בית':'الرئيسية', 'חזור':'رجوع', 'העדפות מערכת':'إعدادات النظام', 'סיום':'إنهاء',
+  'יציאה':'خروج', '→ מסך ראשי':'→ الشاشة الرئيسية', 'בית':'الرئيسية', 'חזור':'رجوع', 'נכנסת בחלון אחר עם משתמש אחר. הדף מתרענן כדי להמשיך עם המשתמש החדש':'دخلت في نافذة أخرى بمستخدم آخر. الصفحة تتحدّث للمتابعة مع المستخدم الجديد', 'יצאת מהמערכת בחלון אחר. הדף מתרענן':'خرجت من النظام في نافذة أخرى. الصفحة تتحدّث', 'העדפות מערכת':'إعدادات النظام', 'סיום':'إنهاء',
   'המשמרות שלי':'مناوباتي', 'הצוות כולו':'الطاقم كله', 'איך הלכו הבקשות שלך':'كيف سارت طلباتك', 'משמרות פתוחות':'مناوبات مفتوحة', 'הודעות חדשות':'رسائل جديدة',
   'המשמרת הבאה שלך':'مناوبتك القادمة', 'בקשת החלפה':'طلب استبدال', 'הבנתי, תודה':'فهمت، شكرًا', 'סימון של כולן כנקראו':'تعليم الكل كمقروء',
   'העדכונים שלך':'تحديثاتك', 'הודעות מהרכזת':'رسائل من المركّزة', 'הבקשות שלי':'طلباتي', 'בקשות החלפה פתוחות':'طلبات استبدال مفتوحة',
