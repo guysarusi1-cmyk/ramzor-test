@@ -1447,10 +1447,10 @@
   .mcal-name.wish-no{ background:var(--p-no-bg, #3a1a18); color:var(--p-no, #ff8a80); box-shadow:inset 0 0 0 1px var(--p-no, #ff8a80); }
   .mcal-name.wish-none{ background:var(--p-none-bg, #3d2a0e); color:var(--p-none, #ffb347); box-shadow:inset 0 0 0 1px var(--p-none, #ffb347); }
   .cs-pick{ position:relative; width:100%; }
-  .cs-pick-list.cs-repl-list{ position:static; margin:4px 0 8px; max-height:300px; }          /* (the "החלפה" list opens under its row, inside the window; floating, it fell outside the window and the button seemed dead) */
+  .cs-pick-list.cs-repl-list{ position:static; margin:4px 0 8px; }          /* (the "החלפה" list opens under its row, inside the window; floating, it fell outside the window and the button seemed dead) */
   .cs-pick-btn{ display:flex; align-items:center; justify-content:space-between; width:100%; min-height:44px; padding:8px 12px; border:1px solid var(--p-line); border-radius:10px; background:var(--p-panel2); color:var(--p-text); font:inherit; font-size:16px; cursor:pointer; }
   .cs-pick-btn.sel-yes{ background:#123322; color:#7be0a0; } .cs-pick-btn.sel-can{ background:var(--p-can-bg, #14263f); color:var(--p-can, #8ec0ff); } .cs-pick-btn.sel-none{ background:var(--p-none-bg, #3d2a0e); color:var(--p-none, #ffb347); } .cs-pick-btn.sel-no{ background:#3a1a18; color:#ff8a80; }
-  .cs-pick-list{ position:absolute; z-index:20; inset-inline:0; top:calc(100% + 4px); max-height:340px; overflow-y:auto; padding:6px; background:var(--p-panel); border:1px solid var(--p-line); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+  .cs-pick-list{ position:static; margin:4px 0 8px; padding:6px; background:var(--p-panel); border:1px solid var(--p-line); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
   .cs-pick-head{ position:static; display:flex; align-items:center; gap:10px; margin:-6px -6px 4px; padding:8px 10px; background:var(--p-panel); border-bottom:1px solid var(--p-line); }
   .cs-pick-title{ font-weight:700; } .cs-pick-key{ display:inline-flex; flex-wrap:wrap; gap:4px; margin-inline-start:auto; }
   .cs-pick-key .mcal-name{ display:inline-block; font-size:11px; padding:1px 7px; }
@@ -7662,7 +7662,7 @@ function srvOpenSlot(mk, key, body){
     const upd = () => { const w = who.value ? srvWarnings(who.value, date, code, from.value, to.value) : []; aw.innerHTML = w.map(x => `<div>⚠ ${pEsc(x)}</div>`).join(''); };
     const pickBtn = wrap.querySelector('#cs-pick-btn'), pickList = wrap.querySelector('#cs-pick-list');
     const tint = () => { const o = who.selectedOptions[0]; pickBtn.className = 'cs-pick-btn' + (o && o.className ? ' sel-' + o.className.replace('opt-', '') : ''); pickBtn.firstElementChild.textContent = o ? o.textContent : 'בחרו מדריך/ה'; };          // (the closed button shows the chosen name in the same colour)
-    pickBtn.addEventListener('click', e => { e.stopPropagation(); pickList.hidden = !pickList.hidden; pickBtn.setAttribute('aria-expanded', String(!pickList.hidden)); });
+    pickBtn.addEventListener('click', e => { e.stopPropagation(); pickList.hidden = !pickList.hidden; pickBtn.setAttribute('aria-expanded', String(!pickList.hidden)); if(!pickList.hidden) pickBtn.scrollIntoView({ block:'start', behavior:'smooth' }); });          // (the list opens inside the window; the window scrolls so that it starts at the top)
     pickList.querySelectorAll('.cs-pick-item').forEach(it => it.addEventListener('click', e => { e.stopPropagation(); who.value = it.dataset.val; pickList.hidden = true; pickBtn.setAttribute('aria-expanded', 'false'); who.dispatchEvent(new Event('change')); }));
     wrap.addEventListener('click', e => { if(!e.target.closest('.cs-pick')){ pickList.hidden = true; pickBtn.setAttribute('aria-expanded', 'false'); } });
     who.addEventListener('change', () => { tint(); upd(); }); from.addEventListener('change', upd); to.addEventListener('change', upd);
