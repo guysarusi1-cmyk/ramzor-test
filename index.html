@@ -1584,6 +1584,7 @@
   .prefs-past-btn{ display:block; margin:0 auto 10px; }
   .pprefs-past{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:0 0 10px; padding:8px 12px; border-radius:12px; background:rgba(90,160,255,.14); border:1px solid rgba(90,160,255,.5); font-weight:700; }
   .unmarked-choices{ display:flex; flex-direction:column; gap:8px; margin-top:12px; } .unmarked-choices .btn{ width:100%; min-height:48px; }          /* the question about unmarked shifts (14f) */
+  .psub-fill{ grid-column:1 / -1; justify-self:start; margin-top:6px; }          /* the coordinator fills a service girl's availability (14k) */
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -6883,7 +6884,7 @@ async function srvSubmit(mk, note, goal){
 
 // ---- the screens in server mode
 function srvTabs(me){
-  if(srvEditingFor()) return [['prefs', 'העדפות']];          // (the admin fills somebody's preferences: only that tab)
+  if(srvEditingFor()) return me.role === 'service' ? [['avail', 'זמינות']] : [['prefs', 'העדפות']];          // (filling for somebody: only that tab — a service girl's availability, an instructor's preferences)
   if(portalAsCoord(me)) return [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);          // (the admin: one more tab, 14s-portal-admin.js)
   if(me.role === 'instructor' && srv.profile && srv.profile.manual_only) return [['schedule', 'הסידור'], ['open', 'משמרות חסרות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];          // (not scheduled automatically: she places herself where somebody is missing)
   if(me.role === 'instructor') return [['schedule', 'הסידור'], ['prefs', 'העדפות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];
@@ -7217,15 +7218,15 @@ async function srvRenderVacation(body){
 // the hours of the service girls (Guy 2026-10-17): Sunday 11:00-19:00; Monday-Wednesday the morning (07:00-15:00), the afternoon (14:00-22:00) or both; Thursday only the morning
 const SVC_OPTS = [['early', '07:00–15:00'], ['late', '14:00–22:00'], ['both', 'שתיהן'], ['none', 'לא זמינה']];
 const svcOptsFor = d => dowOf(d) === 0 ? [['late', '11:00–19:00'], ['none', 'לא זמינה']] : dowOf(d) === 4 ? SVC_OPTS.filter(o => o[0] === 'early' || o[0] === 'none') : SVC_OPTS;
-async function srvRenderAvailability(body){
+async function srvRenderAvailability(body){          // (also the admin or the coordinator filling it for a service girl: srvWho())
   const mk = (portalUi.pmonth = prefsMonthNow()), m = portalMonth(mk), locked = !srvPrefsOpen(mk);          // (next month only)
   body.innerHTML = '<div class="pnote">רק רגע...</div>';
   const days = daysOfMonth(mk).filter(d => dowOf(d) <= 4);
-  const r = await sbPersonal.from('prefs_service').select('day,opt').eq('staff_id', srv.me).gte('day', days[0]).lte('day', days[days.length - 1]);
+  const r = await sbPersonal.from('prefs_service').select('day,opt').eq('staff_id', srvWho()).gte('day', days[0]).lte('day', days[days.length - 1]);
   if(!body.isConnected) return;
   const have = {}; (r.data || []).forEach(x => { have[x.day] = x.opt; });
-  const fixed = srvPrefsOf(m, srv.me).fixed.map(f => f.day);
-  const submitted = !!m.submitted[srv.me], left = days.filter(d => !have[d] && !fixed.includes(d)).length;
+  const fixed = srvPrefsOf(m, srvWho()).fixed.map(f => f.day);
+  const submitted = !!m.submitted[srvWho()], left = days.filter(d => !have[d] && !fixed.includes(d)).length;
   body.innerHTML = `
     ${monthFixedHtml(mk)}
     <div class="pstatus ${submitted ? 'ok' : 'bad'}">${submitted ? 'הזמינות שלכן אצלנו, תודה! אפשר לעדכן עד סגירת ההגשה.' : 'נשמח לדעת מתי אתן זמינות, ככה נוכל לסדר לכן את החודש.'} · אפשר להגיש עד 24/${addMonths(mk, -1).slice(5)} בשעה 22:30</div>
@@ -7236,14 +7237,14 @@ async function srvRenderAvailability(body){
   wireMonthNav(body, 'pmonth');
   body.querySelectorAll('[data-svc]').forEach(b => b.addEventListener('click', async () => {
     const [d, opt] = b.dataset.svc.split('|');
-    const u = await sbPersonal.from('prefs_service').upsert({ staff_id:srv.me, day:d, opt });
+    const u = await sbPersonal.from('prefs_service').upsert({ staff_id:srvWho(), day:d, opt });
     if(u.error) toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב'); srvRenderAvailability(body);
   }));
   body.querySelector('#svc-submit').addEventListener('click', async () => {
     if(left){ toast('נשמח שתבחרו לכל יום לפני ההגשה, ככה נוכל לתכנן'); return; }
-    const u = await sbPersonal.from('prefs_submission').upsert({ staff_id:srv.me, month:firstOf(mk), submitted_at:new Date().toISOString() });
+    const u = await sbPersonal.from('prefs_submission').upsert({ staff_id:srvWho(), month:firstOf(mk), submitted_at:new Date().toISOString() });
     if(u.error){ toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע'); return; }
-    m.submitted[srv.me] = true; toast(tx('avail_ok')); srvRenderAvailability(body);
+    m.submitted[srvWho()] = true; toast(tx('avail_ok')); srvRenderAvailability(body);
   });
 }
 
@@ -7795,7 +7796,7 @@ function srvRenderSubmissions(body){
   const missing = people.filter(p => !m.submitted[p.id]), done = people.filter(p => m.submitted[p.id]);
   const subRow = p => { const pr = m.prefs[p.id] || { slots:{}, absent:[], hours:{} }, c = { yes:0, avoid:0, no:0 }; Object.values(pr.slots).forEach(v => { v = v === 'can' ? 'avoid' : v; if(c[v] !== undefined) c[v]++; });
     const note = m.notes && m.notes[p.id];
-    return `<div class="psub-row ${m.submitted[p.id] ? 'ok' : 'bad'}"><img src="${p.photo}" alt=""><b>${pEsc(instrName(p, st.instructors))}</b><span>${m.submitted[p.id] ? 'הוגש ✓' : 'לא הוגש'}</span><small>${KIND_WORD[p.role] || ''}${p.role === 'instructor' ? ` · כן ${c.yes} · יכול ${c.avoid} · לא ${c.no} · היעדרות ${(pr.absent || []).length}${Object.keys(pr.hours || {}).length ? ' · שעות אחרות ' + Object.keys(pr.hours).length : ''}${pr.consent && pr.consent.extend ? ' · מסכים להארכה' : ''}${pr.consent && pr.consent.pull ? ' · מסכים למשיכה' : ''}` : ''}</small>${note ? `<div class="psub-note">הערה: ${pEsc(note)}</div>` : ''}</div>`; };
+    return `<div class="psub-row ${m.submitted[p.id] ? 'ok' : 'bad'}"><img src="${p.photo}" alt=""><b>${pEsc(instrName(p, st.instructors))}</b><span>${m.submitted[p.id] ? 'הוגש ✓' : 'לא הוגש'}</span><small>${KIND_WORD[p.role] || ''}${p.role === 'instructor' ? ` · כן ${c.yes} · יכול ${c.avoid} · לא ${c.no} · היעדרות ${(pr.absent || []).length}${Object.keys(pr.hours || {}).length ? ' · שעות אחרות ' + Object.keys(pr.hours).length : ''}${pr.consent && pr.consent.extend ? ' · מסכים להארכה' : ''}${pr.consent && pr.consent.pull ? ' · מסכים למשיכה' : ''}` : ''}</small>${note ? `<div class="psub-note">הערה: ${pEsc(note)}</div>` : ''}${p.role === 'service' ? `<button type="button" class="btn ghost small psub-fill" data-fill-for="${p.id}">✏️ מילוי זמינות</button>` : ''}</div>`; };
   const away = people.map(p => { const pr = m.prefs[p.id] || {}; const fx = (pr.fixed || []).filter(f => daysOfMonth(mk).includes(f.day)); return { p, fx }; }).filter(x => x.fx.length);
   body.innerHTML = `
     ${monthNavHtml(mk)}
@@ -7807,6 +7808,10 @@ function srvRenderSubmissions(body){
     <button type="button" class="btn ghost" id="abs-add">הוספת היעדרות (מחלה, מילואים, לידה...)</button>`;
   wireMonthNav(body, 'smonth'); wireFolds(body);
   document.getElementById('abs-add').addEventListener('click', () => srvAbsenceSheet(body));
+  body.querySelectorAll('[data-fill-for]').forEach(b => b.addEventListener('click', () => {          // (the coordinator fills a service girl's availability for her, e.g. after a phone call)
+    portalUi.fillReturn = { tab:portalUi.tab, manager:!!portalUi.manager }; portalUi.viewAs = b.dataset.fillFor; portalUi.persona = b.dataset.fillFor; portalUi.editPrefs = true; portalUi.manager = false;
+    portalUi.tab = 'avail'; portalUi.pmonth = null; srvResnap(); showPortal('avail');
+  }));
 }
 function srvAbsenceSheet(body){
   const st = portalLoad(), people = st.instructors.filter(p => p.active && !['coordinator', 'therapist'].includes(p.role)), today = srvToday();
@@ -9055,21 +9060,25 @@ async function adminStaff(box, body){
 // ---- 2. the portal as one person sees it (only to look: nothing can be changed there)
 function adminViewAs(box){
   const st = portalLoad(), fill = !!portalUi.admFill;
-  const people = st.instructors.filter(p => p.active && p.id !== srv.me && (!fill || p.role === 'instructor')).sort((a, b) => String(a.first).localeCompare(String(b.first), 'he'));
+  const people = st.instructors.filter(p => p.active && p.id !== srv.me && (!fill || ['instructor', 'service'].includes(p.role))).sort((a, b) => String(a.first).localeCompare(String(b.first), 'he'));
   box.innerHTML = `<div class="pchoice adm-va-mode" role="group" aria-label="מה לעשות"><button type="button" class="${fill ? '' : 'on'}" data-va-mode="look">👁️ צפייה</button><button type="button" class="${fill ? 'on' : ''}" data-va-mode="fill">✏️ מילוי העדפות</button></div>
-    <div class="pnote">${fill ? 'בחירה במדריך/ה פותחת את מסך ההעדפות שלו/ה, ואפשר למלא ולהגיש בשבילו/ה (למשל מדף שמסר/ה). נשמר אצלו/ה, גם אחרי סגירת ההגשה. כל שינוי נרשם.' : 'בחירה באדם פותחת את הפורטל בדיוק כמו שהוא רואה אותו: הסידור, ההעדפות, ההחלפות. רק לצפייה, בלי אפשרות לשנות דבר.'}</div>
+    <div class="pnote">${fill ? 'בחירה במדריך/ה או בבת שירות פותחת את מסך ההעדפות (או הזמינות) שלו/ה, ואפשר למלא ולהגיש בשבילו/ה (למשל מדף שמסר/ה). נשמר אצלו/ה, גם אחרי סגירת ההגשה. כל שינוי נרשם.' : 'בחירה באדם פותחת את הפורטל בדיוק כמו שהוא רואה אותו: הסידור, ההעדפות, ההחלפות. רק לצפייה, בלי אפשרות לשנות דבר.'}</div>
     <div class="adm-people">${people.map(p => `<button type="button" class="cs-name" data-view-as="${p.id}"><img src="${p.photo}" alt=""><span>${pEsc(instrName(p, st.instructors))}</span>${fill && portalMonth(addMonths(monthKeyOf(srvToday()), 1)).submitted[p.id] ? ' <small class="adm-sub">✓ הגיש/ה</small>' : ''}</button>`).join('')}</div>`;
   box.querySelectorAll('[data-va-mode]').forEach(b => b.addEventListener('click', () => { portalUi.admFill = b.dataset.vaMode === 'fill'; adminViewAs(box); }));
   box.querySelectorAll('[data-view-as]').forEach(b => b.addEventListener('click', () => {
-    portalUi.viewAs = b.dataset.viewAs; portalUi.persona = b.dataset.viewAs; portalUi.manager = false; portalUi.editPrefs = fill;
-    portalUi.tab = fill ? 'prefs' : null; portalUi.pmonth = null; if(fill) srvResnap(); showPortal(fill ? 'prefs' : undefined);
+    const role = (portalPerson(b.dataset.viewAs) || {}).role, tab = fill ? (role === 'service' ? 'avail' : 'prefs') : null;
+    portalUi.fillReturn = null; portalUi.viewAs = b.dataset.viewAs; portalUi.persona = b.dataset.viewAs; portalUi.manager = false; portalUi.editPrefs = fill;
+    portalUi.tab = tab; portalUi.pmonth = null; if(fill) srvResnap(); showPortal(tab || undefined);
   }));
 }
 // the coordinator's own screen, with full control: everything she sees and does (the database lets the admin do all of it; each action is recorded as the admin's)
 function adminActAs(id){ portalUi.viewAs = id; portalUi.persona = id; portalUi.actAs = true; portalUi.editPrefs = false; portalUi.manager = false; portalUi.tab = null; portalUi.month = null; showPortal(); }
 async function adminViewAsEnd(){
   if(portalUi.editPrefs){ clearTimeout(srv.timer); await srvFlush(); }          // (what was filled is saved before leaving)
-  portalUi.viewAs = null; portalUi.editPrefs = false; portalUi.actAs = false; portalUi.persona = srv.me; portalUi.manager = true; portalUi.tab = 'admin'; portalUi.pmonth = null; srvResnap(); showPortal('admin');
+  const back = portalUi.fillReturn; portalUi.fillReturn = null;          // (the coordinator came from the submissions tab: back there)
+  portalUi.viewAs = null; portalUi.editPrefs = false; portalUi.actAs = false; portalUi.persona = srv.me; portalUi.pmonth = null; srvResnap();
+  if(back){ portalUi.manager = back.manager; portalUi.tab = back.tab; showPortal(back.tab); return; }
+  portalUi.manager = true; portalUi.tab = 'admin'; showPortal('admin');
 }
 
 // ---- 3. the system settings: the hours of the shifts, how early a long vacation is asked for, the numbers of the rules
