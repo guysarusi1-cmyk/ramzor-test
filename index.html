@@ -1451,7 +1451,7 @@
   .cs-pick-btn{ display:flex; align-items:center; justify-content:space-between; width:100%; min-height:44px; padding:8px 12px; border:1px solid var(--p-line); border-radius:10px; background:var(--p-panel2); color:var(--p-text); font:inherit; font-size:16px; cursor:pointer; }
   .cs-pick-btn.sel-yes{ background:#123322; color:#7be0a0; } .cs-pick-btn.sel-can{ background:var(--p-can-bg, #14263f); color:var(--p-can, #8ec0ff); } .cs-pick-btn.sel-none{ background:var(--p-none-bg, #3d2a0e); color:var(--p-none, #ffb347); } .cs-pick-btn.sel-no{ background:#3a1a18; color:#ff8a80; }
   .cs-pick-list{ position:absolute; z-index:20; inset-inline:0; top:calc(100% + 4px); max-height:340px; overflow-y:auto; padding:6px; background:var(--p-panel); border:1px solid var(--p-line); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
-  .cs-pick-head{ position:sticky; top:-6px; z-index:1; display:flex; align-items:center; gap:10px; margin:-6px -6px 4px; padding:8px 10px; background:var(--p-panel); border-bottom:1px solid var(--p-line); }
+  .cs-pick-head{ position:static; display:flex; align-items:center; gap:10px; margin:-6px -6px 4px; padding:8px 10px; background:var(--p-panel); border-bottom:1px solid var(--p-line); }
   .cs-pick-title{ font-weight:700; } .cs-pick-key{ display:inline-flex; flex-wrap:wrap; gap:4px; margin-inline-start:auto; }
   .cs-pick-key .mcal-name{ display:inline-block; font-size:11px; padding:1px 7px; }
   .cs-pick-item{ display:block; width:100%; margin:2px 0; padding:7px 12px; text-align:start; border:1px solid transparent; border-radius:8px; font:inherit; font-size:15px; cursor:pointer; }
@@ -7644,7 +7644,7 @@ function srvOpenSlot(mk, key, body){
         <select id="add-who" hidden aria-label="מי">${'<option value="">בחרו מדריך/ה</option>' + ranked.map(({ p, lv }) => `<option value="${p.id}" class="opt-${LV[lv][0]}">${pEsc(instrName(p, portalLoad().instructors))}</option>`).join('')}</select>
         <button type="button" class="cs-pick-btn" id="cs-pick-btn" aria-haspopup="listbox" aria-expanded="false"><span>בחרו מדריך/ה</span><i aria-hidden="true">⌄</i></button>
         <div class="cs-pick-list" id="cs-pick-list" role="listbox" hidden>
-          <div class="cs-pick-head"><span class="cs-pick-title">בחרו מדריך/ה</span><span class="cs-pick-key">${mcalKeyChips()}</span></div>
+          <div class="cs-pick-head"><span class="cs-pick-key">${mcalKeyChips()}</span></div>
           ${ranked.map(({ p, lv }) => `<div class="cs-pick-row"><button type="button" class="cs-pick-item opt-${LV[lv][0]}" role="option" data-val="${p.id}">${pEsc(instrName(p, portalLoad().instructors))}</button>${lv === 'no' || lv === 'none' ? waButtonHtml(p.id, key) : ''}</div>`).join('')}
         </div></div></div>
       <div class="phours-row"><select id="add-from" aria-label="משעה">${Array.from({ length:24 }, (_, h) => `<option value="${String(h).padStart(2, '0')}:00"${String(h).padStart(2, '0') + ':00' === sh.start ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select><span>עד</span><select id="add-to" aria-label="עד שעה">${Array.from({ length:24 }, (_, h) => `<option value="${String(h).padStart(2, '0')}:00"${String(h).padStart(2, '0') + ':00' === sh.end ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select></div>
