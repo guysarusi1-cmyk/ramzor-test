@@ -8119,8 +8119,8 @@ async function srvRemoveOther(rowId, sid, body){
   const keep = two ? (sid === 'm' ? { shift:'A', from_time:'15:00', to_time:to } : { shift:'M', from_time:from, to_time:'15:00' }) : null;
   const choice = await new Promise(resolve => {
     let done = false; const finish = v => { if(done) return; done = true; s2.close(); resolve(v); };
-    const s2 = portalSheet(`<h2>להסיר את ${pEsc(nm)}?</h2><div class="pnote">${pEsc(dayLabel(r.day))} · ${pEsc(sh.label || '')}${from && to ? ` · ${from}–${to}` : ''}</div>
-      <div class="confirm-actions stack">${keep ? `<button type="button" class="btn" data-c="part">רק מ${pEsc(sh.label || 'המשמרת')} (תישאר ${keep.from_time}–${keep.to_time})</button><button type="button" class="btn ghost" data-c="all">מכל היום</button>` : '<button type="button" class="btn" data-c="all">כן, להסיר</button>'}<button type="button" class="btn ghost" data-c="back">חזרה</button></div>`);
+    const s2 = portalSheet(`<h2>להסיר את ${pEsc(nm)}?</h2><div class="pnote">${pEsc(dayLabel(r.day))} · ${pEsc(sh.label || '')}${from && to ? ` · ${csLtr(from + '–' + to)}` : ''}</div>
+      <div class="confirm-actions stack">${keep ? `<button type="button" class="btn ghost" data-c="part">רק מ${pEsc(sh.label || 'המשמרת')} (תישאר ${csLtr(keep.from_time + '–' + keep.to_time)})</button><button type="button" class="btn ghost" data-c="all">מכל היום</button>` : '<button type="button" class="btn ghost" data-c="all">כן, להסיר</button>'}<button type="button" class="btn ghost" data-c="back">חזרה</button></div>`);
     s2.querySelectorAll('[data-c]').forEach(b => b.addEventListener('click', () => finish(b.dataset.c)));
     s2.addEventListener('click', e => { if(e.target === s2) finish('back'); });
   });
