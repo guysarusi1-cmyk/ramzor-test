@@ -7938,7 +7938,7 @@ function srvOpenSlot(mk, key, body){
         </div></div></div>
       <div class="phours-row" id="add-hours" hidden><select id="add-from" aria-label="משעה">${Array.from({ length:24 }, (_, h) => `<option value="${String(h).padStart(2, '0')}:00"${String(h).padStart(2, '0') + ':00' === sh.start ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select><span>עד</span><select id="add-to" aria-label="עד שעה">${Array.from({ length:24 }, (_, h) => `<option value="${String(h).padStart(2, '0')}:00"${String(h).padStart(2, '0') + ':00' === sh.end ? ' selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select></div>
       <div id="add-warn" class="pwarn" aria-live="polite"></div>
-      <div class="confirm-actions"><button type="button" class="btn ghost" data-close>סגירה</button><button type="button" class="btn ghost" id="add-go" hidden>הוספה</button></div>`;
+      <div class="confirm-actions"><button type="button" class="btn ghost" data-close>סגירה</button><button type="button" class="btn" id="add-go" hidden>הוספה</button></div>`;
     const who = wrap.querySelector('#add-who'), from = wrap.querySelector('#add-from'), to = wrap.querySelector('#add-to'), aw = wrap.querySelector('#add-warn');
     const upd = () => { const w = who.value ? srvWarnings(who.value, date, code, from.value, to.value) : []; aw.innerHTML = w.map(x => `<div>⚠ ${pEsc(x)}</div>`).join(''); };
     const pickBtn = wrap.querySelector('#cs-pick-btn'), pickList = wrap.querySelector('#cs-pick-list');
@@ -9945,7 +9945,7 @@ const AR = {
   'לחופשה או להיעדרות אפשר לפנות לרכזת, והיא תסמן':'للإجازة أو الغياب يمكن التوجه للمركّزة، وهي تسجّل ذلك', 'היעדרות שאושרה':'غياب تمت الموافقة عليه',
   'חודשיים מראש':'قبل شهرين', '30 יום מראש':'قبل 30 يومًا',
   // service girls
-  'הימים והשעות הקבועים שלכן':'أيامكن وساعاتكن الثابتة', 'לא זמינה':'غير متاحة', 'שתיהן':'كلتاهما', 'הארכה עד 16:00':'تمديد حتى 16:00', 'מ-16:00':'من 16:00', 'עד 22:00':'حتى 22:00',
+  'הימים והשעות הקבועים שלכן':'أيامكن وساعاتكن الثابتة', 'לא זמינה':'غير متاحة', 'שתיהן':'كلتاهما', 'הארכה עד 16:00':'تمديد حتى 16:00', 'אישר/ה ✓':'أكّد/ت ✓', 'מ-16:00':'من 16:00', 'עד 22:00':'حتى 22:00',
   'שעות מותאמות':'ساعات مخصّصة', 'המשך עד 11:00 ביום ראשון':'استمرار حتى 11:00 يوم الأحد', 'כל הימים נבחרו, תודה!':'تم اختيار كل الأيام، شكرًا!',
   'נשמח שתבחרו לכל יום לפני ההגשה, ככה נוכל לתכנן':'يسعدنا أن تختاروا لكل يوم قبل التقديم، هكذا نستطيع التخطيط',
   'עוד לא הוגדרו שעות קבועות. נשמח אם תפנו לרכזת':'لم تُحدَّد ساعات ثابتة بعد. يسعدنا أن تتوجهن للمركّزة',
