@@ -1653,6 +1653,11 @@
   .tv-duties .duty-board{ grid-template-columns:repeat(3, minmax(0, 1fr)); gap:2vh; } .tv-duties .duty-name{ font-size:3.4vh; } .tv-duties .duty-kid{ font-size:3vh; } .tv-duties .duty-kid .duty-av, .tv-duties .duty-kid img{ width:6vh; height:6vh; }
   .ctl-duty{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px; padding:6px 0; border-bottom:1px solid var(--p-line, rgba(255,255,255,.1)); } .ctl-duty-kids{ display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
   .duty-move{ display:flex; flex-direction:column; gap:6px; }
+  /* the review of the portals (Guy 2026-10-28): the next shift, open shifts by day, the fixed preferences line */
+  .pnext-line{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:0 0 10px; padding:8px 12px; border:1px solid var(--p-line); border-radius:12px; background:var(--p-panel); }
+  .popen-day{ margin:0 0 8px; } .popen-date{ font-weight:700; margin:6px 0 2px; }
+  .pfixed-edit{ background:none; border:0; padding:0 4px; font:inherit; color:inherit; text-decoration:underline; cursor:pointer; min-height:32px; }
+  .ptab-count{ display:inline-block; min-width:18px; padding:0 5px; margin-inline-start:4px; border-radius:9px; font-size:11px; line-height:18px; text-align:center; background:var(--p-gold, #f0c060); color:#1a1a1a; font-weight:700; }
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -5992,7 +5997,7 @@ if(PORTAL_ENABLED){
 // Demo mode: there are no personal logins yet, so a small "viewing as" selector lets you see the portal as the
 // coordinator or as any instructor. Everything is stored in this browser only (see 14a-portal-data.js).
 const portalHomeFirst = () => PORTAL_ENABLED && !window.__portalNoHome && location.hash !== '#tv';       // (the test tools set __portalNoHome: they start from the רמזור home)
-const portalUi = { persona:'c1', tab:null, month:null, level:'avoid', openDay:null, fold:{ mine:false, team:false, swap:false } };
+const portalUi = { persona:'c1', tab:null, month:null, level:'avoid', openDay:null, fold:{ mine:false, team:true, swap:false } };          // (the team calendar opens by itself: Guy 2026-10-28)
 
 function portalPerson(id){ return portalLoad().instructors.find(p => p.id === id); }
 function portalMe(){ return portalPerson(portalUi.persona) || portalLoad().instructors[0]; }          // (in server mode persona = the signed-in person)
@@ -6089,7 +6094,7 @@ function showPortal(tab){
         <select id="portal-persona">${st.instructors.filter(p => p.active).map(p => `<option value="${p.id}"${p.id === me.id ? ' selected' : ''}>${pEsc(instrName(p, st.instructors))}${p.role === 'coordinator' ? ' (רכזת)' : ''}</option>`).join('')}</select>
         <span class="portal-demo-tag">דמו</span>
       </label>`}
-      <nav class="portal-tabs" role="tablist">${tabs.map(t => `<button type="button" role="tab" data-ptab="${t[0]}" class="${t[0] === portalUi.tab ? 'active' : ''}">${t[1]}</button>`).join('')}</nav>
+      <nav class="portal-tabs" role="tablist">${tabs.map(t => `<button type="button" role="tab" data-ptab="${t[0]}" class="${t[0] === portalUi.tab ? 'active' : ''}">${t[1]}${(c => c ? ` <span class="ptab-count">${c}</span>` : '')(portalServerOn && typeof srvTabCount === 'function' ? srvTabCount(me, t[0]) : 0)}</button>`).join('')}</nav>
       ${portalServerOn && portalUi.viewAs ? (portalUi.actAs ? `<div class="adm-viewas act"><span>🛠️ במסך של ${pEsc(me.first)} · שליטה מלאה, כל פעולה נרשמת על שמך</span><button type="button" class="btn small" id="viewas-end">חזרה לפורטל הניהול</button></div>` : portalUi.editPrefs ? `<div class="adm-viewas edit"><span>✏️ ממלא/ת העדפות עבור ${pEsc(me.first)} · נשמר אצלו/ה</span><button type="button" class="btn small" id="viewas-end">סיום</button></div>` : `<div class="adm-viewas"><span>👁️ צפייה כמו ש${pEsc(me.first)} רואה · רק לצפייה</span><button type="button" class="btn small" id="viewas-end">חזרה לפורטל הניהול</button></div>`) : ''}
       <div id="portal-body"></div>
       ${portalServerOn && srv.meRow && !['instructor', 'coordinator'].includes(srv.meRow.role) && !srv.meRow.admin ? installLinkHtml() : ''}
@@ -6498,11 +6503,11 @@ function renderInstructorPrefs(body){
     ${past ? `<div class="pprefs-past"><span>👁️ ההעדפות שהגשת ל${pEsc(monthLabel(mk))} · לצפייה בלבד</span><button type="button" class="btn small" id="prefs-past-end">חזרה להעדפות של ${pEsc(monthLabel(addMonths(mk, 1)))}</button></div>`
       : portalServerOn ? `<button type="button" class="btn ghost small prefs-past-btn" id="prefs-past">👁️ ההעדפות שהגשת ל${pEsc(monthLabel(addMonths(mk, -1)))}</button>` : ''}
     ${portalServerOn && !past && !locked && srvPrefsDeadlinePassed(mk) ? `<div class="pnote">${tx('late')}</div>` : ''}
-    <div class="pstatus ${submitted ? 'ok' : 'bad'}">${submitted ? tx('st_sub') : tx('st_unsub')}${dl ? ` · אפשר להגיש עד ${dl.getDate()}/${dl.getMonth() + 1}${m.deadlineTime ? ' בשעה ' + m.deadlineTime : ''}` : ''}${portalServerOn && !locked ? ' · <span id="srv-save-state">נשמר ✓</span>' : ''}</div>
-    ${locked ? `<div class="pnote">${tx('locked')}</div>` : ''}
+    ${locked ? `<div class="pstatus ${submitted ? 'ok' : 'bad'}" id="prefs-locked">${tx('locked')}</div>`          // (closed: one line, and the marks are shown to read only — Guy 2026-10-28)
+      : `<div class="pstatus ${submitted ? 'ok' : 'bad'}">${submitted ? tx('st_sub') : tx('st_unsub')}${dl ? ` · אפשר להגיש עד ${dl.getDate()}/${dl.getMonth() + 1}${m.deadlineTime ? ' בשעה ' + m.deadlineTime : ''}` : ''}${portalServerOn ? ' · <span id="srv-save-state">נשמר ✓</span>' : ''}</div>`}
     ${fixedList.length ? `<div class="pnote">הימים שאושרו לך או שהרכזת סימנה: ${fixedList.map(f => dayLabel(f.day) + ' (' + (FIXED_REASON[f.reason] || 'היעדרות') + ')').join(', ')}.</div>` : ''}
-    <details class="pfold" data-fold="prefhelp"${openFold('prefhelp') ? ' open' : ''}><summary><span>איך ממלאים? (לחצו להסבר)</span></summary><div class="pfold-body"><div class="pnote">${portalServerOn ? 'בהתחלה אף משמרת לא מסומנת. נשמח שתעברו על כל החודש: בחרו למטה רמה, ואז לחצו על יום (לכל המשמרות שלו) או על משמרת בודדת. "כן" אומר שתשמחו לקבל אותה, "יכול" אומר שאפשר, אבל פחות נוח, ו"לא" אומר שלא מתאים. לחיצה נוספת על אותו סימון מחזירה את המשמרת למצב שלא סומן. משמרת שלא תסמנו נשבץ רק אם לא תהיה שום ברירה אחרת, אז כדאי לסמן "כן" או "יכול" בכל מה שמתאים לכם.' : 'כל המשמרות מסומנות "כן", כלומר שאתם זמינים. נשמח לדעת אם יש משמרות שפחות מתאימות לכם: בחרו למטה רמה, ואז לחצו על יום (לכל המשמרות שלו) או על משמרת בודדת. "יכול" אומר שאפשר, אבל פחות נוח, ו"לא" אומר שלא מתאים.'} ${[...DEFAULT_SHIFT_LEGEND(st.shiftTypes)].join(' · ')}${portalServerOn ? ` · 🕯️ = סופ"ש ארוך (${SRV_LONG.sub}). הוא כפתור אחד לכל סופ"ש, מתחת לשישי ולשבת, ולא תלוי בסימונים של שישי או של שבת. אם לא סימנתם אותו, לא נשבץ אתכם אליו. אם אתם זמינים רק בחלק מהשעות, בחרו "שעות אחרות" ולחצו על היום.` : ''}</div></div></details>
-    ${availHint}${neutralHint}${portalServerOn && prefFixedKinds().size && !locked ? `<div class="pnote pnote-soft" id="nonight-note">${prefFixedNote()}</div>` : ''}
+    ${locked ? '' : `<details class="pfold" data-fold="prefhelp"${openFold('prefhelp') ? ' open' : ''}><summary><span>איך ממלאים? (לחצו להסבר)</span></summary><div class="pfold-body"><div class="pnote">${portalServerOn ? 'בהתחלה אף משמרת לא מסומנת. נשמח שתעברו על כל החודש: בחרו למטה רמה, ואז לחצו על יום (לכל המשמרות שלו) או על משמרת בודדת. "כן" אומר שתשמחו לקבל אותה, "יכול" אומר שאפשר, אבל פחות נוח, ו"לא" אומר שלא מתאים. לחיצה נוספת על אותו סימון מחזירה את המשמרת למצב שלא סומן. משמרת שלא תסמנו נשבץ רק אם לא תהיה שום ברירה אחרת, אז כדאי לסמן "כן" או "יכול" בכל מה שמתאים לכם.' : 'כל המשמרות מסומנות "כן", כלומר שאתם זמינים. נשמח לדעת אם יש משמרות שפחות מתאימות לכם: בחרו למטה רמה, ואז לחצו על יום (לכל המשמרות שלו) או על משמרת בודדת. "יכול" אומר שאפשר, אבל פחות נוח, ו"לא" אומר שלא מתאים.'} ${[...DEFAULT_SHIFT_LEGEND(st.shiftTypes)].join(' · ')}${portalServerOn ? ` · 🕯️ = סופ"ש ארוך (${SRV_LONG.sub}). הוא כפתור אחד לכל סופ"ש, מתחת לשישי ולשבת, ולא תלוי בסימונים של שישי או של שבת. אם לא סימנתם אותו, לא נשבץ אתכם אליו. אם אתם זמינים רק בחלק מהשעות, בחרו "שעות אחרות" ולחצו על היום.` : ''}</div></div></details>`}
+    ${locked ? '' : availHint}${neutralHint}${portalServerOn && !locked && me.role === 'instructor' && !prefOther() ? prefFixedLineHtml() : portalServerOn && prefFixedKinds().size && !locked ? `<div class="pnote pnote-soft" id="nonight-note">${prefFixedNote()}</div>` : ''}
     <div class="pshift-key" aria-label="שעות המשמרות">${portalLoad().shiftTypes.map(s => `<span><b>${pEsc(s.label)}</b> <bdi dir="ltr">${pEsc(s.start)}–${pEsc(s.end)}</bdi></span>`).join('')}</div>          
     <div class="pcal">${DOW_SHORT.map(d => `<div class="pcal-head">${d}</div>`).join('')}${cells}</div>
     ${portalServerOn ? `
@@ -6515,7 +6520,7 @@ function renderInstructorPrefs(body){
         ${goalBtn('max', 'אני רוצה לעבוד כמה שיותר החודש', 'מתוך המשמרות שסימנת "כן" או "יכול"')}
         ${goalBtn('', 'אין לי העדפה מיוחדת', '')}
       </div>
-      ${goal !== null || !locked ? '<div class="pnote">הבחירה נשמרת כשמגישים את ההעדפות.</div>' : ''}
+      ${!locked ? '<div class="pnote">הבחירה נשמרת כשמגישים את ההעדפות.</div>' : ''}
     </div>
     <div class="pconsents${cons.extend === null || cons.pull === null ? ' unanswered' : ''}">
       <h2 class="psec">עוד שתי שאלות קטנות לחודש הזה</h2>
@@ -6523,9 +6528,10 @@ function renderInstructorPrefs(body){
       <div class="pconsent"><span>אם נצטרך, האם יהיה לך נוח להמשיך משבת בלילה עד יום ראשון ב-11:00?</span>${choice('pull')}</div>
     </div>
     <label class="pfield">יש משהו שחשוב לך שנדע? (לא חובה)<textarea id="prefs-note" rows="2" maxlength="400"${locked ? ' disabled' : ''}>${pEsc(m.notes && m.notes[me.id] || '')}</textarea></label>` : ''}
-    <div class="pprefs-actions"><button type="button" class="btn" id="prefs-submit">${submitted ? 'עדכון והגשה מחדש' : 'הגשת ההעדפות'}</button><span class="pnote">${portalServerOn ? (neutral > 0 ? 'עוד ' + neutral + ' משמרות לסימון' : 'כל המשמרות מסומנות') : (marked ? marked + ' סימונים שאינם "כן"' : 'הכל "כן"')}</span></div>
-    <div class="plevelbar" role="group" aria-label="בחירת רמה">${levels.map(b => `<button type="button" class="lvbtn lv-${b[0]}${portalUi.level === b[0] ? ' active' : ''}" data-plevel="${b[0]}">${b[1]}</button>`).join('')}<button type="button" class="lvbtn lv-clear" id="prefs-clear-all">נקה הכל</button></div>`;
+    ${locked ? '' : `<div class="pprefs-actions"><button type="button" class="btn" id="prefs-submit">${submitted ? 'עדכון והגשה מחדש' : 'הגשת ההעדפות'}</button><span class="pnote">${portalServerOn ? (neutral > 0 ? 'עוד ' + neutral + ' משמרות לסימון' : 'כל המשמרות מסומנות') : (marked ? marked + ' סימונים שאינם "כן"' : 'הכל "כן"')}</span></div>
+    <div class="plevelbar" role="group" aria-label="בחירת רמה">${levels.map(b => `<button type="button" class="lvbtn lv-${b[0]}${portalUi.level === b[0] ? ' active' : ''}" data-plevel="${b[0]}">${b[1]}</button>`).join('')}<button type="button" class="lvbtn lv-clear" id="prefs-clear-all">נקה הכל</button></div>`}`;
   wireMonthNav(body, 'pmonth'); wireFolds(body);
+  { const fe = body.querySelector('#prefs-fixed-edit'); if(fe) fe.addEventListener('click', () => { portalUi.gearFold = Object.assign(portalUi.gearFold || {}, { prefs:true }); openPortalSettings(); }); }
   { const pp = body.querySelector('#prefs-past'), pe = body.querySelector('#prefs-past-end');
     if(pp) pp.addEventListener('click', () => { portalUi.prefsPast = true; renderInstructorPrefs(body); });
     if(pe) pe.addEventListener('click', () => { portalUi.prefsPast = false; renderInstructorPrefs(body); }); }
@@ -6576,12 +6582,12 @@ function renderInstructorPrefs(body){
     else if(keys.every(k => prefs.slots[k] === lv)){ keys.forEach(k => delete prefs.slots[k]); } else { keys.forEach(k => { prefs.slots[k] = lv; }); }
     portalSave(); renderInstructorPrefs(body);
   }));
-  document.getElementById('prefs-clear-all').addEventListener('click', async () => {
+  if(document.getElementById('prefs-clear-all')) document.getElementById('prefs-clear-all').addEventListener('click', async () => {
     if(locked) return;
     if(!(await confirmSheet({ title:'לנקות את כל ההעדפות?', text:tx('clear_text', portalServerOn ? ' ושעות אחרות' : ', היעדרויות'), okLabel:'כן, לנקות הכל', cancelLabel:'חזרה', danger:true }))) return;
     prefs.slots = {}; prefs.absent = []; if(portalServerOn){ prefs.hours = {}; prefs.pick = []; } portalSave(); toast(tx('clear_done')); renderInstructorPrefs(body);
   });
-  document.getElementById('prefs-submit').addEventListener('click', async () => {
+  if(document.getElementById('prefs-submit')) document.getElementById('prefs-submit').addEventListener('click', async () => {
     if(locked) return;
     if(portalServerOn){
       if(cons.extend === null || cons.pull === null){ toast(tx('consent_needed')); const box = body.querySelector('.pconsents'); if(box) box.scrollIntoView({ block:'center' }); return; }
@@ -6698,6 +6704,11 @@ function showMailPreview(e){
 }
 
 // the sentence over the calendar: which kinds start as "no", and how to change one
+// her fixed preferences, in one line at the top of the preferences, with a way to the gear where they are set (Guy 2026-10-28)
+function prefFixedLineHtml(){
+  const k = prefFixedKinds(), words = [['m', 'לא עושה בקרים'], ['e', 'לא עושה צהריים'], ['n', 'לא עושה לילות']].filter(x => k.has(x[0])).map(x => `<span>${x[1]}</span>`);
+  return `<div class="pnote pnote-soft pfixed-line"${k.size ? ' id="nonight-note"' : ' id="prefs-fixed-line"'}>${k.size ? `<span>קבוע אצלך:</span> ${words.join(' · ')}. <span>משמרת מסוימת משנים בלחיצה עליה.</span>` : '<span>אין לך העדפות קבועות.</span>'} <button type="button" class="pfixed-edit" id="prefs-fixed-edit">שינוי</button></div>`;
+}
 function prefFixedNote(){
   const k = prefFixedKinds(), words = [['m', 'הבקרים'], ['e', 'הצהריים'], ['n', 'הלילות']].filter(x => k.has(x[0])).map(x => x[1]);
   const list = words.length === 1 ? words[0] : words.slice(0, -1).join(', ') + ' ו' + words[words.length - 1];
@@ -7097,8 +7108,10 @@ async function srvLoad(){
   if(srv.pendingOn && srv.meRow && (srv.meRow.role === 'coordinator' || srv.meRow.admin)){
     try { const pr = await sbPersonal.from('assignment_pending').select('id,discarded_at'); if(!pr.error) (pr.data || []).forEach(x => { st.pending[x.discarded_at ? 'discarded' : 'waiting']++; }); } catch(e){}
   }
+  try { await sbPersonal.rpc('swaps_close_expired'); } catch(e){}          // (a request whose shift has passed closes by itself: scheduling-v45.sql)
   const swapRows = await srvAll(() => sbPersonal.from('swap_requests').select('id,assignment_id,from_staff,to_staff,status,urgent,created_at').order('created_at', { ascending:false })).catch(() => []);
-  st.swaps = swapRows.filter(s => st.assignmentIds[s.assignment_id]).map(s => ({ id:s.id, key:st.assignmentIds[s.assignment_id].key, aid:s.assignment_id, urgent:!!s.urgent, from:s.from_staff, to:s.to_staff, status:s.status, at:s.created_at }));
+  const swapPast = s => ['open', 'offered'].includes(s.status) && String(st.assignmentIds[s.assignment_id].key).split('|')[0] < srvToday();          // (and is not shown while the server has not closed it yet)
+  st.swaps = swapRows.filter(s => st.assignmentIds[s.assignment_id] && !swapPast(s)).map(s => ({ id:s.id, key:st.assignmentIds[s.assignment_id].key, aid:s.assignment_id, urgent:!!s.urgent, from:s.from_staff, to:s.to_staff, status:s.status, at:s.created_at }));
   if(!fresh()) return false;
   if(old){ Object.keys(old).forEach(k => { if(!(k in st)) st[k] = old[k]; }); portalState = st; }          // (what only the coordinator's load adds stays until it is read again, just below)
   await srvLoadPrefsOpen();
@@ -7232,6 +7245,17 @@ function srvTabs(me){
   if(me.role === 'service') return [['schedule', 'הסידור'], ['avail', 'זמינות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];          // (swaps: only among the service girls)
   return [['schedule', 'הסידור'], ['hours', 'שעות'], ['inbox', 'הודעות']];          // teachers
 }
+// what waits for the coordinator in a tab, as a number on it (Guy 2026-10-28): swaps to decide and urgent ones, vacation requests,
+// and while the preferences of next month are open, who has not handed them in yet
+function srvTabCount(me, t){
+  if(!portalAsCoord(me) || srvEditingFor()) return 0;
+  const st = portalLoad();
+  if(t === 'swaps') return (st.swaps || []).filter(s => s.status === 'offered' || (s.status === 'open' && s.urgent)).length + (st.openReqs || []).length;
+  if(t === 'vacations') return (st.vacations || []).filter(v => v.status === 'pending').length;
+  if(t === 'submissions'){ const mk = addMonths(monthKeyOf(srvToday()), 1), m = portalMonth(mk); if(!srvPrefsOpen(mk)) return 0;
+    return st.instructors.filter(p => p.active && !['coordinator', 'therapist'].includes(p.role) && !m.submitted[p.id]).length; }
+  return 0;
+}
 function srvRenderTab(me, body, t){
   const soon = what => { body.innerHTML = `<div class="pnote">${what} — עדיין בבנייה.</div>`; };
   if(portalAsCoord(me)){
@@ -7256,8 +7280,13 @@ async function srvRenderInbox(body){
   if(!body.textContent.trim()) body.innerHTML = '<div class="pnote">טוען…</div>';          // (not a blank screen while the messages come)
   const an = await sbPersonal.from('announcements').select('created_at,text').order('created_at', { ascending:false }).limit(10);
   if(!body.isConnected) return;                                   // (the person went to another screen while this one was loading)
-  body.innerHTML = `<h2 class="psec">העדכונים שלך</h2>${st.notices.length ? st.notices.map(n => `<div class="pannounce ${n.kind}"><small>${new Date(n.at).toLocaleString('he-IL', { dateStyle:'short', timeStyle:'short' })}${n.seen ? '' : ' · חדש'}</small><div>${pEsc(n.text)}</div></div>`).join('') : '<div class="pnote">אין עדכונים חדשים כרגע.</div>'}
-    <h2 class="psec">הודעות מהרכזת</h2>${(an.data || []).length ? an.data.map(a => `<div class="pannounce"><small>${new Date(a.created_at).toLocaleString('he-IL', { dateStyle:'short', timeStyle:'short' })}</small><div>${pEsc(a.text)}</div></div>`).join('') : '<div class="pnote">אין הודעות חדשות כרגע.</div>'}`;
+  // the coordinator's messages first; then her updates, the same text only once (with how many times), the latest 7 and the rest under "עוד" (Guy 2026-10-28)
+  const when = d => new Date(d).toLocaleString('he-IL', { dateStyle:'short', timeStyle:'short' });
+  const groups = []; st.notices.forEach(n => { const g = groups.find(x => x.text === n.text); if(g){ g.n++; if(!n.seen) g.fresh = true; } else groups.push({ text:n.text, at:n.at, kind:n.kind, n:1, fresh:!n.seen }); });
+  const one = g => `<div class="pannounce ${g.kind}"><small>${when(g.at)}${g.fresh ? ' · חדש' : ''}${g.n > 1 ? ` · ${g.n} פעמים` : ''}</small><div>${pEsc(g.text)}</div></div>`;
+  const ann = an.data || [];
+  body.innerHTML = `<h2 class="psec">הודעות מהרכזת</h2>${ann.length ? ann.map(a => `<div class="pannounce"><small>${when(a.created_at)}</small><div>${pEsc(a.text)}</div></div>`).join('') : '<div class="pnote">אין הודעות חדשות כרגע.</div>'}
+    <h2 class="psec">העדכונים שלך</h2>${groups.length ? groups.slice(0, 7).map(one).join('') + (groups.length > 7 ? `<details class="pfold" data-fold="inbox-more"><summary><span>עוד ${groups.length - 7} עדכונים</span></summary><div class="pfold-body">${groups.slice(7).map(one).join('')}</div></details>` : '') : '<div class="pnote">אין עדכונים חדשים כרגע.</div>'}`;
   st.notices.forEach(n => { if(!n.seen){ n.seen = true; } }); portalSave();             // (opening the inbox is reading it)
 }// ---- swaps: the three people's steps go through the database's own functions (it checks who may do what)
 async function srvReload(){ await srvFlush(); await srvLoad(); }
@@ -7443,6 +7472,7 @@ function srvRenderSchedule(body){
       ${notices.map(n => `<div class="pnotice ${n.kind}" role="status"><span>${pEsc(n.text)}</span><button type="button" class="btn small" data-notice-ok="${n.id}">הבנתי, תודה</button></div>`).join('')}
       </div></details>` : ''}
     ${isInstr ? '<div id="od-cards" class="od-cards"></div>' : ''}
+    ${next ? `<div class="pnext-line" id="pnext-line"><span class="pnext-badge">המשמרת הבאה שלך</span><span>${srvRowLine(next)}</span></div>` : ''}
     ${monthNavHtml(mk)}
     ${!m.published ? `<div class="pnote">${tx('sch_unpub')}</div>` : `
     <details class="pfold" data-fold="mine"${openFold('mine') ? ' open' : ''}>
@@ -7668,10 +7698,15 @@ async function srvRenderTeacherHours(body){
 async function srvOpenShiftList(mk){
   try { const r = await sbPersonal.rpc('open_shifts', { p_month:firstOf(mk) }); return r.error || !r.data ? [] : r.data; } catch(e){ return []; }
 }
+// by day, and in a day morning, noon, night; one small button on every row (Guy 2026-10-28)
 function srvOpenShiftsHtml(list){
-  return list.length ? list.map(o => `<div class="pmine-row"><span><b>${dayLabel(o.day)}</b> · ${SRV_SHIFT_WORD[o.shift]} <small>(חסר/ים ${o.need - o.have})</small></span>${o.req
-    ? `<span class="pmine-actions"><em class="pst pst-offered">${tx('open_waiting')}</em><button type="button" class="btn ghost small" data-ocancel="${o.req}">ביטול</button></span>`
-    : `<button type="button" class="btn small" data-ojoin="${o.day}|${o.shift}">אשמח להצטרף</button>`}</div>`).join('') : `<div class="pnote">${tx('open_none')}</div>`;
+  if(!list.length) return `<div class="pnote">${tx('open_none')}</div>`;
+  const ORD = { M:0, S:0, A:1, N:2, L:3 }, sorted = list.slice().sort((x, y) => x.day.localeCompare(y.day) || (ORD[x.shift] - ORD[y.shift]));
+  const days = [...new Set(sorted.map(o => o.day))];
+  return days.map(d => `<div class="popen-day"><div class="popen-date">${dayLabel(d)}</div>${sorted.filter(o => o.day === d).map(o => { const n = o.need - o.have;
+    return `<div class="pmine-row"><span>${SRV_SHIFT_WORD[o.shift]} <small>${n > 1 ? `חסרים ${n}` : `חסר ${n}`}</small></span>${o.req
+      ? `<span class="pmine-actions"><em class="pst pst-offered">${tx('open_waiting')}</em><button type="button" class="btn ghost small" data-ocancel="${o.req}">ביטול</button></span>`
+      : `<button type="button" class="btn ghost small" data-ojoin="${o.day}|${o.shift}">אשמח להצטרף</button>`}</div>`; }).join('')}</div>`).join('');
 }
 function srvWireOpenShifts(root, refresh){
   root.querySelectorAll('[data-ojoin]').forEach(b => b.addEventListener('click', async () => {
@@ -7922,9 +7957,10 @@ function csIssuesWire(body, mk){
   body.querySelectorAll('#cs-issues-next, #cs-issues-prev').forEach(b => b.addEventListener('click', () => { portalUi.csIssueOff = +b.dataset.off || 0; srvRenderCoordSchedule(body); }));          // (three on, three back)
   body.querySelectorAll('[data-live-done]').forEach(b => b.addEventListener('click', async () => {          // (a live note she handled another way: kept as handled, also on her other devices)
     b.disabled = true; const st = portalLoad();
-    const r = await sbPersonal.from('coordinator_flags').insert({ month:firstOf(mk), day:b.dataset.liveDone.split('|')[1] || null, kind:'handled', text:b.dataset.liveDone, resolved:true }).select('month,text').single();
+    const r = await sbPersonal.from('coordinator_flags').insert({ month:firstOf(mk), day:b.dataset.liveDone.split('|')[1] || null, kind:'handled', text:b.dataset.liveDone, resolved:true }).select('id,month,text').single();
     if(r.error){ b.disabled = false; toast('העדכון נכשל'); return; }
     st.flagsDone = (st.flagsDone || []).concat(r.data); srvRenderCoordSchedule(body);
+    if(typeof csUndo === 'function') csUndo('סומן כטופל', body, async () => { const d = await sbPersonal.from('coordinator_flags').delete().eq('id', r.data.id); if(!d.error) st.flagsDone = (st.flagsDone || []).filter(f => f.id !== r.data.id); return !d.error; });
   }));
 }
 
@@ -8056,6 +8092,20 @@ async function asgWrite(mk, op, id, data, news = true){
   if(op === 'update') return sbPersonal.from('assignment').update(data).eq('id', id);
   return sbPersonal.from('assignment').delete().eq('id', id);
 }
+// "ביטול" for a moment after removing, moving or "טופל" — only when she switched it on in the gear ("מתקדם"; Guy 2026-10-28). Off: as before
+const csUndoOn = () => { try { return localStorage.getItem('ramzor-cs-undo') === '1'; } catch(e){ return false; } };
+function csUndo(msg, body, undo){
+  if(!csUndoOn()) return false;
+  toastUndo(msg, async () => { let ok = false; try { ok = await undo(); } catch(e){ ok = false; } await srvReloadSafe(); await srvLoadCoord(); if(body && body.isConnected) srvRenderCoordSchedule(body); return ok; });
+  return true;
+}
+// the way back of one change (a published month: its waiting change is dropped; otherwise the old values are written again)
+async function csUndoRow(mk, r, removed){
+  if(csPendingOn(mk) && !(r.pending === 'insert' && removed)){ const x = await sbPersonal.rpc('sched_pending_write', { p_op:'revert', p_target:r.id, p_data:null }); return !x.error; }
+  const old = { month:firstOf(monthKeyOf(r.day)), staff_id:r.staff, day:r.day, shift:r.shift, from_time:r.from, to_time:r.to, flags:r.flags || [] };
+  const x = removed ? await asgWrite(mk, 'insert', null, old) : await asgWrite(mk, 'update', r.id, old);
+  return !x.error;
+}
 // at her first change of a published month: what happens to it (once on this device)
 function csFirstPendingNote(){
   try { if(localStorage.getItem('ramzor-pending-told') === '1') return; localStorage.setItem('ramzor-pending-told', '1'); } catch(e){ return; }
@@ -8121,7 +8171,7 @@ function srvRenderCoordSchedule(body){
     ${monthNavHtml(mk, `<span class="pchip ${m.published ? 'lv-yes' : 'lv-avoid'}">${has ? SRV_STATUS_WORD[m.status] : 'אין סידור'}</span>`)}
     ${srvBuildBoxHtml(mk)}
     ${has ? `<div class="pactions">
-      <button type="button" class="btn" id="cs-publish"${m.published ? ' disabled' : ''}>${m.published ? 'הסידור פורסם' : 'פרסום הסידור'}</button>
+      ${m.published ? '' : '<button type="button" class="btn" id="cs-publish">פרסום הסידור</button>'}
       <button type="button" class="btn ghost" id="cs-xlsx">ייצוא לאקסל</button>
       <button type="button" class="btn ghost" id="cs-print">הדפסה / PDF</button>
       ${m.published ? '<button type="button" class="btn ghost" id="cs-openday">פתיחת יום לשיבוץ</button>' : ''}
@@ -8187,8 +8237,8 @@ function srvRenderCoordSchedule(body){
   });
   body.querySelectorAll('[data-flag-done]').forEach(b => b.addEventListener('click', async () => {
     b.disabled = true;
-    const u = await sbPersonal.from('coordinator_flags').update({ resolved:true }).eq('id', b.dataset.flagDone);
-    if(u.error) toast('העדכון נכשל'); else { st.flags = st.flags.filter(f => f.id !== b.dataset.flagDone); }
+    const id = b.dataset.flagDone, u = await sbPersonal.from('coordinator_flags').update({ resolved:true }).eq('id', id);
+    if(u.error) toast('העדכון נכשל'); else { st.flags = st.flags.filter(f => f.id !== id); csUndo('סומן כטופל', body, async () => !(await sbPersonal.from('coordinator_flags').update({ resolved:false }).eq('id', id)).error); }
     srvRenderCoordSchedule(body);
   }));
   const pub = document.getElementById('cs-publish');
@@ -8382,7 +8432,8 @@ function srvOpenSlot(mk, key, body){
       const d = await asgWrite(monthKeyOf(r.day), 'delete', r.id);
       if(d.error){ b.disabled = false; toast('ההסרה נכשלה'); return; }
       srvNoteRemoved(r);
-      srvDropRow(portalLoad(), r.id); draw(); srvRenderCoordSchedule(body); toast(`${nm(r.staff)} הוסר/ה מהמשמרת.` + csTold(monthKeyOf(r.day)));
+      srvDropRow(portalLoad(), r.id); draw(); srvRenderCoordSchedule(body);
+      { const msg = `${nm(r.staff)} הוסר/ה מהמשמרת.` + csTold(monthKeyOf(r.day)); if(!csUndo(msg, body, () => csUndoRow(monthKeyOf(r.day), r, true))) toast(msg); }
       srvReloadSafe().then(() => srvLoadCoord()).then(() => { draw(); if(body.isConnected) srvRenderCoordSchedule(body); }).catch(() => {});
     }));
     // replacing: another instructor takes this row (the same hours); the list is ordered by her wish for this shift, then by the priority list
@@ -8448,7 +8499,8 @@ async function srvMoveToSlot(mk, key, rowId, body){
   if(u.error){ toast('ההעברה נכשלה'); return; }
   srvNoteRemoved(r); srvForgetRemoved(r.staff, date, code);
   srvDropRow(st, r.id); srvAddRow(st, { id:r.id, staff_id:r.staff, day:date, shift:code, from_time:sh.start, to_time:sh.end, flags });
-  srvRenderCoordSchedule(body); toast(`${nm} הועבר/ה ל${sh.label} ${dayLabel(date)}.` + csTold(was));
+  srvRenderCoordSchedule(body);
+  { const msg = `${nm} הועבר/ה ל${sh.label} ${dayLabel(date)}.` + csTold(was); if(!csUndo(msg, body, () => csUndoRow(was, r, false))) toast(msg); }
   srvReloadSafe().then(() => srvLoadCoord()).then(() => { if(body.isConnected && portalServerOn) srvRenderCoordSchedule(body); }).catch(() => {});
 }
 // a service girl or a teacher taken off one shift (the × by her name, with a question first: Guy 2026-10-26). When her hours reach two shifts
@@ -8471,7 +8523,8 @@ async function srvRemoveOther(rowId, sid, body){
   if(u.error){ toast('ההסרה נכשלה'); return; }
   srvDropRow(st, r.id);
   if(choice === 'part') srvAddRow(st, { id:r.id, staff_id:r.staff, day:r.day, shift:keep.shift, from_time:keep.from_time, to_time:keep.to_time, flags:r.flags || [] });
-  srvRenderCoordSchedule(body); toast((choice === 'part' ? `${nm} הוסרה מ${sh.label || 'המשמרת'}.` : `${nm} הוסרה מהסידור ביום הזה.`) + csTold(monthKeyOf(r.day)));
+  srvRenderCoordSchedule(body);
+  { const msg = (choice === 'part' ? `${nm} הוסרה מ${sh.label || 'המשמרת'}.` : `${nm} הוסרה מהסידור ביום הזה.`) + csTold(monthKeyOf(r.day)); if(!csUndo(msg, body, () => csUndoRow(monthKeyOf(r.day), r, choice !== 'part'))) toast(msg); }
   srvReloadSafe().then(() => srvLoadCoord()).then(() => { if(body.isConnected && portalServerOn) srvRenderCoordSchedule(body); }).catch(() => {});
 }
 // while a name is dragged the page can still be scrolled (Guy): with the mouse wheel, and by holding the name near the top or the bottom of the screen
@@ -8776,8 +8829,12 @@ function srvRenderCoordVacations(body){
     ${rest.length ? rest.map(v => `<div class="pmine-row"><span>${line(v)}</span><em class="pst pst-${v.status === 'approved' ? 'approved' : 'rejected'}">${SRV_VAC_STATUS[v.status]}</em></div>`).join('') : '<div class="pnote">אין.</div>'}`;
   body.querySelectorAll('[data-vac-ok], [data-vac-no]').forEach(b => b.addEventListener('click', async () => {
     const approve = !!b.dataset.vacOk, id = b.dataset.vacOk || b.dataset.vacNo, v = (st.vacations || []).find(x => x.id === id), was = v && v.status;
+    // shifts on those days: shown before the approval; in a published month they open for a replacement at once (Guy 2026-10-28, scheduling-v45.sql)
+    const clash = approve && v ? st.rows.filter(r => r.staff === v.staff_id && r.day >= v.from_day && r.day <= v.to_day && r.day >= srvToday()).sort((a, b2) => a.day.localeCompare(b2.day)) : [];
+    const pubClash = clash.filter(r => portalMonth(monthKeyOf(r.day)).published);
+    if(clash.length && !(await confirmSheet({ title:'לאשר את החופשה?', text:`ל${nameOf(v.staff_id)} יש ${clash.length === 1 ? 'משמרת אחת' : clash.length + ' משמרות'} בימים האלה: ${clash.map(r => `${dayLabel(r.day)} ${SRV_SHIFT_WORD[r.shift] || ''}`).join(', ')}.${pubClash.length ? ' אחרי האישור הן ייפתחו להחלפה, ומי שסימן "כן" או "יכול" ופנוי באותו יום יקבל קריאה לעזרה.' : ''}${pubClash.length < clash.length ? ' בחודש שעוד לא פורסם הן יופיעו בסידור בין הדברים שדורשים תשומת לב.' : ''}`, okLabel:'כן, לאשר', cancelLabel:'חזרה' }))) return;
     if(v) v.status = approve ? 'approved' : 'rejected';          // (the answer shows at once; the server is asked right after, and the screen goes back if that fails)
-    srvRenderCoordVacations(body); toast(approve ? 'החופשה אושרה, והימים נכנסו כהיעדרות' : 'הבקשה נדחתה');
+    srvRenderCoordVacations(body); toast(approve ? `החופשה אושרה, והימים נכנסו כהיעדרות.${pubClash.length ? ' המשמרות בימים האלה נפתחו להחלפה.' : ''}` : 'הבקשה נדחתה', pubClash.length ? 5000 : 0);
     const r = await sbPersonal.rpc('decide_vacation', { p_id:id, p_approve:approve });
     if(r.error){ if(v) v.status = was; toast('הפעולה לא הצליחה, הבקשה חזרה לרשימה'); if(body.isConnected) srvRenderCoordVacations(body); return; }
     srvReloadSafe().then(() => { if(body.isConnected && portalServerOn) srvRenderCoordVacations(body); });
@@ -9091,6 +9148,9 @@ function fbCounts(rows, mk){
 const fbRowShiftId = r => r.shift === 'S' ? 'm' : ({ M:'m', A:'e', N:'n', L:'l' })[r.shift];
 
 // the whole picture for one person and one month
+// "חסרה משמרת אחת" / "חסרות 2 משמרות" (not "חסרות 1 משמרות": Guy 2026-10-28)
+const fbMissHe = (n, what) => n === 1 ? `חסרה משמרת${what} אחת` : `חסרות ${n} משמרות${what}`;
+const fbMissAr = (n, what) => n === 1 ? `تنقص مناوبة واحدة${what}` : `تنقص ${n} مناوبات${what}`;
 function srvFeedbackFor(p, mk, input){
   const { prefs, rows, profile, goal } = input, gx = (m, f) => fbGx(profile, m, f), V = input.voice || ((typeof arOn === 'function' && arOn()) ? 'ar' : portalVoice()), T = (key, ...a) => txFor(V, key, ...a), fem = !(profile && profile.female === false);
   const ar = V === 'ar', L = (he, a) => ar ? a : he, DL = d => ar ? arWords(dayLabel(d)) : dayLabel(d);          // (Arabic: the person's own language)
@@ -9129,11 +9189,11 @@ function srvFeedbackFor(p, mk, input){
   const minGaps = [];
   if(min.own){
     const m = min.own;
-    c.perWeek.forEach(w => { const all = w.mid + w.night; if(all < m.mid + m.night) minGaps.push(L(`בשבוע של ${dayLabel(w.week)} חסרות ${m.mid + m.night - all} משמרות`, `في أسبوع ${DL(w.week)} تنقص ${m.mid + m.night - all} مناوبات`)); else if(w.night < m.night) minGaps.push(L(`בשבוע של ${dayLabel(w.week)} חסר לילה`, `في أسبوع ${DL(w.week)} تنقص ليلة`)); });
+    c.perWeek.forEach(w => { const all = w.mid + w.night; if(all < m.mid + m.night) minGaps.push(L(`בשבוע של ${dayLabel(w.week)} ${fbMissHe(m.mid + m.night - all, '')}`, `في أسبوع ${DL(w.week)} ${fbMissAr(m.mid + m.night - all, '')}`)); else if(w.night < m.night) minGaps.push(L(`בשבוע של ${dayLabel(w.week)} חסר לילה`, `في أسبوع ${DL(w.week)} تنقص ليلة`)); });
     if(c.weekend < m.weekend) minGaps.push(L(`במשמרות סופ"ש יש ${c.weekend} מתוך ${m.weekend}`, `في مناوبات نهاية الأسبوع يوجد ${c.weekend} من ${m.weekend}`));
   } else if(min.total != null && !(profile && profile.only_long)){
     const nights = !(profile && (profile.no_nights || profile.only_long || profile.latest_end));
-    c.perWeek.forEach(w => { if(w.mid < 2) minGaps.push(L(`בשבוע של ${dayLabel(w.week)} חסרות ${2 - w.mid} משמרות אמצע שבוע`, `في أسبوع ${DL(w.week)} تنقص ${2 - w.mid} مناوبات منتصف الأسبوع`)); if(nights && w.night < 1) minGaps.push(L(`בשבוע של ${dayLabel(w.week)} חסרה משמרת לילה`, `في أسبوع ${DL(w.week)} تنقص مناوبة ليلية`)); });
+    c.perWeek.forEach(w => { if(w.mid < 2) minGaps.push(L(`בשבוע של ${dayLabel(w.week)} ${fbMissHe(2 - w.mid, ' אמצע שבוע')}`, `في أسبوع ${DL(w.week)} ${fbMissAr(2 - w.mid, ' منتصف الأسبوع')}`)); if(nights && w.night < 1) minGaps.push(L(`בשבוע של ${dayLabel(w.week)} חסרה משמרת לילה`, `في أسبوع ${DL(w.week)} تنقص مناوبة ليلية`)); });
     if(c.weekend < 4) minGaps.push(L(`במשמרות סופ"ש יש ${c.weekend} מתוך 4`, `في مناوبات نهاية الأسبوع يوجد ${c.weekend} من 4`));
   } else if(profile && profile.only_long && !mine.some(r => r.shift === 'L')) minGaps.push(L('עוד לא שובצת לסופ"ש ארוך', 'لم تُجدول/ي بعد لنهاية أسبوع طويلة'));
   const asked = honored.length + unmet.length, name = p.first;
@@ -9209,7 +9269,7 @@ const VOICES = {
   // ---- the schedule tab
   sch_unpub:  { warm:() => 'הסידור לחודש הזה עוד בהכנה. ברגע שהוא יפורסם נעדכן אותך כאן ובמייל.', light:() => 'הסידור עוד בתנור. כשהוא יצא נעדכן כאן ובמייל.', brief:() => 'הסידור טרם פורסם.' },
   sch_none:   { warm:() => 'בחודש הזה עדיין לא שובצו לך משמרות. אם זה לא מה שציפיתם, נשמח לשמוע ולעזור.', light:() => 'החודש אין לך משמרות (בינתיים). אם זה לא מה שציפית, תגיד לנו ונבדוק.', brief:() => 'אין משמרות החודש.' },
-  sch_help:   { warm:() => 'צריך לשנות משהו? לחצו על "בקשת החלפה": שם אפשר לבקש החלפה, או לדווח "לא יכול/ה להגיע" אם קרה משהו. בקשת החלפה מפרסמת את המשמרת בלוח ההחלפות, ועמיתים יכולים להציע לעזור. אי הגעה מעדכנת את הרכזת ופותחת את המשמרת להחלפה מיד. אנחנו כאן בשבילכם.', light:() => 'צריך שינוי? "בקשת החלפה" מציע החלפה (עמיתים יוכלו להציל את המצב) או דיווח שהפעם אי אפשר להגיע (הרכזת מקבלת הודעה והמשמרת נפתחת מיד). קורה לכולם.', brief:() => 'שינוי: "בקשת החלפה".' },
+  sch_help:   { warm:() => 'צריך שינוי? ב"בקשת החלפה" מבקשים החלפה או מדווחים "לא יכול/ה להגיע". המשמרת נפתחת לעמיתים, והרכזת מעודכנת.', light:() => 'צריך שינוי? "בקשת החלפה" מציע החלפה (עמיתים יוכלו להציל את המצב) או דיווח שהפעם אי אפשר להגיע (הרכזת מקבלת הודעה והמשמרת נפתחת מיד). קורה לכולם.', brief:() => 'שינוי: "בקשת החלפה".' },
   change_title:{ warm:() => 'מה נוכל לעשות בשבילך?', light:() => 'מה משנים?', brief:() => 'סוג השינוי' },
   change_swap_sub:{ warm:() => 'מפרסמים את המשמרת בלוח ההחלפות, ועמיתים יכולים להציע לעזור', light:() => 'המשמרת עולה ללוח, ומישהו מציל את המצב', brief:() => 'פרסום בלוח ההחלפות' },
   change_cant_sub:{ warm:() => 'מעדכנים את הרכזת ופותחים את המשמרת להחלפה מיד', light:() => 'הרכזת מקבלת הודעה והמשמרת נפתחת מיד. קורה לכולם', brief:() => 'הרכזת מעודכנת, המשמרת נפתחת' },
@@ -9234,7 +9294,7 @@ const VOICES = {
   cancel_ok:  { warm:() => 'ביטלנו את הבקשה', light:() => 'הבקשה בוטלה', brief:() => 'בוטל' },
   cancel_fail:{ warm:() => 'לא הצלחנו לבטל כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'הביטול לא עבר. עוד ניסיון בעוד רגע?', brief:() => 'הביטול נכשל. נסו שוב' },
   // ---- vacation
-  vac_guide:  { warm:() => 'כדי שנצליח לתכנן את הצוות ולאשר את החופשה בקלות, נשמח לקבל בקשה של שבוע עד שלושה שבועות לפחות 30 יום מראש, ובקשה של שלושה שבועות ומעלה לפחות חודשיים מראש. אחרי שהרכזת מאשרת, הימים נכנסים אוטומטית כהיעדרות. (ליום או יומיים אפשר פשוט לסמן "היעדרות" בהעדפות.)', light:() => 'חופש זה חשוב, ותכנון זה עוד יותר: בקשה של שבוע עד שלושה שבועות כדאי להגיש 30 יום מראש, ושל שלושה שבועות ומעלה חודשיים מראש. אחרי שהרכזת מאשרת, הימים נכנסים לבד כהיעדרות.', brief:() => 'חופשה של 1-3 שבועות: 30 יום מראש. מעל 3 שבועות: חודשיים מראש. אחרי אישור הרכזת הימים נרשמים.' },
+  vac_guide:  { warm:() => 'חופשה של שבוע עד שלושה שבועות: נשמח לבקשה 30 יום מראש. יותר משלושה שבועות: חודשיים מראש. אחרי שהרכזת מאשרת, הימים נכנסים לבד כהיעדרות. ליום או יומיים אפשר פשוט לסמן "לא" בהעדפות.', light:() => 'חופש זה חשוב, ותכנון זה עוד יותר: בקשה של שבוע עד שלושה שבועות כדאי להגיש 30 יום מראש, ושל שלושה שבועות ומעלה חודשיים מראש. אחרי שהרכזת מאשרת, הימים נכנסים לבד כהיעדרות.', brief:() => 'חופשה של 1-3 שבועות: 30 יום מראש. מעל 3 שבועות: חודשיים מראש. אחרי אישור הרכזת הימים נרשמים.' },
   vac_hint:   { warm:(d, k) => `זו חופשה של ${d} ימים. בדרך כלל כדאי להגיש חופשה כזו ${k}. אפשר לשלוח גם עכשיו, והרכזת תעשה כל מה שאפשר.`, light:(d, k) => `${d} ימים, וואו! בדרך כלל מגישים חופשה כזו ${k}, אבל אפשר לשלוח גם עכשיו והרכזת תעשה מאמץ.`, brief:(d, k) => `${d} ימים. מומלץ להגיש ${k}.` },
   vac_sent:   { warm:() => 'הבקשה נשלחה, תודה! הרכזת תחזור אליכם', light:() => 'הבקשה בדרך! הרכזת תחזור אליכם', brief:() => 'הבקשה נשלחה' },
   vac_fail:   { warm:() => 'לא הצלחנו לשלוח כרגע. אפשר לנסות שוב בעוד רגע', light:() => 'הבקשה לא יצאה. עוד ניסיון בעוד רגע?', brief:() => 'השליחה נכשלה. נסו שוב' },
@@ -9260,14 +9320,14 @@ const VOICES = {
   fb_close:   { warm:(g) => `אם משהו לא יושב לך טוב, אפשר לבקש החלפה בפורטל או לדבר עם הרכזת. אנחנו כאן בשבילך, ${g}.`, light:(g) => `אם משהו לא יושב טוב, אפשר לבקש החלפה בפורטל או לדבר עם הרכזת. ${g}!`, brief:() => `לשינוי: בקשת החלפה בפורטל או הרכזת.` },
   fb_thanks:  { warm:(f) => f ? 'תודה שאת חלק מהצוות' : 'תודה שאתה חלק מהצוות', light:(f) => f ? 'מי היה מאמין שיהיה צוות כל כך טוב בלעדייך' : 'מי היה מאמין שיהיה צוות כל כך טוב בלעדיך', brief:() => '' },
   fb_g_min_ok:{ warm:(t, c) => `ביקשת ${t}, וקיבלת ${c} משמרות, בדיוק במקום שרצית. תודה על השיתוף!`, light:(t, c) => `ביקשת ${t}, וקיבלת ${c} משמרות. בול!`, brief:(t, c) => `יעד: מינימום. התקבלו ${c} משמרות. הושג.` },
-  fb_g_min_low:{ warm:(t, c) => `ביקשת ${t}. הפעם קיבלת ${c} משמרות, קצת מתחת למינימום, וזה לא קשור אלייך. נשמח להשלים את זה יחד.`, light:(t, c) => `ביקשת ${t}. קיבלת ${c} משמרות, קצת פחות מהמינימום, וזה לא באשמתך. נסדר יחד.`, brief:(t, c) => `יעד: מינימום. התקבלו ${c}, מתחת למינימום. נשלים מול הרכזת.` },
+  fb_g_min_low:{ warm:(t, c) => `ביקשת ${t}. הפעם קיבלת ${c} משמרות, קצת מתחת למינימום, וזה לא בגללך. נשמח להשלים את זה יחד.`, light:(t, c) => `ביקשת ${t}. קיבלת ${c} משמרות, קצת פחות מהמינימום, וזה לא באשמתך. נסדר יחד.`, brief:(t, c) => `יעד: מינימום. התקבלו ${c}, מתחת למינימום. נשלים מול הרכזת.` },
   fb_g_min_high:{ warm:(t, c) => `ביקשת ${t}. הפעם קיבלת ${c} משמרות, יותר מהמינימום, כי היינו צריכים עוד ידיים. אנחנו מודים לך על הגמישות.`, light:(t, c) => `ביקשת ${t}. קיבלת ${c} משמרות, יותר מהמינימום, כי חיפשנו עוד ידיים. תודה על הגמישות!`, brief:(t, c) => `יעד: מינימום. התקבלו ${c}, מעל המינימום (השלמת צוות).` },
   fb_g_max_ok:{ warm:(t, c) => `ביקשת ${t}, וקיבלת ${c} משמרות. תודה על הנכונות!`, light:(t, c) => `ביקשת ${t}, וקיבלת ${c} משמרות. עבודה יפה!`, brief:(t, c) => `יעד: מקסימום. התקבלו ${c} משמרות.` },
   fb_g_max_no:{ warm:(t, c) => `ביקשת ${t}. ניסינו לתת לך כמה שיותר, והפעם הגענו ל-${c} משמרות. לא הצלחנו לתת יותר בלי לפגוע בכללים ובצוות.`, light:(t, c) => `ביקשת ${t}. התאמצנו, והגענו ל-${c} משמרות. יותר מזה היה פוגע בכללים ובצוות.`, brief:(t, c) => `יעד: מקסימום. התקבלו ${c}. מעבר לכך לא היה אפשרי.` },
   fb_g_wk_ok: { warm:(t) => `ביקשת ${t}, ובכל שבוע קיבלת 4 או 5 משמרות. נהדר!`, light:(t) => `ביקשת ${t}, ובכל שבוע קיבלת 4 או 5. מושלם!`, brief:() => `יעד 4-5 בשבוע: הושג.` },
   fb_g_wk_no: { warm:(t, w, x) => `ביקשת ${t}. ניסינו, ובשבוע של ${w} יצא ${x}. לא תמיד הצלחנו להתאים את זה, ותודה על ההבנה.`, light:(t, w, x) => `ביקשת ${t}. בשבוע של ${w} יצא ${x}. לא תמיד זה מסתדר, ותודה על ההבנה.`, brief:(t, w, x) => `יעד 4-5 בשבוע: לא הושג (${w}: ${x}).` },
   fb_min_ok:  { warm:(t) => `וגם: עמדת במינימום של החודש (${t}). תודה על ההשקעה!`, light:(t) => `וגם עמדת במינימום של החודש (${t}). כל הכבוד!`, brief:() => 'המינימום הושלם.' },
-  fb_min_gap: { warm:(t, g) => `לגבי המינימום (${t}): נשארו כמה משמרות שלא הצלחנו להשלים בשבילך:\n${g}\nזה לא קשור אלייך, ואין צורך להילחץ. אם נוח לך, אפשר לפנות לרכזת ונמצא יחד פתרון.`, light:(t, g) => `לגבי המינימום (${t}): כמה משמרות עוד לא השלמנו:\n${g}\nזה לא קשור אלייך, וגם אין סיבה להילחץ. אפשר לפנות לרכזת ולסדר יחד.`, brief:(t, g) => `המינימום לא הושלם:\n${g}\nלפנייה: הרכזת.` }
+  fb_min_gap: { warm:(t, g) => `לגבי המינימום (${t}): נשארו כמה משמרות שלא הצלחנו להשלים בשבילך:\n${g}\nזה לא בגללך, ואין צורך להילחץ. אם נוח לך, אפשר לפנות לרכזת ונמצא יחד פתרון.`, light:(t, g) => `לגבי המינימום (${t}): כמה משמרות עוד לא השלמנו:\n${g}\nזה לא בגללך, וגם אין סיבה להילחץ. אפשר לפנות לרכזת ולסדר יחד.`, brief:(t, g) => `המינימום לא הושלם:\n${g}\nלפנייה: הרכזת.` }
 };
 // the voice of the person now: the setting, else what the browser remembers, else the warm one
 function portalVoice(){
@@ -9350,6 +9410,8 @@ function openPortalSettings(){
     ${Object.keys(COORD_MAIL).map(k => `<h3 class="psec">${COORD_MAIL[k]}</h3><div class="pchoice wrap"><button type="button" class="${srv.mailOff.includes(k) ? '' : 'on'}" data-mail-key="${k}" data-mail-on="1">גם במייל</button><button type="button" class="${srv.mailOff.includes(k) ? 'on' : ''}" data-mail-key="${k}" data-mail-on="0">רק בפורטל</button></div>`).join('')}`) : ''}
     ${portalAsCoord(portalMe()) ? fold('adv', 'מתקדם', [csShowOk() ? W('✓ מוצג', '✓') : '', waMode() === 'app' ? W('וואטסאפ באפליקציה', 'واتساب في التطبيق') : W('וואטסאפ בדפדפן', 'واتساب في المتصفح')].filter(Boolean).join(' · '), `<h3 class="psec">סימון ✓ ליד מי שאישר/ה ידנית</h3>
     <div class="pchoice wrap"><button type="button" class="${csShowOk() ? '' : 'on'}" data-set-ok="0">רק ירוק, בלי ✓</button><button type="button" class="${csShowOk() ? 'on' : ''}" data-set-ok="1">ירוק עם ✓</button></div>
+    <h3 class="psec">הודעת "ביטול" קטנה אחרי הסרה, העברה או "טופל"</h3>
+    <div class="pchoice wrap"><button type="button" class="${csUndoOn() ? '' : 'on'}" data-set-undo="0">בלי</button><button type="button" class="${csUndoOn() ? 'on' : ''}" data-set-undo="1">עם הודעת ביטול</button></div>
     <h3 class="psec">שיחות וואטסאפ נפתחות</h3>
     <div class="pchoice wrap"><button type="button" class="${waMode() === 'app' ? 'on' : ''}" data-set-wa="app">באפליקציית וואטסאפ במחשב</button><button type="button" class="${waMode() === 'app' ? '' : 'on'}" data-set-wa="web">בדפדפן</button></div>
     <div class="pnote">באפליקציה לא נפתחות לשוניות בדפדפן. צריך שאפליקציית וואטסאפ תהיה מותקנת במחשב הזה. הבחירות כאן נשמרות במכשיר הזה.</div>`) : ''}
@@ -9386,6 +9448,11 @@ function openPortalSettings(){
   sh.querySelectorAll('[data-set-ok]').forEach(b => b.addEventListener('click', () => {          // ("✓ אישר/ה": by default only green; the ✓ is an advanced choice, Guy 2026-10-26)
     try { localStorage.setItem('ramzor-show-ok', b.dataset.setOk); } catch(e){}
     sh.querySelectorAll('[data-set-ok]').forEach(x => x.classList.toggle('on', x === b)); portalRefresh();
+  }));
+  sh.querySelectorAll('[data-set-undo]').forEach(b => b.addEventListener('click', () => {          // (the small "ביטול" message: Guy 2026-10-28)
+    try { localStorage.setItem('ramzor-cs-undo', b.dataset.setUndo); } catch(e){}
+    sh.querySelectorAll('[data-set-undo]').forEach(x => x.classList.toggle('on', x === b));
+    toast(b.dataset.setUndo === '1' ? 'אחרי הסרה, העברה או "טופל" תופיע לרגע הודעה עם "ביטול"' : 'בלי הודעת ביטול');
   }));
   sh.querySelectorAll('[data-set-wa]').forEach(b => b.addEventListener('click', () => {          // (WhatsApp in the computer's app: no browser tab each time, Guy 2026-10-26)
     try { localStorage.setItem('ramzor-wa-mode', b.dataset.setWa); } catch(e){}
@@ -10388,7 +10455,7 @@ const AR_VOICES = {
   pick_setting:() => 'عند تفعيل هذا الخيار يظهر في كل نهاية أسبوع زر صغير "واحدة فقط من هذه". تختارون عدة نهايات أسبوع تناسبكم، والنظام يجدولكم في واحدة منها فقط.',
   sch_unpub:() => 'جدول هذا الشهر ما زال قيد التحضير. حالما يُنشر سنبلغك هنا وبالبريد الإلكتروني.',
   sch_none:() => 'في هذا الشهر لم تُجدول لك مناوبات بعد. إذا لم يكن هذا ما توقعتم، يسعدنا أن نسمع ونساعد.',
-  sch_help:() => 'تحتاجون تغيير شيء؟ اضغطوا على "طلب استبدال": هناك يمكن طلب استبدال، أو الإبلاغ "لا أستطيع الحضور" إذا حدث شيء. طلب الاستبدال ينشر المناوبة في لوحة الاستبدالات، ويمكن للزملاء أن يعرضوا المساعدة. عدم الحضور يُبلغ المركّزة ويفتح المناوبة للاستبدال فورًا. نحن هنا من أجلكم.',
+  sch_help:() => 'تحتاجون تغييرًا؟ في "طلب استبدال" يمكن طلب استبدال أو الإبلاغ "لا أستطيع الحضور". تُفتح المناوبة للزملاء، وتُبلَّغ المركّزة.',
   change_title:() => 'ماذا نستطيع أن نفعل من أجلك؟',
   change_swap_sub:() => 'ننشر المناوبة في لوحة الاستبدالات، ويمكن للزملاء أن يعرضوا المساعدة',
   change_cant_sub:() => 'نبلغ المركّزة ونفتح المناوبة للاستبدال فورًا',
@@ -10411,7 +10478,7 @@ const AR_VOICES = {
   take_fail:() => 'لم ننجح الآن، ربما المناوبة أُخذت. شكرًا على الاستعداد!',
   cancel_ok:() => 'ألغينا الطلب',
   cancel_fail:() => 'لم ننجح في الإلغاء الآن. يمكن المحاولة مرة أخرى بعد لحظة',
-  vac_guide:() => 'لكي ننجح في تخطيط الطاقم والموافقة على الإجازة بسهولة، يسعدنا استلام طلب إجازة من أسبوع حتى ثلاثة أسابيع قبل 30 يومًا على الأقل، وطلب ثلاثة أسابيع فأكثر قبل شهرين على الأقل. بعد موافقة المركّزة تدخل الأيام تلقائيًا كغياب. (ليوم أو يومين يمكن ببساطة اختيار "غياب" في التفضيلات.)',
+  vac_guide:() => 'إجازة من أسبوع حتى ثلاثة أسابيع: يسعدنا استلام الطلب قبل 30 يومًا. أكثر من ثلاثة أسابيع: قبل شهرين. بعد موافقة المركّزة تدخل الأيام تلقائيًا كغياب. ليوم أو يومين يمكن ببساطة اختيار "لا" في التفضيلات.',
   vac_hint:(d, k) => `هذه إجازة من ${d} أيام. عادة من الأفضل تقديم إجازة كهذه ${A(k)}. يمكن الإرسال الآن أيضًا، والمركّزة ستفعل كل ما بوسعها.`,
   vac_sent:() => 'تم إرسال الطلب، شكرًا! المركّزة ستعود إليكم',
   vac_fail:() => 'لم ننجح في الإرسال الآن. يمكن المحاولة مرة أخرى بعد لحظة',
@@ -10537,7 +10604,8 @@ const AR_SENT = [
 const AR_INLINE = [
   [/אפשר להגיש עד (\d{1,2}\/\d{1,2})(?: בשעה (\d{1,2}:\d{2}))?/g, (m, d, h) => `يمكن التقديم حتى ${d}${h ? ' الساعة ' + h : ''}`],
   [/\((חופשה|מחלה|מילואים|היעדרות|לידה|אחר)\)/g, (m, r) => `(${AR[r] || r})`],
-  [/(^|\s)נשמר ✓/g, (m, s) => `${s}تم الحفظ ✓`]
+  [/(^|\s)נשמר ✓/g, (m, s) => `${s}تم الحفظ ✓`],
+  [/ · (\d+) פעמים/g, (m, n) => ` · ${n} مرات`], [/ · חדש/g, () => ' · جديد']
 ];
 // one letter in a calendar: a day of the week in the head row, a shift in a day
 const AR_DOW_LETTER = { 'א':'ح', 'ב':'ن', 'ג':'ث', 'ד':'ر', 'ה':'خ', 'ו':'ج', 'ש':'س' };
@@ -10545,6 +10613,8 @@ const AR_SHIFT_LETTER = { 'ב':'ص', 'צ':'ظ', 'ל':'ل', 'ע':'م' };
 // texts with details inside (numbers, dates, names): [pattern, the Arabic]
 const AR_RX = [
   [/^חסר (\d+)$/, (m, n) => `ينقص ${n}`],
+  [/^עוד (\d+) עדכונים$/, (m, n) => `${n} تحديثات أخرى`],
+  [/^חסרים (\d+)$/, (m, n) => `ينقص ${n}`],
   [/^במוקד: (.+)$/, (m, g) => `في التركيز: ${g}`],
   [/^גרסה (\d+)(.*)$/, (m, v, r) => `نسخة ${v}${r}`],
   [/^מטרות נוספות \((\d+)\)$/, (m, n) => `أهداف إضافية (${n})`],
@@ -10594,7 +10664,7 @@ Object.assign(AR, {
   'הקלידו את הקוד':'اكتبوا الرمز', 'שליחת קוד חדש':'إرسال رمز جديد', 'נשלח קוד חדש':'أُرسل رمز جديد', 'בחירת סיסמה אישית':'اختيار كلمة مرور شخصية',
   'מהפעם הבאה נכנסים עם המייל והסיסמה הזו, בלי לחכות לקוד. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.':'من المرة القادمة يكون الدخول بالبريد الإلكتروني وكلمة المرور هذه، بدون انتظار رمز. إذا نُسيت، يمكن دائمًا الحصول على رمز للبريد الإلكتروني.',
   'סיסמה (לפחות 8 תווים)':'كلمة المرور (8 أحرف على الأقل)', 'שוב, לאימות':'مرة أخرى، للتأكيد', 'שמירה וכניסה':'حفظ ودخول',
-  'רוצה לבחור סיסמה חדשה?':'هل تريد/ين اختيار كلمة مرور جديدة؟', 'לא עכשיו':'ليس الآن', 'שינוי סיסמה':'تغيير كلمة المرور', 'סיסמה חדשה (לפחות 8 תווים)':'كلمة مرور جديدة (8 أحرف على الأقل)',
+  'רוצה לבחור סיסמה חדשה?':'هل تريد/ين اختيار كلمة مرور جديدة؟', 'לא עכשיו':'ليس الآن', 'קבוע אצלך':'ثابت عندك', 'משמרת מסוימת משנים בלחיצה עליה.':'تُغيَّر مناوبة معينة بالضغط عليها.', 'אין לך העדפות קבועות.':'ليست لديك تفضيلات ثابتة.', 'שינוי':'تغيير', 'שינוי סיסמה':'تغيير كلمة المرور', 'סיסמה חדשה (לפחות 8 תווים)':'كلمة مرور جديدة (8 أحرف على الأقل)',
   'נכנסת עם קוד. אפשר לבחור עכשיו סיסמה קבועה חדשה, ומהפעם הבאה להיכנס איתה בלי לחכות לקוד.':'دخلت برمز. يمكن الآن اختيار كلمة مرور ثابتة جديدة، والدخول بها من المرة القادمة بدون انتظار رمز.',
   'מהפעם הבאה נכנסים עם המייל והסיסמה החדשה. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.':'من المرة القادمة يكون الدخول بالبريد الإلكتروني وكلمة المرور الجديدة. إذا نُسيت، يمكن دائمًا الحصول على رمز للبريد الإلكتروني.',
   'זו הסיסמה שכבר יש לך. אפשר לבחור אחרת.':'هذه كلمة المرور الموجودة لديك. يمكن اختيار أخرى.', 'לא הצלחנו לשמור את הסיסמה כרגע. אפשר לנסות שוב בעוד רגע.':'لم ننجح في حفظ كلمة المرور الآن. يمكن المحاولة مرة أخرى بعد لحظة.',
