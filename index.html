@@ -2158,6 +2158,11 @@
   .ln-scr{ position:relative; width:100%; height:100%; border-radius:35px; overflow:hidden; background:var(--bg); }
   .ln-status{ height:34px; background:var(--bg); }
   .ln-scr iframe{ display:block; width:100%; height:calc(100% - 34px); border:0; background:var(--bg); }
+  .ln-phone.wide{ border-radius:20px; }          /* a wide screen: the kids' TV, the coordinator's computer */
+  .ln-phone.wide::before, .ln-phone.wide .ln-status{ display:none; }
+  .ln-phone.wide .ln-scr{ border-radius:10px; }
+  .ln-phone.wide iframe{ height:100%; }
+  .ln-phone.wide .ln-layer{ top:0; }
   .ln-layer{ position:absolute; top:34px; left:0; right:0; bottom:0; z-index:20; overflow:hidden; cursor:pointer; }
   .ln-cardover, .ln-cover{ position:absolute; inset:0; z-index:40; display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:30px; background:radial-gradient(ellipse at 50% 20%, #26315e 0%, var(--bg) 70%); }
   .ln-cover{ z-index:45; }
@@ -13177,7 +13182,8 @@ const SIMPLE_GOAL = { id:'demo-goal', kind:'goal', scope:'mercury', active:true,
 const SIMPLE_SCREENS = [['tasks', 'משימות'], ['list', 'תוכניות טיפוליות: הרשימה'], ['plan', 'דף תוכנית'], ['b-start', 'בנייה: התחלה'], ['b-pick', 'בנייה: תמה'], ['b-goal', 'בנייה: מטרה'], ['b-targets', 'בנייה: יעדים'],
   ['b-ints', 'בנייה: התערבות'], ['b-sents', 'בנייה: משפטים'], ['b-journey', 'בנייה: מסע ומקדש'], ['b-sum', 'בנייה: סיכום'], ['b-preview', 'בנייה: לצוות'], ['child', 'הילד: התוכנית'], ['spiral', 'הספירלה'], ['staff', 'כרטיס הילד אצל המדריך']];
 function simplicityOn(){ return typeof APP_ENV !== 'undefined' && APP_ENV === 'test' && location.hash.indexOf('#simplicity') === 0; }
-async function simplicityStart(){
+// the made-up therapy portal (also the phone of the overview video, 14zh-learn.js)
+function simplicityData(){
   roster.length = 0; roster.push({ id:'d1', firstName:'נועם', lastInitial:'כ', age:'7' }, { id:'d2', firstName:'מאיה', lastInitial:'ל', age:'4' });
   srv.profile = { therapist:true, admin:false, kind:'therapist' }; srv.me = 'demo-me';
   const goal = tpSync({ id:'g1', title:SIMPLE_GOAL.title, theme:'ויסות רגשי', library_id:SIMPLE_GOAL.id, status:'focus', why_staff:SIMPLE_GOAL.description, review_date:isoDate(new Date(Date.now() + 80 * 864e5)),
@@ -13187,6 +13193,9 @@ async function simplicityStart(){
   Object.assign(thp, { loaded:true, ok:true, v32:true, v42:true, v43:true, mode:'therapist', mine:['d1', 'd2'], library:[SIMPLE_GOAL], plans:{ d1:{ child_id:'d1', draft:plan, published:plan, published_version:2, review_date:goal.review_date } },
     guidance:{ d1:{ child_id:'d1', version:2, content:plan } }, planets:[], videos:{}, unseen:{ d1:2 }, questions:{ d2:1 }, journeys:{}, risen:[], stays:{ d2:{ admitted:isoDate(new Date(Date.now() - 12 * 864e5)) } }, newInc:{ d1:1 }, lettersWait:{}, mopts:{ focus_max:1 }, favs:new Set(), useN:{} });
   thpLoad = async () => {};          // (no server here)
+}
+async function simplicityStart(){
+  simplicityData();
   portalActivateView('view-therapy');
   document.getElementById('login-screen').style.display = 'none'; document.getElementById('protected-app').style.display = '';
   simplicityShow((location.hash.split(':')[1]) || 'tasks');
@@ -13212,6 +13221,7 @@ function simplicityShow(screen){
   else if(screen === 'child'){ thp.tab = 'mine'; thpRender(); planOpenEditor('d1', 'plan'); }
   else if(screen === 'spiral'){ thp.tab = 'mine'; thpRender(); planOpenEditor('d1', 'track'); }          // (the real tracking screen; here without data, only today's dot)
   else if(screen === 'staff'){ thp.tab = 'kids'; thpRender(); }
+  if(!simplicityOn()) return;
   let bar = document.getElementById('simplicity-bar');
   if(!bar){ bar = document.createElement('nav'); bar.id = 'simplicity-bar'; document.body.appendChild(bar); }
   bar.innerHTML = SIMPLE_SCREENS.map(([k, w]) => `<a href="#simplicity:${k}"${k === screen ? ' aria-current="page"' : ''}>${w}</a>`).join('');
@@ -13229,7 +13239,25 @@ const learnFrameOn = () => /^#learnframe/.test(location.hash) && !!sbPersonal;
 // A step: scene (a fresh screen in the phone: a new chapter starts with one), card (a title over the phone), say (the caption and the voice),
 // hl (a selector to light up), type [selector, text], tap (a selector the finger presses: a real click in the phone), act (a change in the phone first)
 const LEARN_ITEMS = [
-  { id:'inst-schedule', icon:'📅', title:'כניסה לפורטל והסידור שלי', sub:'כניסה ראשונה, ההודעות, המשמרת הבאה, המשמרות שלי וסידור הצוות', who:'מדריכים',
+  { id:'overview', group:'מבט על', icon:'🚦', title:'המערכת במבט על', sub:'הרמזור, מסך הילדים, מערכת הסידור ופורטל הטיפול, בפחות מדקה', who:'הצגה',
+    end:'הכל במקום אחד: מהטלפון, מהמחשב ועל המסך בחדר.',
+    chapters:[
+      { title:'פתיחה', steps:[
+        { scene:'ramzor', card:{ ic:'🚦', title:'מרכז החירום<br>המערכת במבט על', sub:'הרמזור · מסך הילדים · הסידור · הטיפול' }, say:'המערכת של מרכז החירום: כלי אחד לצוות, לילדים ולטיפול.' }]},
+      { title:'הרמזור ומסך הילדים', steps:[
+        { scene:'ramzor', say:'הרמזור: לכל התנהגות צבע, ולכל צבע פרוטוקול ברור, צעד אחרי צעד.', hl:'#quick-light-rows' },
+        { scene:'tv', device:'wide', say:'במסך שבחדר, הילדים רואים כוכבים, בונוסים ואת המסע בחלל, בזמן אמת.' }]},
+      { title:'מערכת הסידור', steps:[
+        { scene:'prefs-filled', say:'בסידור העבודה, כל מדריך מסמן מהטלפון מתי נוח לו לעבוד.', hl:'.pcal' },
+        { scene:'coord', device:'wide', say:'הרכזת בונה בלחיצה סידור חודשי, לפי ההעדפות, המנוחה וכללי הבטיחות.', hl:'#portal-body .cs-layout' },
+        { scene:'swaps', say:'החלפות ומשמרות פתוחות מתנהלות במערכת, והרכזת רק מאשרת.', hl:'details[data-fold="swopen"] .pfold-body' }]},
+      { title:'פורטל הטיפול', steps:[
+        { scene:'therapy-plan', say:'בפורטל הטיפול בונים לכל ילד תוכנית: מטרות, יעדים ודרכי התערבות.' },
+        { scene:'therapy-staff', say:'והמדריכים רואים לכל ילד מה עושים, וממה להימנע.' }]},
+      { title:'סיום', steps:[
+        { card:{ ic:'✨', title:'הכל במקום אחד', sub:'מהטלפון, מהמחשב ועל המסך בחדר' }, say:'הכל במקום אחד: בטלפון, במחשב ועל המסך בחדר.' }]}
+    ]},
+  { id:'inst-schedule', group:'פורטל המדריך', icon:'📅', title:'כניסה לפורטל והסידור שלי', sub:'כניסה ראשונה, ההודעות, המשמרת הבאה, המשמרות שלי וסידור הצוות', who:'מדריכים',
     end:'עכשיו אתם יודעים להיכנס ולראות את הסידור. בסרטון הבא: בחירת העדפות.',
     chapters:[
       { title:'פתיחה', steps:[
@@ -13259,7 +13287,7 @@ const LEARN_ITEMS = [
       { title:'סיום', steps:[
         { card:{ ic:'✅', title:'זהו!', sub:'בסרטון הבא: בחירת העדפות לחודש הבא' }, say:'זהו. בסרטון הבא נלמד איך בוחרים העדפות לחודש הבא.' }]}
     ]},
-  { id:'inst-prefs', icon:'🗓️', title:'בחירת העדפות', sub:'סימון כן, יכול ולא, יעד חודשי, שתי השאלות והגשה', who:'מדריכים',
+  { id:'inst-prefs', group:'פורטל המדריך', icon:'🗓️', title:'בחירת העדפות', sub:'סימון כן, יכול ולא, יעד חודשי, שתי השאלות והגשה', who:'מדריכים',
     end:'עכשיו אתם יודעים למלא ולהגיש העדפות. בסרטון הבא: החלפות ומשמרות פתוחות.',
     chapters:[
       { title:'פתיחה', steps:[
@@ -13297,7 +13325,7 @@ const LEARN_ITEMS = [
       { title:'סיום', steps:[
         { card:{ ic:'✅', title:'זהו!', sub:'בסרטון הבא: החלפות ומשמרות פתוחות' }, say:'זהו. בסרטון הבא נלמד על החלפות ועל משמרות פתוחות.' }]}
     ]},
-  { id:'inst-swaps', icon:'🔄', title:'החלפות ומשמרות פתוחות', sub:'בקשת החלפה, לא יכול/ה להגיע, עזרה לחברי הצוות והצטרפות למשמרת חסרה', who:'מדריכים',
+  { id:'inst-swaps', group:'פורטל המדריך', icon:'🔄', title:'החלפות ומשמרות פתוחות', sub:'בקשת החלפה, לא יכול/ה להגיע, עזרה לחברי הצוות והצטרפות למשמרת חסרה', who:'מדריכים',
     end:'עכשיו אתם יודעים לבקש החלפה, לעזור לאחרים ולהצטרף למשמרות פתוחות.',
     chapters:[
       { title:'פתיחה', steps:[
@@ -13340,9 +13368,8 @@ const learnUrl = id => location.origin + location.pathname + '#learn:' + id;
 // ---------------------------------------------------------------- the admin's tab: the list, watch, share
 function learnAdminRender(body){
   body.innerHTML = `<div class="pnote">סרטוני הדרכה קצרים. כל סרטון נפתח מקישור, בלי כניסה לפורטל, אז אפשר לשלוח אותו בוואטסאפ לקבוצה או למדריך מסוים. אין בסרטונים שמות אמיתיים.</div>
-    <h2 class="psec">פורטל המדריך</h2>
-    ${LEARN_ITEMS.map(v => `<div class="learn-row"><span class="learn-ic" aria-hidden="true">${v.icon}</span><span class="learn-txt"><b>${pEsc(v.title)}</b><small>${pEsc(v.sub)} · כ-${learnMinutes(v)} דק'</small></span>
-      <span class="learn-acts"><a class="btn ghost small" href="#learn:${v.id}" target="_blank" rel="noopener">▶ צפייה</a><a class="btn small" href="${pEsc(waUrl('', `סרטון הדרכה: ${v.title}\n${learnUrl(v.id)}`))}"${waTarget()}>שיתוף בוואטסאפ</a></span></div>`).join('')}
+    ${[...new Set(LEARN_ITEMS.map(v => v.group))].map(g => `<h2 class="psec">${pEsc(g)}</h2>${LEARN_ITEMS.filter(v => v.group === g).map(v => `<div class="learn-row"><span class="learn-ic" aria-hidden="true">${v.icon}</span><span class="learn-txt"><b>${pEsc(v.title)}</b><small>${pEsc(v.sub)} · כ-${learnMinutes(v)} דק'</small></span>
+      <span class="learn-acts"><a class="btn ghost small" href="#learn:${v.id}" target="_blank" rel="noopener">▶ צפייה</a><a class="btn small" href="${pEsc(waUrl('', `סרטון הדרכה: ${v.title}\n${learnUrl(v.id)}`))}"${waTarget()}>שיתוף בוואטסאפ</a></span></div>`).join('')}`).join('')}
     <div class="pnote pnote-soft">בוואטסאפ בוחרים למי לשלוח: קבוצה או אדם אחד.</div>`;
 }
 
@@ -13350,10 +13377,16 @@ function learnAdminRender(body){
 const learnFx = { open:{}, nextId:1 };
 function learnFakeClient(client){
   const ok = v => ({ data:v, error:null });
-  const chain = v => { const p = Promise.resolve(ok(v)); const q = new Proxy(function(){}, { get:(t, k) => k === 'then' ? p.then.bind(p) : k === 'catch' ? p.catch.bind(p) : k === 'finally' ? p.finally.bind(p) : () => q, apply:() => q }); return q; };
-  client.from = () => chain([]);
+  // a query of a table: the made-up rows of that table, filtered by eq / in; single / maybeSingle give one row (a write simply succeeds)
+  const chain = (v, table) => { const f = [], st = { one:false }; let p = null;
+    const run = () => p || (p = Promise.resolve(ok((() => { if(typeof v !== 'function') return v; let rows = v();
+      f.forEach(([op, c, x]) => { rows = rows.filter(r => op === 'eq' ? r[c] === x : (x || []).includes(r[c])); }); return st.one ? rows[0] || null : rows; })())));
+    const q = new Proxy(function(){}, { apply:() => q, get:(t, k) => k === 'then' ? (a, b) => run().then(a, b) : k === 'catch' ? e => run().catch(e) : k === 'finally' ? e => run().finally(e)
+      : (...a) => { if(k === 'eq' || k === 'in') f.push([k, a[0], a[1]]); if(k === 'single' || k === 'maybeSingle') st.one = true; if(['insert', 'update', 'upsert', 'delete'].includes(k)) v = null; return q; } });
+    return q; };
+  client.from = table => chain(() => (LEARN_TABLES[table] || (() => []))(), table);
   client.rpc = (name, args) => chain(learnRpc(name, args || {}));
-  client.channel = () => { const c = { on:() => c, subscribe:() => c, unsubscribe:() => {} }; return c; };
+  client.channel = () => { const c = new Proxy({}, { get:(t, k) => k === 'then' ? undefined : () => c }); return c; };          // (realtime: every call answers quietly)
   client.removeChannel = () => Promise.resolve();
   if(client.auth){
     try { client.auth.stopAutoRefresh(); } catch(e){}
@@ -13362,6 +13395,16 @@ function learnFakeClient(client){
       signInWithOtp:none, verifyOtp:none, updateUser:none, signInWithPassword:none, signOut:none, onAuthStateChange:() => ({ data:{ subscription:{ unsubscribe(){} } } }) });
   }
 }
+// the Ramzor's made-up data: children, their stars and journey, the bonus lists (for the overview video)
+const LEARN_KIDS = ['נועם', 'מאיה', 'איתן', 'שירה', 'עידו', 'ליה', 'יואב', 'תמר'];
+const LEARN_TABLES = {
+  roster:() => LEARN_KIDS.map((n, i) => ({ id:'k' + i, first_name:n, last_initial:'', age:String(5 + i % 6), sw_name:'', sw_phone:'' })),
+  child_state:() => LEARN_KIDS.map((n, i) => ({ child_id:'k' + i, stars:[3, 5, 1, 4, 2, 6, 0, 3][i], moon_steps:[4, 2, 6, 1, 5, 3, 2, 8][i], moon_gifts:0, mercury_steps:i === 7 ? 1 : 0, bricks:0 })),
+  mini_lists:() => [
+    { key:'bonusesDaily', items:[{ id:'bd1', text:'סבב מיץ פטל, למי שעשה תורנות חצר', startTime:'13:30', endTime:'15:30' }, { id:'bd2', text:'בארוחת ארבע: משהו מתוק קטן', startTime:'15:30', endTime:'17:00' }, { id:'bd3', text:'אחרי ארוחת הערב: זמן טלוויזיה', startTime:'18:00', endTime:'20:00' }] },
+    { key:'bonusesWeekly', items:[{ id:'bw1', text:'תורנויות מהנות, לפי הלוח' }, { id:'bw2', text:'בשישי: עוזרי אפייה', days:[5] }] },
+    { key:'dutyRoster', items:[] }, { key:'childSettings', items:[] }]
+};
 // what the made-up database answers; a request changes the made-up portal, so the screen shows what really happens
 function learnRpc(name, a){
   const st = portalState, today = srvToday();
@@ -13379,17 +13422,21 @@ function learnRpc(name, a){
   return null;
 }
 // the made-up month: "today" is the 10th; this month is published, the preferences of next month are open
-function learnDemoState(){
+function learnDemoState(dense){
   const cur = monthKeyOf(srvToday()), next = addMonths(cur, 1), today = srvToday();
-  const names = ['נועה', 'יוסי', 'מיכל', 'אלי', 'תמר', 'רן', 'שירה', 'עומר', 'ליאת', 'גיא'];
+  const names = ['נועה', 'יוסי', 'מיכל', 'אלי', 'תמר', 'רן', 'שירה', 'עומר', 'ליאת', 'גיא'].concat(dense ? ['דנה', 'אורי', 'נוי', 'בן', 'הדר', 'עדי', 'אסף', 'מור'] : []);
   const people = names.map((n, i) => ({ id:i ? 'p' + i : 'me', first:n, last:'', role:'instructor', admin:false, active:true, photo:samplePhoto(i + 1) }));
   people.push({ id:'c1', first:'רותם', last:'', role:'coordinator', admin:false, active:true, photo:samplePhoto(20) });
   const st = { version:2, serverMode:true, instructors:people, shiftTypes:JSON.parse(JSON.stringify(SRV_SHIFTS)), rules:Object.assign({}, RULES_DEFAULT), months:{}, swaps:[], assignmentIds:{}, announcements:[], timetable:{}, birthdays:{}, outbox:[], rows:[],
     notices:[{ id:'n1', to:'me', at:new Date().toISOString(), text:`הסידור של ${monthLabel(cur)} פורסם. אפשר לראות את המשמרות שלך כאן, בלשונית "הסידור".`, kind:'info', seen:false, sent:true, fromServer:false }],
     settings:{ theme:'dark' }, pending:{ waiting:0, discarded:0 } };
   [-1, 0, 1].forEach(n => { const mk = addMonths(cur, n); st.months[mk] = { deadline:addMonths(mk, -1) + '-24', deadlineTime:'22:30', prefs:{}, submitted:{}, notes:{}, goals:{}, assignments:{}, annot:{}, approvals:{}, published:n < 1, status:n < 1 ? 'published' : null }; });
-  let k = 0;
-  daysOfMonth(cur).forEach((d, di) => [['M', '07:00', '15:00'], ['A', '14:00', '22:00'], ['N', '22:00', '08:00']].forEach(([s, f, t], si) => {
+  let k = 0, at = 0;
+  if(dense) daysOfMonth(cur).forEach(d => [['M', '07:00', '15:00'], ['A', '14:00', '22:00'], ['N', '22:00', '08:00']].forEach(([s, f, t]) => {          // (the coordinator's month: as many as the standard numbers ask for)
+    const n = s === 'M' ? ([5, 6].includes(dowOf(d)) ? 5 : 1) : s === 'A' ? ([4, 5, 6].includes(dowOf(d)) ? 5 : 4) : 2;
+    for(let i = 0; i < n; i++){ const id = people[at++ % names.length].id; srvAddRow(st, { id:'a' + k++, staff_id:id, day:d, shift:s, from_time:f, to_time:t, flags:[] }); }
+  }));
+  else daysOfMonth(cur).forEach((d, di) => [['M', '07:00', '15:00'], ['A', '14:00', '22:00'], ['N', '22:00', '08:00']].forEach(([s, f, t], si) => {
     const mine = di % 3 === 1 && si === Math.floor(di / 3) % 3 % 2;          // (about every third day, a morning or an afternoon)
     srvAddRow(st, { id:'a' + k++, staff_id:mine ? 'me' : 'p' + (1 + (di * 3 + si) % 9), day:d, shift:s, from_time:f, to_time:t, flags:[] });
   }));
@@ -13412,16 +13459,27 @@ function learnFrameStart(){
   document.body.classList.add('learn-frame'); document.documentElement.classList.add('learn-frame');
   window.learnFrame = { scene:learnScene, act:learnAct, ready:true };
 }
-function learnScene(name){
+async function learnScene(name){
   document.querySelectorAll('.sheet, .toast').forEach(x => x.remove());
   learnFx.open = {};
-  portalState = learnDemoState(); portalServerOn = true;
+  try { stopCarousel(); } catch(e){}
+  document.getElementById('protected-app').style.display = ''; document.getElementById('view-display').classList.remove('active');
+  document.body.classList.remove('leopard-bg');
+  if(name === 'ramzor' || name === 'tv'){          // (the Ramzor and the kids' screen: the made-up children)
+    portalServerOn = false; await initRoster(); await initMiniLists();
+    if(name === 'ramzor'){ showHub(); document.getElementById('hub-daily-btn').click(); window.scrollTo(0, 0); return; }
+    roster.forEach((c, i) => { childSettings[c.id] = Object.assign({}, childSettings[c.id], { id:c.id, character:CHARACTER_KEYS[i % CHARACTER_KEYS.length] }); });          // (every child with a character, like the real screen)
+    document.getElementById('protected-app').style.display = 'none'; activateDisplayView(); pauseRotation(); await showSlide(5); return;
+  }
+  if(/^therapy/.test(name)){ simplicityData(); portalActivateView('view-therapy'); simplicityShow(name === 'therapy-staff' ? 'staff' : 'plan'); window.scrollTo(0, 0); return; }
+  portalState = learnDemoState(name === 'coord'); portalServerOn = true;
   Object.assign(srv, { me:'me', meRow:portalState.instructors[0], profile:{ kind:'instructor', female:true, manual_only:false, admin:false }, profileFor:'me', ahmash:{ p1:1, p4:2 }, photos:{},
     prefsOpenSrv:{ [prefsMonthNow()]:true }, showLong:false, pickOne:false, fixedNo:[], failed:false, busy:false, portalTheme:null });
   srvResnap();
   Object.assign(portalUi, { persona:'me', tab:null, month:monthKeyOf(srvToday()), pmonth:null, level:'yes', viewAs:null, actAs:false, editPrefs:false, manager:false, prefsPast:false, fold:{ mine:false, team:true, swap:false } });
   if(name === 'login'){ srvShowLogin('email'); window.scrollTo(0, 0); return; }
   if(name === 'home'){ showAppHome(); return; }
+  if(name === 'coord'){ const c = portalState.instructors.find(p => p.id === 'c1'); Object.assign(srv, { me:'c1', meRow:c, profile:{ kind:'coordinator', female:true, admin:false } }); portalUi.persona = 'c1'; await srvLoadCoord(); showPortal('schedule'); window.scrollTo(0, 0); return; }
   if(name === 'schedule-mine') portalUi.fold = { mine:true, team:false, swap:false };
   if(name === 'swaps'){ portalUi.fold = { mine:false, team:true, swap:false, swmine:true, swopen:true };          // (one request of "me" that still waits for somebody)
     const r = portalState.rows.filter(x => x.staff === 'me' && x.day > srvToday())[2]; if(r) learnRpc('request_swap', { p_assignment:r.id }); }
@@ -13457,6 +13515,15 @@ function learnAct(name){
 }
 
 // ---------------------------------------------------------------- the player page (no sign-in)
+// the device the video shows: a phone, or a wide screen (the kids' TV, the coordinator's computer). A chapter's scene step says which one.
+const LEARN_DEV = { phone:{ w:380, h:780 }, wide:{ w:1040, h:640 } };
+const learnDevAt = i => { for(let k = i; k >= 0; k--){ const s = LP.steps[k]; if(s.device) return s.device; if(s.scene) return 'phone'; } return 'phone'; };
+function learnSetDevice(d){
+  if(LP.dev === d) return false; LP.dev = d;
+  const ph = document.getElementById('ln-phone'); if(!ph) return false;
+  ph.classList.toggle('wide', d === 'wide'); ph.style.width = LEARN_DEV[d].w + 'px'; ph.style.height = LEARN_DEV[d].h + 'px'; learnFit(); return true;
+}
+const learnRateGet = () => { try { const r = parseFloat(localStorage.getItem('ramzor-learn-rate')); return [1, 1.25, 1.5].includes(r) ? r : 1; } catch(e){ return 1; } };
 const LP = { v:null, steps:[], idx:0, playing:false, run:0, voice:null, voiceOn:true, scale:1, frame:null, finger:null, hl:null };
 function learnStart(){
   document.getElementById('login-screen').style.display = 'none'; document.getElementById('protected-app').style.display = 'none';
@@ -13477,10 +13544,11 @@ function learnRoute(){
     <div class="ln-grid">${LEARN_ITEMS.map(v => `<a class="ln-card-btn" href="#learn:${v.id}"><span class="ln-ic">${v.icon}</span><b>${pEsc(v.title)}</b><small>${pEsc(v.sub)}</small><em>⏱ כ-${learnMinutes(v)} דקות · ${pEsc(v.who)}</em></a>`).join('')}</div></section>`;
 }
 function learnOpen(v){
-  LP.v = v; LP.steps = learnSteps(v); LP.idx = 0; LP.lastDone = -1; document.title = v.title + ' · סרטון הדרכה';
+  LP.v = v; LP.steps = learnSteps(v); LP.idx = 0; LP.lastDone = -1; LP.dev = null; document.title = v.title + ' · סרטון הדרכה';
   const voiceOk = learnCanSpeak();
   learnRoot().innerHTML = `<section class="ln-player">
     <header class="ln-top"><span class="ln-title"><b>${pEsc(v.title)}</b><small>סרטון הדרכה · ${pEsc(v.who)}</small></span>
+      <button type="button" class="ln-ibtn" id="ln-rate" aria-label="מהירות">⏩ ×${learnRateGet()}</button>
       <button type="button" class="ln-ibtn" id="ln-voice" aria-pressed="${LP.voiceOn && voiceOk}"${voiceOk ? '' : ' disabled title="אין קול עברי בדפדפן הזה. הכתוביות מספרות הכל"'}>🔊 קריינות</button></header>
     <div class="ln-main"><div class="ln-stage" id="ln-stage">
       <div class="ln-slot" id="ln-slot"><div class="ln-phone" id="ln-phone"><div class="ln-scr">
@@ -13499,12 +13567,14 @@ function learnOpen(v){
     <aside class="ln-chaps"><h3>פרקים</h3>${v.chapters.map((c, k) => `<button type="button" class="ln-chap" data-ci="${k}"><span class="n">${k + 1}</span><span>${pEsc(c.title)}</span></button>`).join('')}</aside></div></section>`;
   const $ = id => document.getElementById(id);
   LP.frame = $('ln-frame'); LP.finger = null; LP.hl = null;
-  learnFit();
+  learnSetDevice('phone');
   const ready = () => { const w = LP.frame.contentWindow; return w && w.learnFrame && w.learnFrame.ready; };
-  const wait = setInterval(() => { if(!document.body.contains(LP.frame)){ clearInterval(wait); return; } if(ready()){ clearInterval(wait); learnFW().learnFrame.scene(LP.steps[0].scene || 'schedule'); $('ln-start').disabled = false; $('ln-start').textContent = '▶ הפעלה'; } }, 200);
+  const wait = setInterval(() => { if(!document.body.contains(LP.frame)){ clearInterval(wait); return; } if(ready()){ clearInterval(wait); learnSetDevice(learnDevAt(0)); learnFW().learnFrame.scene(LP.steps[0].scene || 'schedule'); $('ln-start').disabled = false; $('ln-start').textContent = '▶ הפעלה'; } }, 200);
   $('ln-start').addEventListener('click', () => { learnUnlock(); $('ln-cover').classList.remove('on'); LP.playing = true; learnGo(0); });
   $('ln-replay').addEventListener('click', () => { learnUnlock(); $('ln-end').classList.remove('on'); LP.playing = true; learnGo(0); });
   $('ln-play').addEventListener('click', learnToggle);
+  LP.rate = learnRateGet();
+  $('ln-rate').addEventListener('click', () => { LP.rate = LP.rate === 1 ? 1.25 : LP.rate === 1.25 ? 1.5 : 1; $('ln-rate').textContent = '⏩ ×' + LP.rate; if(LP.audio) LP.audio.playbackRate = LP.rate; try { localStorage.setItem('ramzor-learn-rate', String(LP.rate)); } catch(e){} });
   $('ln-prev').addEventListener('click', () => learnGo(Math.max(0, LP.idx - 1)));
   $('ln-next').addEventListener('click', () => learnGo(Math.min(LP.steps.length - 1, LP.idx + 1)));
   $('ln-bar').addEventListener('click', e => { const r = e.currentTarget.getBoundingClientRect(); learnGo(Math.round((r.right - e.clientX) / r.width * (LP.steps.length - 1))); });
@@ -13535,11 +13605,13 @@ function learnStopSound(){ if(LP.audio) try { LP.audio.pause(); } catch(e){} try
 function learnFit(){
   const stage = document.getElementById('ln-stage'), phone = document.getElementById('ln-phone'), slot = document.getElementById('ln-slot'); if(!stage) return;
   const narrow = innerWidth <= 860, availH = narrow ? innerHeight - 250 : stage.clientHeight - 170, availW = stage.clientWidth - 24;          // (on a phone: the phone fills the screen, the chapters are below)
-  LP.scale = Math.max(.42, Math.min(1, availH / 780, availW / 380));
-  phone.style.transform = `scale(${LP.scale})`; slot.style.width = 380 * LP.scale + 'px'; slot.style.height = 780 * LP.scale + 'px';
+  const dv = LEARN_DEV[LP.dev || 'phone'];
+  LP.scale = Math.max(.25, Math.min(1, availH / dv.h, availW / dv.w));
+  phone.style.transform = `scale(${LP.scale})`; slot.style.width = dv.w * LP.scale + 'px'; slot.style.height = dv.h * LP.scale + 'px';
 }
 // waits ms of playing time; false when another step started meanwhile
 function learnWait(ms, my){
+  ms = ms / (LP.rate || 1);
   return new Promise(res => { let el = 0, last = performance.now();
     (function tick(){ const now = performance.now(); if(my !== LP.run) return res(false); if(LP.playing) el += now - last; last = now; if(el >= ms) return res(true); setTimeout(tick, 40); })(); });          // (a timer, not animation frames: those stop when the page is not on the screen)
 }
@@ -13551,7 +13623,7 @@ function learnSpeak(text, my){
     await new Promise(res => { let iv, t; const done = () => { clearInterval(iv); clearTimeout(t); a.onended = a.onerror = null; res(); };
       a.onended = done; a.onerror = done; t = setTimeout(done, learnReadMs(text) * 4);
       iv = setInterval(() => { if(my !== LP.run){ a.pause(); done(); } }, 200);
-      a.muted = false; a.src = clip; const p = a.play(); if(p && p.catch) p.catch(done); });
+      a.muted = false; a.src = clip; a.playbackRate = LP.rate || 1; const p = a.play(); if(p && p.catch) p.catch(done); });
   })();
   if(!LP.voiceOn || !('speechSynthesis' in window) || !(LP.voice || LP.byLang) || !text) return Promise.resolve();
   let busy = false; try { busy = speechSynthesis.speaking || speechSynthesis.pending; if(busy) speechSynthesis.cancel(); } catch(e){ return Promise.resolve(); }
@@ -13571,7 +13643,7 @@ async function learnScrollTo(sel, my, fast){
   const h = LP.frame.clientHeight, r = el.getBoundingClientRect();
   if(r.top >= 50 && r.bottom <= h - 70) return;
   el.scrollIntoView({ block:'center', behavior:fast ? 'auto' : 'smooth' });
-  if(!fast) await learnWait(600, my);
+  if(!fast) await learnWait(420, my);
 }
 function learnHighlight(sel){
   const el = learnFind(sel); if(!el) return;
@@ -13586,26 +13658,27 @@ async function learnTap(sel, my, fast){
     const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
     if(!LP.finger){ LP.finger = document.createElement('div'); LP.finger.className = 'ln-finger'; LP.finger.style.left = x + 60 + 'px'; LP.finger.style.top = y + 120 + 'px'; learnLayer().appendChild(LP.finger); void LP.finger.offsetWidth; }
     LP.finger.style.opacity = 1; LP.finger.style.left = x + 'px'; LP.finger.style.top = y + 'px';
-    if(!await learnWait(750, my)) return;
+    if(!await learnWait(520, my)) return;
     LP.finger.classList.add('press'); const rp = document.createElement('div'); rp.className = 'ln-ripple'; rp.style.left = x + 'px'; rp.style.top = y + 'px'; learnLayer().appendChild(rp); setTimeout(() => rp.remove(), 700);
     await learnWait(180, my); LP.finger.classList.remove('press');
   }
   if(my !== LP.run) return;
   el.click();
-  await learnWait(fast ? 0 : 450, my); if(fast) await new Promise(r => setTimeout(r, 120));          // (the screen answers: a sheet opens, a list draws)
+  await learnWait(fast ? 0 : 300, my); if(fast) await new Promise(r => setTimeout(r, 120));          // (the screen answers: a sheet opens, a list draws)
 }
 async function learnType(sel, text, my, fast){
   const el = learnFind(sel); if(!el) return;
   await learnScrollTo(sel, my, fast);
   el.classList.add('ln-typing');
-  for(let k = fast ? text.length : 1; k <= text.length; k++){ el.value = text.slice(0, k); if(!fast && !await learnWait(85, my)) return; }
+  for(let k = fast ? text.length : 1; k <= text.length; k++){ el.value = text.slice(0, k); if(!fast && !await learnWait(55, my)) return; }
   el.dispatchEvent(new Event('input', { bubbles:true })); el.classList.remove('ln-typing');
 }
 // a step's screen: a fresh scene at its chapter start; jumping into the middle of a chapter replays the steps before it quickly
 async function learnPrepare(i, my){
   let s = i; while(s > 0 && !LP.steps[s].scene) s--;
   const fw = learnFW(); if(!fw || !fw.learnFrame) return;
-  fw.learnFrame.scene(LP.steps[s].scene || 'schedule');
+  if(learnSetDevice(learnDevAt(i))) await new Promise(r => setTimeout(r, 150));          // (the page in the frame takes the new size first)
+  await fw.learnFrame.scene(LP.steps[s].scene || 'schedule');
   for(let k = s; k < i; k++){ const st = LP.steps[k]; if(my !== LP.run) return;
     if(st.act) fw.learnFrame.act(st.act); if(st.type) await learnType(st.type[0], st.type[1], my, true); if(st.tap) await learnTap(st.tap, my, true); }
 }
@@ -13623,18 +13696,19 @@ async function learnGo(i){
   document.getElementById('ln-end').classList.remove('on'); document.getElementById('ln-cover').classList.remove('on');
   learnClear(); learnShow(i);
   const st = LP.steps[i], fw = learnFW();
-  if(st.scene || i === 0 || !LP.lastDone || LP.lastDone !== i - 1) await learnPrepare(i, my);
+  if(st.scene || i === 0 || !LP.lastDone || LP.lastDone !== i - 1){ try { await learnPrepare(i, my); } catch(e){ console.warn('learn scene', e); } }          // (a screen that fails to draw must not stop the video)
   if(my !== LP.run) return;
   if(st.act && fw && fw.learnFrame) fw.learnFrame.act(st.act);
   const target = st.hl || (st.type && st.type[0]) || st.tap;
-  if(st.hl && fw && fw.document.querySelector('.toast')){ if(!await learnWait(1800, my)) return; fw.document.querySelectorAll('.toast').forEach(t => t.remove()); }          // (the message of the last tap is read first, then it leaves the light free)
+  if(st.hl && fw && fw.document.querySelector('.toast')){ if(!await learnWait(1200, my)) return; fw.document.querySelectorAll('.toast').forEach(t => t.remove()); }          // (the message of the last tap is read first, then it leaves the light free)
   if(target) await learnScrollTo(target, my);
   if(my !== LP.run) return;
   if(st.hl) learnHighlight(st.hl);
   const spoken = learnSpeak(st.say, my);
   if(st.type) await learnType(st.type[0], st.type[1], my);
   if(my !== LP.run) return;
-  await Promise.all([learnWait(learnReadMs(st.say) - (st.type ? st.type[1].length * 85 : 0), my), spoken]);
+  const recorded = LP.voiceOn && !!learnClip(st.say) && !!LP.audio;          // (with a recording: on as soon as it ends; without: the time to read the caption)
+  await Promise.all([learnWait(recorded ? 250 : learnReadMs(st.say) - (st.type ? st.type[1].length * 85 : 0), my), spoken]);
   if(my !== LP.run) return;
   while(!LP.playing){ if(!await learnWait(100, my)) return; }
   if(st.tap){ learnClear(); await learnTap(st.tap, my); }
@@ -13653,7 +13727,7 @@ function learnToggle(){
 }
 // ---------- THE RECORDED NARRATION of the training videos: made by tools\learn-voice.ps1, do not edit by hand ----------
 // sentence -> file in learn\ (next to the page). A sentence that is not here is read by the device's own voice.
-const LEARN_VOICE = {"בסרטון הזה נלמד איך נכנסים לפורטל המדריך, ואיך רואים את סידור העבודה.":"e97b74d407b9.mp3","בכניסה הראשונה מקלידים את כתובת המייל שלכם, זו שמסרתם לרכזת.":"cc98f6f5eebd.mp3","ולוחצים על \"שלחו לי קוד למייל\".":"46d88ac5bc2d.mp3","תוך דקה מגיע למייל קוד של שש ספרות. אם הוא לא מגיע, כדאי לבדוק גם בתיקיית הספאם.":"4c44a344da3c.mp3","מקלידים את הקוד, ולוחצים \"כניסה\".":"944fc64c6f4d.mp3","עכשיו בוחרים סיסמה אישית, לפחות שמונה תווים.":"4f7fb212a6f1.mp3","מקלידים אותה שוב, ולוחצים \"שמירה וכניסה\".":"9bbbb21a9fe7.mp3","מהפעם הבאה נכנסים עם המייל והסיסמה, בלי לחכות לקוד. שכחתם את הסיסמה? לוחצים שוב \"שלחו לי קוד למייל\".":"b700f9de2d87.mp3","אחרי הכניסה מגיעים למסך הבית. בוחרים \"פורטל המדריך\".":"9d6a173e3097.mp3","זה פורטל המדריך. למעלה יש לשוניות: הסידור, העדפות, החלפות, חופשה והודעות. עכשיו אנחנו בלשונית \"הסידור\".":"7ba1bb89c4b4.mp3","הודעות חדשות מחכות כאן, למעלה. לוחצים כדי לפתוח אותן.":"81e76ce1e7d1.mp3","אחרי שקוראים, לוחצים \"הבנתי, תודה\", וההודעה יורדת.":"8dcc7f804965.mp3","בשורה הזו תמיד רואים את המשמרת הבאה שלכם: היום, סוג המשמרת והשעות.":"6f5499f7fca1.mp3","עם החצים עוברים בין החודשים.":"c641d1132914.mp3","לחיצה על \"המשמרות שלי\" פותחת את כל המשמרות שלכם בחודש.":"01a817d7aa37.mp3","המשמרת הבאה מסומנת, ומשמרות שכבר עברו מופיעות בצבע חלש יותר.":"b65e1d045f48.mp3","מתחת נמצא הסידור של כל הצוות, לפי ימים ומשמרות.":"4ec13a798b2d.mp3","השם שלכם מודגש. לחיצה עליו, במשמרת שעוד לא עברה, פותחת בקשת החלפה או דיווח שלא תוכלו להגיע.":"2078b4621c3d.mp3","על החלפות יש סרטון נפרד. בינתיים, \"חזרה\".":"0496dbdf414a.mp3","זהו. בסרטון הבא נלמד איך בוחרים העדפות לחודש הבא.":"f9c0fc794cf3.mp3","בסרטון הזה נלמד איך ממלאים את ההעדפות לחודש הבא, ואיך מגישים אותן.":"29b4b4315b50.mp3","את ההעדפות לחודש הבא ממלאים בלשונית \"העדפות\".":"56249eb27ebf.mp3","בשורה הזו רואים אם כבר הגשתם, ועד מתי אפשר להגיש: עד ה-24 בחודש, בעשר וחצי בלילה. כל סימון נשמר מיד.":"1fe61050e246.mp3","אם משהו לא ברור, \"איך ממלאים?\" פותח הסבר קצר.":"6c01bb552fe7.mp3","יש לכם העדפה קבועה, למשל שאתם לא עושים לילות? מגדירים אותה ב\"שינוי\", והיא תסומן לבד בכל חודש.":"3401bc9ba508.mp3","וכאן רואים את השעות של כל משמרת: בוקר, צהריים ולילה.":"1f9f16dfd6d8.mp3","בלוח, בכל יום יש שלוש משמרות: בוקר, צהריים ולילה. בהתחלה אף משמרת לא מסומנת.":"bb4659d363e0.mp3","בתחתית בוחרים רמה. \"כן\": אשמח לקבל. \"יכול\": אפשר, אבל פחות נוח. \"לא\": לא מתאים.":"219c78662ff7.mp3","נבחר \"כן\"...":"7dd89e019da1.mp3","ונלחץ על המספר של היום, כדי לסמן את כל המשמרות שלו.":"ab9af726a101.mp3","אפשר גם ללחוץ על משמרת אחת. נבחר \"לא\"...":"73f5f70ea8d4.mp3","ונלחץ על הלילה של אותו יום.":"90d1a50cec8f.mp3","\"יכול\" מסמנים באותה דרך: בוחרים \"יכול\"...":"69a2eb96dc45.mp3","ולוחצים על יום, או על משמרת.":"1ce6ec70d9c9.mp3","לחיצה נוספת עם אותה רמה מחזירה את המשמרות למצב שלא סומן.":"29dad2a2305e.mp3","\"שעות אחרות\" מתאים כשאתם זמינים רק בחלק מהשעות: בוחרים אותו, לוחצים על היום, ומסמנים את השעות.":"756dd04688df.mp3","ו\"נקה הכל\" מוחק את כל הסימונים, אם רוצים להתחיל מחדש.":"b6016b690f75.mp3","אחרי שעוברים על כל החודש, גוללים למטה. כאן אפשר לספר כמה משמרות ירגישו לכם נכון החודש. זה לא חובה.":"90422442ecc6.mp3","למשל, ארבע עד חמש משמרות בכל שבוע.":"4a7d27c3be7c.mp3","ועוד שתי שאלות קצרות לכל חודש. עונים \"כן\", \"לא\", או \"תבדקו איתי\".":"0c91a2224b37.mp3","בשאלה הראשונה נבחר \"כן\"...":"622ada19b462.mp3","ובשנייה, \"תבדקו איתי\".":"5f56fa8859d3.mp3","יש משהו שחשוב לכם שהרכזת תדע? כותבים אותו כאן.":"cef02c66d127.mp3","בסוף לוחצים \"הגשת ההעדפות\".":"0a08beea1570.mp3","אם נשארו משמרות שלא סימנתם, המערכת שואלת מה לעשות איתן: לסמן \"יכול\", לסמן \"לא\", או לחזור ולסמן.":"841e447561ec.mp3","נבחר \"יכול\".":"521f30c100e3.mp3","זהו, ההעדפות הוגשו. עד מועד הסגירה אפשר לשנות, וללחוץ \"עדכון והגשה מחדש\".":"bc1b399ad10a.mp3","זהו. בסרטון הבא נלמד על החלפות ועל משמרות פתוחות.":"1ce380890eb8.mp3","בסרטון הזה נלמד איך מבקשים החלפה, איך עוזרים לחברי הצוות, ואיך מצטרפים למשמרת שחסר בה מישהו.":"13b68f0e0a40.mp3","צריכים שמישהו יחליף אתכם? בלשונית \"הסידור\", ב\"המשמרות שלי\", לוחצים \"בקשת החלפה\".":"4f51aa66ca0e.mp3","בוחרים \"בקשת החלפה\"...":"ccfab1e8af22.mp3","ובוחרים את המשמרת.":"aab027ac63e8.mp3","המערכת מראה מי מהצוות פנוי למשמרת, ושואלת אם לפרסם. לוחצים \"כן, לפרסם\".":"ea2633e5a8a7.mp3","הבקשה פורסמה לכל המדריכים. ליד המשמרת רואים מה המצב שלה.":"c08d1d9e33f5.mp3","ואם פתאום אי אפשר להגיע? לוחצים שוב \"בקשת החלפה\"...":"645a0c4bb4e0.mp3","בוחרים \"לא יכולה להגיע\"...":"fc18e5d8c271.mp3","ואת המשמרת.":"0404c6f5b2f7.mp3","כותבים בקצרה את הסיבה.":"a36f11e126bc.mp3","ולוחצים \"כן, לדווח\". הדיווח מגיע מיד לרכזת, ומתפרסם לצוות כבקשה דחופה.":"3ef10674fc15.mp3","בלשונית \"החלפות\" רואים את הבקשות שלכם, ומה המצב של כל אחת.":"3288013a0f7d.mp3","ומתחת, בקשות של חברי צוות שמחפשים מחליף. בקשה דחופה מסומנת.":"eb5d44b95b22.mp3","רוצים לעזור? לוחצים \"אני יכול/ה להחליף\".":"a6fdccf86349.mp3","ההצעה עוברת לרכזת. אחרי שהיא מאשרת, הסידור מתעדכן, ושניכם מקבלים הודעה.":"fc4da9d16cb2.mp3","ובבקשה שלכם, \"מי זמין/ה?\" מראה עמיתים פנויים למשמרת. אפשר לפנות אליהם ישירות.":"1552d1bff614.mp3","\"תודה\" סוגר.":"0fe42086ed74.mp3","לפעמים יש משמרת שחסר בה מישהו. רואים את זה בלשונית \"הסידור\", ב\"משמרות פתוחות\".":"99f1455ed7d0.mp3","הרשימה מסודרת לפי ימים, וליד כל משמרת כתוב כמה חסרים.":"4807d62df6a6.mp3","רוצים להצטרף? לוחצים \"אשמח להצטרף\"...":"02bf224a8834.mp3","ומאשרים. הבקשה נשלחת לרכזת.":"891555c87556.mp3","עד שהרכזת מאשרת, כתוב \"מחכה לאישור\". אפשר גם לבטל.":"7693e4f36609.mp3","זהו. תודה שאתם עוזרים זה לזה.":"fd8671705491.mp3"};
+const LEARN_VOICE = {"המערכת של מרכז החירום: כלי אחד לצוות, לילדים ולטיפול.":"0ff3b129132b.mp3","הרמזור: לכל התנהגות צבע, ולכל צבע פרוטוקול ברור, צעד אחרי צעד.":"1aadaaa3d364.mp3","במסך שבחדר, הילדים רואים כוכבים, בונוסים ואת המסע בחלל, בזמן אמת.":"a170645b51ed.mp3","בסידור העבודה, כל מדריך מסמן מהטלפון מתי נוח לו לעבוד.":"223a3375c5a3.mp3","הרכזת בונה בלחיצה סידור חודשי, לפי ההעדפות, המנוחה וכללי הבטיחות.":"23e5dca5b175.mp3","החלפות ומשמרות פתוחות מתנהלות במערכת, והרכזת רק מאשרת.":"de21f2c43682.mp3","בפורטל הטיפול בונים לכל ילד תוכנית: מטרות, יעדים ודרכי התערבות.":"f654c561e5fe.mp3","והמדריכים רואים לכל ילד מה עושים, וממה להימנע.":"353ea81557d5.mp3","הכל במקום אחד: בטלפון, במחשב ועל המסך בחדר.":"e01d206f3b33.mp3","בסרטון הזה נלמד איך נכנסים לפורטל המדריך, ואיך רואים את סידור העבודה.":"c884fb3a3878.mp3","בכניסה הראשונה מקלידים את כתובת המייל שלכם, זו שמסרתם לרכזת.":"eb4ee0e872c4.mp3","ולוחצים על \"שלחו לי קוד למייל\".":"23d415ee5ec8.mp3","תוך דקה מגיע למייל קוד של שש ספרות. אם הוא לא מגיע, כדאי לבדוק גם בתיקיית הספאם.":"1528f420187f.mp3","מקלידים את הקוד, ולוחצים \"כניסה\".":"a5414ac4c922.mp3","עכשיו בוחרים סיסמה אישית, לפחות שמונה תווים.":"3c1281d22994.mp3","מקלידים אותה שוב, ולוחצים \"שמירה וכניסה\".":"17a01d7a0ffc.mp3","מהפעם הבאה נכנסים עם המייל והסיסמה, בלי לחכות לקוד. שכחתם את הסיסמה? לוחצים שוב \"שלחו לי קוד למייל\".":"68983b68fb16.mp3","אחרי הכניסה מגיעים למסך הבית. בוחרים \"פורטל המדריך\".":"94dacb295a18.mp3","זה פורטל המדריך. למעלה יש לשוניות: הסידור, העדפות, החלפות, חופשה והודעות. עכשיו אנחנו בלשונית \"הסידור\".":"1f9b21ef0da2.mp3","הודעות חדשות מחכות כאן, למעלה. לוחצים כדי לפתוח אותן.":"9578113b903b.mp3","אחרי שקוראים, לוחצים \"הבנתי, תודה\", וההודעה יורדת.":"083f0ceaff7c.mp3","בשורה הזו תמיד רואים את המשמרת הבאה שלכם: היום, סוג המשמרת והשעות.":"bf36d324a3aa.mp3","עם החצים עוברים בין החודשים.":"2032204ec300.mp3","לחיצה על \"המשמרות שלי\" פותחת את כל המשמרות שלכם בחודש.":"24b31b939412.mp3","המשמרת הבאה מסומנת, ומשמרות שכבר עברו מופיעות בצבע חלש יותר.":"7153ecc88d92.mp3","מתחת נמצא הסידור של כל הצוות, לפי ימים ומשמרות.":"b2cf50d95085.mp3","השם שלכם מודגש. לחיצה עליו, במשמרת שעוד לא עברה, פותחת בקשת החלפה או דיווח שלא תוכלו להגיע.":"6c3f8d09c0d2.mp3","על החלפות יש סרטון נפרד. בינתיים, \"חזרה\".":"dc617793e2cc.mp3","זהו. בסרטון הבא נלמד איך בוחרים העדפות לחודש הבא.":"20de03be9958.mp3","בסרטון הזה נלמד איך ממלאים את ההעדפות לחודש הבא, ואיך מגישים אותן.":"7fa050bb3a8d.mp3","את ההעדפות לחודש הבא ממלאים בלשונית \"העדפות\".":"3b3033abcdfa.mp3","בשורה הזו רואים אם כבר הגשתם, ועד מתי אפשר להגיש: עד ה-24 בחודש, בעשר וחצי בלילה. כל סימון נשמר מיד.":"85f134927e35.mp3","אם משהו לא ברור, \"איך ממלאים?\" פותח הסבר קצר.":"c2d6ee3f7cce.mp3","יש לכם העדפה קבועה, למשל שאתם לא עושים לילות? מגדירים אותה ב\"שינוי\", והיא תסומן לבד בכל חודש.":"0bbf63d287e3.mp3","וכאן רואים את השעות של כל משמרת: בוקר, צהריים ולילה.":"d5e40df5c425.mp3","בלוח, בכל יום יש שלוש משמרות: בוקר, צהריים ולילה. בהתחלה אף משמרת לא מסומנת.":"69d715c557f6.mp3","בתחתית בוחרים רמה. \"כן\": אשמח לקבל. \"יכול\": אפשר, אבל פחות נוח. \"לא\": לא מתאים.":"87b3d10497d9.mp3","נבחר \"כן\"...":"4cfe2105075e.mp3","ונלחץ על המספר של היום, כדי לסמן את כל המשמרות שלו.":"689d047c1666.mp3","אפשר גם ללחוץ על משמרת אחת. נבחר \"לא\"...":"e8f081a460c7.mp3","ונלחץ על הלילה של אותו יום.":"ac22a0c78e14.mp3","\"יכול\" מסמנים באותה דרך: בוחרים \"יכול\"...":"7bb5a10896cb.mp3","ולוחצים על יום, או על משמרת.":"c1b0ba9b25a1.mp3","לחיצה נוספת עם אותה רמה מחזירה את המשמרות למצב שלא סומן.":"39596536bf16.mp3","\"שעות אחרות\" מתאים כשאתם זמינים רק בחלק מהשעות: בוחרים אותו, לוחצים על היום, ומסמנים את השעות.":"3cdad8a205f2.mp3","ו\"נקה הכל\" מוחק את כל הסימונים, אם רוצים להתחיל מחדש.":"885e617acef8.mp3","אחרי שעוברים על כל החודש, גוללים למטה. כאן אפשר לספר כמה משמרות ירגישו לכם נכון החודש. זה לא חובה.":"22573ab9b9fb.mp3","למשל, ארבע עד חמש משמרות בכל שבוע.":"0c24c0fc783a.mp3","ועוד שתי שאלות קצרות לכל חודש. עונים \"כן\", \"לא\", או \"תבדקו איתי\".":"436c9432b10b.mp3","בשאלה הראשונה נבחר \"כן\"...":"ea4dacc482f1.mp3","ובשנייה, \"תבדקו איתי\".":"7d3cd28db4b7.mp3","יש משהו שחשוב לכם שהרכזת תדע? כותבים אותו כאן.":"81b6dcfa84ed.mp3","בסוף לוחצים \"הגשת ההעדפות\".":"db47a9a4b2b7.mp3","אם נשארו משמרות שלא סימנתם, המערכת שואלת מה לעשות איתן: לסמן \"יכול\", לסמן \"לא\", או לחזור ולסמן.":"3b03317fd3ab.mp3","נבחר \"יכול\".":"7bea30017e2d.mp3","זהו, ההעדפות הוגשו. עד מועד הסגירה אפשר לשנות, וללחוץ \"עדכון והגשה מחדש\".":"2a6f209d9ff0.mp3","זהו. בסרטון הבא נלמד על החלפות ועל משמרות פתוחות.":"36c4294b989d.mp3","בסרטון הזה נלמד איך מבקשים החלפה, איך עוזרים לחברי הצוות, ואיך מצטרפים למשמרת שחסר בה מישהו.":"329b629ea02c.mp3","צריכים שמישהו יחליף אתכם? בלשונית \"הסידור\", ב\"המשמרות שלי\", לוחצים \"בקשת החלפה\".":"a1f499676b01.mp3","בוחרים \"בקשת החלפה\"...":"cdba0c79568b.mp3","ובוחרים את המשמרת.":"1baba4436774.mp3","המערכת מראה מי מהצוות פנוי למשמרת, ושואלת אם לפרסם. לוחצים \"כן, לפרסם\".":"46891ef902b2.mp3","הבקשה פורסמה לכל המדריכים. ליד המשמרת רואים מה המצב שלה.":"9908bc20f16f.mp3","ואם פתאום אי אפשר להגיע? לוחצים שוב \"בקשת החלפה\"...":"78673f78cd71.mp3","בוחרים \"לא יכולה להגיע\"...":"c1fcd63152b1.mp3","ואת המשמרת.":"facd436ec144.mp3","כותבים בקצרה את הסיבה.":"55c3fdb75919.mp3","ולוחצים \"כן, לדווח\". הדיווח מגיע מיד לרכזת, ומתפרסם לצוות כבקשה דחופה.":"31cbc7860576.mp3","בלשונית \"החלפות\" רואים את הבקשות שלכם, ומה המצב של כל אחת.":"091298976e12.mp3","ומתחת, בקשות של חברי צוות שמחפשים מחליף. בקשה דחופה מסומנת.":"1f899665564f.mp3","רוצים לעזור? לוחצים \"אני יכול/ה להחליף\".":"987f4807b490.mp3","ההצעה עוברת לרכזת. אחרי שהיא מאשרת, הסידור מתעדכן, ושניכם מקבלים הודעה.":"c66c623dea87.mp3","ובבקשה שלכם, \"מי זמין/ה?\" מראה עמיתים פנויים למשמרת. אפשר לפנות אליהם ישירות.":"d80ae9997c9b.mp3","\"תודה\" סוגר.":"b7045a102801.mp3","לפעמים יש משמרת שחסר בה מישהו. רואים את זה בלשונית \"הסידור\", ב\"משמרות פתוחות\".":"f865088cab05.mp3","הרשימה מסודרת לפי ימים, וליד כל משמרת כתוב כמה חסרים.":"1c158234c3ce.mp3","רוצים להצטרף? לוחצים \"אשמח להצטרף\"...":"0ffc39a46506.mp3","ומאשרים. הבקשה נשלחת לרכזת.":"8f022fe92057.mp3","עד שהרכזת מאשרת, כתוב \"מחכה לאישור\". אפשר גם לבטל.":"238407692528.mp3","זהו. תודה שאתם עוזרים זה לזה.":"8e66be015d15.mp3"};
 // ---------- MERCURY: OBSERVATIONS AND TRACKING (stage 5) ----------
 // Anybody on the staff (with the personal sign-in) sends a short free observation on a child to the responsible therapist: words, or a
 // recording (kept in private storage, never in the phone's gallery), optionally tied to a goal in focus. The therapist answers
