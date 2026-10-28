@@ -13271,7 +13271,7 @@ const LEARN_ITEMS = [
         { say:'יש לכם העדפה קבועה, למשל שאתם לא עושים לילות? מגדירים אותה ב"שינוי", והיא תסומן לבד בכל חודש.', hl:'#prefs-fixed-line' },
         { say:'וכאן רואים את השעות של כל משמרת: בוקר, צהריים ולילה.', hl:'.pshift-key' }]},
       { title:'סימון המשמרות', steps:[
-        { scene:'prefs', act:'markPrefs', say:'בלוח, בכל יום יש שלוש משמרות: ב׳ לבוקר, צ׳ לצהריים ול׳ ללילה. בהתחלה אף משמרת לא מסומנת.', hl:'#ln-week1' },
+        { scene:'prefs', act:'markPrefs', say:'בלוח, בכל יום יש שלוש משמרות: בוקר, צהריים ולילה. בהתחלה אף משמרת לא מסומנת.', hl:'#ln-week1' },
         { say:'בתחתית בוחרים רמה. "כן": אשמח לקבל. "יכול": אפשר, אבל פחות נוח. "לא": לא מתאים.', hl:'.plevelbar' },
         { say:'נבחר "כן"...', tap:'.plevelbar [data-plevel="yes"]' },
         { act:'markPrefs', say:'ונלחץ על המספר של היום, כדי לסמן את כל המשמרות שלו.', tap:'#ln-day1' },
@@ -13468,7 +13468,7 @@ function learnStart(){
 }
 function learnRoot(){ let r = document.getElementById('learn-root'); if(!r){ r = document.createElement('div'); r.id = 'learn-root'; r.className = 'learn'; document.body.appendChild(r); } return r; }
 function learnRoute(){
-  LP.run++; LP.playing = false; try { speechSynthesis.cancel(); } catch(e){}
+  LP.run++; LP.playing = false; learnStopSound();
   const id = location.hash.split(':')[1], v = id && learnItem(id);
   if(v) return learnOpen(v);
   LP.v = null; document.title = 'סרטוני הדרכה · מרכז חירום';
@@ -13509,7 +13509,7 @@ function learnOpen(v){
   $('ln-next').addEventListener('click', () => learnGo(Math.min(LP.steps.length - 1, LP.idx + 1)));
   $('ln-bar').addEventListener('click', e => { const r = e.currentTarget.getBoundingClientRect(); learnGo(Math.round((r.right - e.clientX) / r.width * (LP.steps.length - 1))); });
   $('ln-layer').addEventListener('click', learnToggle);
-  $('ln-voice').addEventListener('click', () => { LP.voiceOn = !LP.voiceOn; $('ln-voice').setAttribute('aria-pressed', LP.voiceOn); if(LP.voiceOn) learnUnlock(); else try { speechSynthesis.cancel(); } catch(e){} });
+  $('ln-voice').addEventListener('click', () => { LP.voiceOn = !LP.voiceOn; $('ln-voice').setAttribute('aria-pressed', LP.voiceOn); if(LP.voiceOn) learnUnlock(); else learnStopSound(); });
   document.querySelectorAll('.ln-chap').forEach(b => b.addEventListener('click', () => learnGo(LP.steps.findIndex(s => s.ci === +b.dataset.ci))));
 }
 // the voice: a Hebrew one of the device. Some phones list no voices at all and still read Hebrew by the language alone, so then it is tried that way
@@ -13520,12 +13520,18 @@ function learnPickVoice(){
   if(b){ b.disabled = !ok; if(ok) b.removeAttribute('title'); b.setAttribute('aria-pressed', LP.voiceOn && ok); }
   if(n) n.hidden = ok;
 }
-const learnCanSpeak = () => 'speechSynthesis' in window && (!!LP.voice || !!LP.byLang);
-// phones (iPhone, and Chrome on Android) speak only after a speech that started inside a tap: the "הפעלה" tap starts a silent one
+// the narration is recorded (tools\learn-voice.ps1, 14zi-learn-voice.js): it plays on every phone. Only a sentence with no recording uses the device's voice
+const learnClip = text => typeof LEARN_VOICE !== 'undefined' && LEARN_VOICE[text] ? 'learn/' + LEARN_VOICE[text] : null;
+const learnCanSpeak = () => (typeof LEARN_VOICE !== 'undefined' && Object.keys(LEARN_VOICE).length > 0) || ('speechSynthesis' in window && (!!LP.voice || !!LP.byLang));
+// a phone plays sound only after a sound that started inside a tap: the "הפעלה" tap plays the first recording silently (and a silent speech)
 function learnUnlock(){
+  if(!LP.audio){ LP.audio = new Audio(); LP.audio.preload = 'auto'; }
+  const a = LP.audio, first = learnClip((LP.steps[0] || {}).say);
+  if(first){ a.muted = true; a.src = first; const p = a.play(); LP.unlocking = (p && p.then ? p : Promise.resolve()).then(() => { a.pause(); }, () => {}).then(() => { a.muted = false; }); }
   if(!('speechSynthesis' in window)) return;
   try { learnPickVoice(); speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(' '); u.lang = 'he-IL'; if(LP.voice) u.voice = LP.voice; u.volume = 0; speechSynthesis.speak(u); speechSynthesis.resume(); } catch(e){}
 }
+function learnStopSound(){ if(LP.audio) try { LP.audio.pause(); } catch(e){} try { speechSynthesis.cancel(); } catch(e){} }
 function learnFit(){
   const stage = document.getElementById('ln-stage'), phone = document.getElementById('ln-phone'), slot = document.getElementById('ln-slot'); if(!stage) return;
   const narrow = innerWidth <= 860, availH = narrow ? innerHeight - 250 : stage.clientHeight - 170, availW = stage.clientWidth - 24;          // (on a phone: the phone fills the screen, the chapters are below)
@@ -13535,10 +13541,19 @@ function learnFit(){
 // waits ms of playing time; false when another step started meanwhile
 function learnWait(ms, my){
   return new Promise(res => { let el = 0, last = performance.now();
-    (function tick(now){ if(my !== LP.run) return res(false); if(LP.playing) el += now - last; last = now; if(el >= ms) return res(true); requestAnimationFrame(tick); })(last); });
+    (function tick(){ const now = performance.now(); if(my !== LP.run) return res(false); if(LP.playing) el += now - last; last = now; if(el >= ms) return res(true); setTimeout(tick, 40); })(); });          // (a timer, not animation frames: those stop when the page is not on the screen)
 }
 function learnSpeak(text, my){
-  if(!LP.voiceOn || !learnCanSpeak() || !text) return Promise.resolve();
+  const clip = learnClip(text);
+  if(LP.voiceOn && clip && LP.audio) return (async () => {
+    await LP.unlocking; if(my !== LP.run) return;
+    const a = LP.audio;
+    await new Promise(res => { let iv, t; const done = () => { clearInterval(iv); clearTimeout(t); a.onended = a.onerror = null; res(); };
+      a.onended = done; a.onerror = done; t = setTimeout(done, learnReadMs(text) * 4);
+      iv = setInterval(() => { if(my !== LP.run){ a.pause(); done(); } }, 200);
+      a.muted = false; a.src = clip; const p = a.play(); if(p && p.catch) p.catch(done); });
+  })();
+  if(!LP.voiceOn || !('speechSynthesis' in window) || !(LP.voice || LP.byLang) || !text) return Promise.resolve();
   let busy = false; try { busy = speechSynthesis.speaking || speechSynthesis.pending; if(busy) speechSynthesis.cancel(); } catch(e){ return Promise.resolve(); }
   return new Promise(res => {
     const u = new SpeechSynthesisUtterance(text.replace(/[„”"׳]/g, '')); u.lang = LP.voice ? LP.voice.lang : 'he-IL'; if(LP.voice) u.voice = LP.voice; u.rate = 1.02;
@@ -13604,7 +13619,7 @@ function learnShow(i){
   document.querySelectorAll('.ln-chap').forEach(b => { b.classList.toggle('cur', +b.dataset.ci === st.ci); b.classList.toggle('done', +b.dataset.ci < st.ci); });
 }
 async function learnGo(i){
-  const my = ++LP.run; LP.idx = i; try { speechSynthesis.cancel(); } catch(e){}
+  const my = ++LP.run; LP.idx = i; learnStopSound();
   document.getElementById('ln-end').classList.remove('on'); document.getElementById('ln-cover').classList.remove('on');
   learnClear(); learnShow(i);
   const st = LP.steps[i], fw = learnFW();
@@ -13632,9 +13647,13 @@ function learnToggle(){
   if(document.getElementById('ln-cover').classList.contains('on')) return;
   if(document.getElementById('ln-end').classList.contains('on')){ document.getElementById('ln-end').classList.remove('on'); LP.playing = true; learnGo(0); return; }
   LP.playing = !LP.playing;
+  if(LP.audio && LP.audio.src && !LP.audio.ended){ try { LP.playing ? LP.audio.play() : LP.audio.pause(); } catch(e){} }
   try { LP.playing ? speechSynthesis.resume() : speechSynthesis.pause(); } catch(e){}
   document.getElementById('ln-play').textContent = LP.playing ? '⏸' : '▶';
 }
+// ---------- THE RECORDED NARRATION of the training videos: made by tools\learn-voice.ps1, do not edit by hand ----------
+// sentence -> file in learn\ (next to the page). A sentence that is not here is read by the device's own voice.
+const LEARN_VOICE = {"בסרטון הזה נלמד איך נכנסים לפורטל המדריך, ואיך רואים את סידור העבודה.":"57a20199ce99.m4a","בכניסה הראשונה מקלידים את כתובת המייל שלכם, זו שמסרתם לרכזת.":"4e726fb77da5.m4a","ולוחצים על \"שלחו לי קוד למייל\".":"f3e7759bdc67.m4a","תוך דקה מגיע למייל קוד של שש ספרות. אם הוא לא מגיע, כדאי לבדוק גם בתיקיית הספאם.":"e4a4bbfe1183.m4a","מקלידים את הקוד, ולוחצים \"כניסה\".":"c5b487311798.m4a","עכשיו בוחרים סיסמה אישית, לפחות שמונה תווים.":"ea605a7ab5b1.m4a","מקלידים אותה שוב, ולוחצים \"שמירה וכניסה\".":"b30c5a8dc012.m4a","מהפעם הבאה נכנסים עם המייל והסיסמה, בלי לחכות לקוד. שכחתם את הסיסמה? לוחצים שוב \"שלחו לי קוד למייל\".":"c254ab660c6d.m4a","אחרי הכניסה מגיעים למסך הבית. בוחרים \"פורטל המדריך\".":"1e1e6f92999b.m4a","זה פורטל המדריך. למעלה יש לשוניות: הסידור, העדפות, החלפות, חופשה והודעות. עכשיו אנחנו בלשונית \"הסידור\".":"e594ec91499f.m4a","הודעות חדשות מחכות כאן, למעלה. לוחצים כדי לפתוח אותן.":"a53a24ad379c.m4a","אחרי שקוראים, לוחצים \"הבנתי, תודה\", וההודעה יורדת.":"38c89740f662.m4a","בשורה הזו תמיד רואים את המשמרת הבאה שלכם: היום, סוג המשמרת והשעות.":"e57a822846ab.m4a","עם החצים עוברים בין החודשים.":"be0ba6d704b5.m4a","לחיצה על \"המשמרות שלי\" פותחת את כל המשמרות שלכם בחודש.":"26ce290e88d6.m4a","המשמרת הבאה מסומנת, ומשמרות שכבר עברו מופיעות בצבע חלש יותר.":"5af2e6384830.m4a","מתחת נמצא הסידור של כל הצוות, לפי ימים ומשמרות.":"ffeaa7097159.m4a","השם שלכם מודגש. לחיצה עליו, במשמרת שעוד לא עברה, פותחת בקשת החלפה או דיווח שלא תוכלו להגיע.":"d29f3342aef3.m4a","על החלפות יש סרטון נפרד. בינתיים, \"חזרה\".":"b672e76a28ee.m4a","זהו. בסרטון הבא נלמד איך בוחרים העדפות לחודש הבא.":"e5c2678505f0.m4a","בסרטון הזה נלמד איך ממלאים את ההעדפות לחודש הבא, ואיך מגישים אותן.":"2a8814ed394d.m4a","את ההעדפות לחודש הבא ממלאים בלשונית \"העדפות\".":"7aa77c924203.m4a","בשורה הזו רואים אם כבר הגשתם, ועד מתי אפשר להגיש: עד ה-24 בחודש, בעשר וחצי בלילה. כל סימון נשמר מיד.":"abbdb885e6a7.m4a","אם משהו לא ברור, \"איך ממלאים?\" פותח הסבר קצר.":"73d08ba2a7a5.m4a","יש לכם העדפה קבועה, למשל שאתם לא עושים לילות? מגדירים אותה ב\"שינוי\", והיא תסומן לבד בכל חודש.":"ccadccdd0604.m4a","וכאן רואים את השעות של כל משמרת: בוקר, צהריים ולילה.":"23fb1a65be99.m4a","בלוח, בכל יום יש שלוש משמרות: בוקר, צהריים ולילה. בהתחלה אף משמרת לא מסומנת.":"ebb34c204182.m4a","בתחתית בוחרים רמה. \"כן\": אשמח לקבל. \"יכול\": אפשר, אבל פחות נוח. \"לא\": לא מתאים.":"0aa3d2d7a9fa.m4a","נבחר \"כן\"...":"614ce45dbcb1.m4a","ונלחץ על המספר של היום, כדי לסמן את כל המשמרות שלו.":"c520359d2a33.m4a","אפשר גם ללחוץ על משמרת אחת. נבחר \"לא\"...":"d7f3bc13e1f8.m4a","ונלחץ על הלילה של אותו יום.":"27d71f19edc1.m4a","\"יכול\" מסמנים באותה דרך: בוחרים \"יכול\"...":"abb61442fb91.m4a","ולוחצים על יום, או על משמרת.":"9aca6171fad1.m4a","לחיצה נוספת עם אותה רמה מחזירה את המשמרות למצב שלא סומן.":"a120153e0650.m4a","\"שעות אחרות\" מתאים כשאתם זמינים רק בחלק מהשעות: בוחרים אותו, לוחצים על היום, ומסמנים את השעות.":"9ab929a9796e.m4a","ו\"נקה הכל\" מוחק את כל הסימונים, אם רוצים להתחיל מחדש.":"c86f36feeb50.m4a","אחרי שעוברים על כל החודש, גוללים למטה. כאן אפשר לספר כמה משמרות ירגישו לכם נכון החודש. זה לא חובה.":"7f98d66fb148.m4a","למשל, ארבע עד חמש משמרות בכל שבוע.":"4bdec2fd0b13.m4a","ועוד שתי שאלות קצרות לכל חודש. עונים \"כן\", \"לא\", או \"תבדקו איתי\".":"c15aa689945b.m4a","בשאלה הראשונה נבחר \"כן\"...":"3da9fd5aff86.m4a","ובשנייה, \"תבדקו איתי\".":"9c8fb0e26f30.m4a","יש משהו שחשוב לכם שהרכזת תדע? כותבים אותו כאן.":"7f42545fdf16.m4a","בסוף לוחצים \"הגשת ההעדפות\".":"a1c77289fdea.m4a","אם נשארו משמרות שלא סימנתם, המערכת שואלת מה לעשות איתן: לסמן \"יכול\", לסמן \"לא\", או לחזור ולסמן.":"af35d52d3d70.m4a","נבחר \"יכול\".":"4ab3e1be5b2a.m4a","זהו, ההעדפות הוגשו. עד מועד הסגירה אפשר לשנות, וללחוץ \"עדכון והגשה מחדש\".":"035eae1f2a9a.m4a","זהו. בסרטון הבא נלמד על החלפות ועל משמרות פתוחות.":"4c313b82ac18.m4a","בסרטון הזה נלמד איך מבקשים החלפה, איך עוזרים לחברי הצוות, ואיך מצטרפים למשמרת שחסר בה מישהו.":"984249cf7c36.m4a","צריכים שמישהו יחליף אתכם? בלשונית \"הסידור\", ב\"המשמרות שלי\", לוחצים \"בקשת החלפה\".":"6468b095b5c0.m4a","בוחרים \"בקשת החלפה\"...":"1aaf7ff12933.m4a","ובוחרים את המשמרת.":"ab75d2bd347d.m4a","המערכת מראה מי מהצוות פנוי למשמרת, ושואלת אם לפרסם. לוחצים \"כן, לפרסם\".":"a6cb567f1699.m4a","הבקשה פורסמה לכל המדריכים. ליד המשמרת רואים מה המצב שלה.":"ec209a8ba9ac.m4a","ואם פתאום אי אפשר להגיע? לוחצים שוב \"בקשת החלפה\"...":"010a4319a719.m4a","בוחרים \"לא יכולה להגיע\"...":"b8b5dc69564d.m4a","ואת המשמרת.":"6921b04cf53f.m4a","כותבים בקצרה את הסיבה.":"5fd20776d3f1.m4a","ולוחצים \"כן, לדווח\". הדיווח מגיע מיד לרכזת, ומתפרסם לצוות כבקשה דחופה.":"d5b07f3ed8e0.m4a","בלשונית \"החלפות\" רואים את הבקשות שלכם, ומה המצב של כל אחת.":"47167675f61b.m4a","ומתחת, בקשות של חברי צוות שמחפשים מחליף. בקשה דחופה מסומנת.":"cc68c9161663.m4a","רוצים לעזור? לוחצים \"אני יכול/ה להחליף\".":"e7df4f043d04.m4a","ההצעה עוברת לרכזת. אחרי שהיא מאשרת, הסידור מתעדכן, ושניכם מקבלים הודעה.":"27127385df43.m4a","ובבקשה שלכם, \"מי זמין/ה?\" מראה עמיתים פנויים למשמרת. אפשר לפנות אליהם ישירות.":"7b79290435c5.m4a","\"תודה\" סוגר.":"a5ff405f7265.m4a","לפעמים יש משמרת שחסר בה מישהו. רואים את זה בלשונית \"הסידור\", ב\"משמרות פתוחות\".":"768d02bd082e.m4a","הרשימה מסודרת לפי ימים, וליד כל משמרת כתוב כמה חסרים.":"6832801ba47b.m4a","רוצים להצטרף? לוחצים \"אשמח להצטרף\"...":"43efb09ba5a8.m4a","ומאשרים. הבקשה נשלחת לרכזת.":"bb3261817682.m4a","עד שהרכזת מאשרת, כתוב \"מחכה לאישור\". אפשר גם לבטל.":"e49d09b311b6.m4a","זהו. תודה שאתם עוזרים זה לזה.":"3b390a54d56e.m4a"};
 // ---------- MERCURY: OBSERVATIONS AND TRACKING (stage 5) ----------
 // Anybody on the staff (with the personal sign-in) sends a short free observation on a child to the responsible therapist: words, or a
 // recording (kept in private storage, never in the phone's gallery), optionally tied to a goal in focus. The therapist answers
