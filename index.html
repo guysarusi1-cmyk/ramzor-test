@@ -1658,6 +1658,9 @@
   .popen-day{ margin:0 0 8px; } .popen-date{ font-weight:700; margin:6px 0 2px; }
   .pfixed-edit{ background:none; border:0; padding:0 4px; font:inherit; color:inherit; text-decoration:underline; cursor:pointer; min-height:32px; }
   .ptab-count{ display:inline-block; min-width:18px; padding:0 5px; margin-inline-start:4px; border-radius:9px; font-size:11px; line-height:18px; text-align:center; background:var(--p-gold, #f0c060); color:#1a1a1a; font-weight:700; }
+  /* who could take my shift, under my swap request (Guy 2026-10-28) */
+  .pcands{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:-4px 0 10px; padding:6px 10px; border-radius:10px; background:var(--p-panel); }
+  .pcands-title{ flex-basis:100%; color:var(--p-muted); } .pcand{ display:inline-flex; align-items:center; gap:6px; } .pcand .mcal-name{ font-size:11px; padding:1px 7px; }
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -6749,7 +6752,7 @@ function renderInstructorSwaps(body){
     ${approvalsForMe.map(a => `<div class="preq warn"><div>הרכזת שיבצה אותך למשמרת שסימנת עליה "לא":<br><b>${slotLabel(a.key)}</b><br>האם את/ה מאשר/ת?</div><div class="preq-actions"><button type="button" class="btn" data-appr-ok="${a.mk}|${a.k}">מאשר/ת</button><button type="button" class="btn ghost" data-appr-no="${a.mk}|${a.k}">לא מאשר/ת</button></div></div>`).join('')}
     <details class="pfold" data-fold="swmine"${openFold('swmine') ? ' open' : ''}>
       <summary><span>הבקשות שלי</span><span class="pcount">${mineReq.length}</span></summary>
-      <div class="pfold-body">${mineReq.length ? mineReq.map(s => `<div class="pmine-row"><span>${slotLabel(s.key)}<br><small>${s.from === me.id ? 'ביקשתם החלפה' + (s.to ? ' · מוכן/ה לעזור: ' + pEsc(name(s.to)) : '') : 'הצעתם להחליף את ' + pEsc(name(s.from))}</small></span><span class="pmine-actions">${portalServerOn && s.from === me.id && s.status === 'open' ? `<button type="button" class="btn ghost small" data-cands="${s.aid}">מי זמין/ה?</button>` : ''}<em class="pst pst-${s.status}">${SWAP_STATUS[s.status]}</em></span></div>`).join('') : '<div class="pnote">אין בקשות.</div>'}</div>
+      <div class="pfold-body">${mineReq.length ? mineReq.map(s => `<div class="pmine-row"><span>${slotLabel(s.key)}<br><small>${s.from === me.id ? 'ביקשתם החלפה' + (s.to ? ' · מוכן/ה לעזור: ' + pEsc(name(s.to)) : '') : 'הצעתם להחליף את ' + pEsc(name(s.from))}</small></span><span class="pmine-actions"><em class="pst pst-${s.status}">${SWAP_STATUS[s.status]}</em></span></div>${portalServerOn && s.from === me.id && s.status === 'open' ? `<div class="pcands" data-cands-for="${s.aid}"><small>רק רגע...</small></div>` : ''}`).join('') : '<div class="pnote">אין בקשות.</div>'}</div>
     </details>
     <details class="pfold" data-fold="swopen"${openFold('swopen') ? ' open' : ''}>
       <summary><span>בקשות החלפה פתוחות</span><span class="pcount">${open.length}</span></summary>
@@ -6772,6 +6775,7 @@ function renderInstructorSwaps(body){
     addNotice(me.id, `הבקשה להחליף את ${name(sw.from)} ב-${slotText(sw.key)} הועברה לרכזת.`, 'info');
     portalSave(); toast('הבקשה הועברה לרכזת'); renderInstructorSwaps(body);
   }));
+  body.querySelectorAll('[data-cands-for]').forEach(box => srvFillCandidates(box, box.dataset.candsFor));          // (who could take it, by name, with WhatsApp: Guy 2026-10-28)
   body.querySelectorAll('[data-cands]').forEach(b => b.addEventListener('click', async () => {
     const names = await srvSwapCandidates(b.dataset.cands);
     portalSheet(`<h2>עמיתים שזמינים למשמרת</h2><div class="pnote">${names.length ? 'אלה העמיתים שזמינים למשמרת הזאת ולא שובצו אליה. אפשר לפנות אליהם ישירות ולבקש עזרה: ' + names.map(pEsc).join(', ') + '.' : 'כרגע לא מצאנו עמיתים פנויים למשמרת הזאת. נשמח לעזור, ואפשר גם לדבר עם הרכזת.'}</div><div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>תודה</button></div>`);
@@ -7557,6 +7561,20 @@ function srvRowLine(r){
 // colleagues who could take a shift (the database answers; before scheduling-v5.sql it simply has nothing to add)
 async function srvSwapCandidates(assignmentId){
   try { const r = await sbPersonal.rpc('swap_candidates', { p_assignment:assignmentId }); return r.error || !r.data ? [] : r.data.map(x => x.name); } catch(e){ return []; }
+}
+// the same, by name with her wish for that shift and a WhatsApp number (scheduling-v46.sql; before it: the names only)
+async function srvSwapCandidates2(assignmentId){
+  try { const r = await sbPersonal.rpc('swap_candidates2', { p_assignment:assignmentId }); if(!r.error && r.data) return r.data; } catch(e){}
+  return (await srvSwapCandidates(assignmentId)).map(n => ({ name:n, level:null, wa:null, female:true }));
+}
+async function srvFillCandidates(box, assignmentId){
+  const list = await srvSwapCandidates2(assignmentId); if(!box.isConnected) return;
+  const st = portalLoad(), row = (st.rows || []).find(r => r.id === assignmentId), when = row ? `${dayLabel(row.day)} ${SRV_SHIFT_WORD[row.shift] || ''}` : '';
+  const txt = c => `היי ${String(c.name || '').split(' ')[0]}, ביקשתי החלפה ב${when}. יש מצב ש${c.female === false ? 'תוכל' : 'תוכלי'} לקחת אותה? אפשר להציע בפורטל, בלשונית "החלפות". תודה!`;
+  const LV = { yes:'כן', can:'יכול' };
+  box.innerHTML = list.length ? `<small class="pcands-title">יכולים לקחת את המשמרת:</small>${list.map(c => { const num = waNorm(c.wa);
+      return `<span class="pcand">${pEsc(c.name)}${LV[c.level] ? ` <span class="mcal-name wish-${c.level === 'can' ? 'can' : 'yes'}">${LV[c.level]}</span>` : ''}${num ? `<a class="wa-btn" href="${pEsc(waUrl(num, txt(c)))}"${waTarget()} title="שאלה בוואטסאפ" aria-label="שאלה בוואטסאפ ל${pEsc(c.name)}">${WA_SVG}</a>` : ''}</span>`; }).join('')}`
+    : '<small>כרגע אין עמיתים פנויים למשמרת הזאת. אפשר לדבר עם הרכזת.</small>';
 }
 const srvCandidatesText = names => names.length ? tx('cands', names.join(', ')) : '';
 
@@ -8764,8 +8782,10 @@ async function srvAddOtherToSlot(mk, key, staffId, body){
 // ---------------------------------------------------------------- WhatsApp: asking an instructor before placing her in a shift she marked "no" or did not mark
 const WA_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.5.5 0 0 0 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.6-.3z"/></svg>';
 // the person's phone as WhatsApp wants it: 054-1234567 -> 972541234567
-function waNumber(staffId){
-  const raw = String(((portalLoad().priv || {})[staffId] || {}).phone || '').replace(/[^\d+]/g, '').replace(/^\+/, '');
+function waNumber(staffId){ return waNorm(((portalLoad().priv || {})[staffId] || {}).phone); }
+// a phone as WhatsApp wants it: 054-1234567 -> 972541234567
+function waNorm(phone){
+  const raw = String(phone || '').replace(/[^\d+]/g, '').replace(/^\+/, '');
   if(!raw) return null;
   return raw.startsWith('972') ? raw : raw.startsWith('0') ? '972' + raw.slice(1) : raw.length >= 9 ? '972' + raw : null;
 }
@@ -10768,7 +10788,7 @@ Object.assign(AR, {
   'הקלידו את הקוד':'اكتبوا الرمز', 'שליחת קוד חדש':'إرسال رمز جديد', 'נשלח קוד חדש':'أُرسل رمز جديد', 'בחירת סיסמה אישית':'اختيار كلمة مرور شخصية',
   'מהפעם הבאה נכנסים עם המייל והסיסמה הזו, בלי לחכות לקוד. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.':'من المرة القادمة يكون الدخول بالبريد الإلكتروني وكلمة المرور هذه، بدون انتظار رمز. إذا نُسيت، يمكن دائمًا الحصول على رمز للبريد الإلكتروني.',
   'סיסמה (לפחות 8 תווים)':'كلمة المرور (8 أحرف على الأقل)', 'שוב, לאימות':'مرة أخرى، للتأكيد', 'שמירה וכניסה':'حفظ ودخول',
-  'רוצה לבחור סיסמה חדשה?':'هل تريد/ين اختيار كلمة مرور جديدة؟', 'לא עכשיו':'ليس الآن', 'קבוע אצלך':'ثابت عندك', 'משמרת מסוימת משנים בלחיצה עליה.':'تُغيَّر مناوبة معينة بالضغط عليها.', 'אין לך העדפות קבועות.':'ليست لديك تفضيلات ثابتة.', 'שינוי':'تغيير', 'שינוי סיסמה':'تغيير كلمة المرور', 'סיסמה חדשה (לפחות 8 תווים)':'كلمة مرور جديدة (8 أحرف على الأقل)',
+  'רוצה לבחור סיסמה חדשה?':'هل تريد/ين اختيار كلمة مرور جديدة؟', 'לא עכשיו':'ليس الآن', 'יכולים לקחת את המשמרת:':'يمكنهم أخذ المناوبة:', 'כרגע אין עמיתים פנויים למשמרת הזאת. אפשר לדבר עם הרכזת.':'حاليًا لا يوجد زملاء متاحون لهذه المناوبة. يمكن التحدث مع المركّزة.', 'קבוע אצלך':'ثابت عندك', 'משמרת מסוימת משנים בלחיצה עליה.':'تُغيَّر مناوبة معينة بالضغط عليها.', 'אין לך העדפות קבועות.':'ليست لديك تفضيلات ثابتة.', 'שינוי':'تغيير', 'שינוי סיסמה':'تغيير كلمة المرور', 'סיסמה חדשה (לפחות 8 תווים)':'كلمة مرور جديدة (8 أحرف على الأقل)',
   'נכנסת עם קוד. אפשר לבחור עכשיו סיסמה קבועה חדשה, ומהפעם הבאה להיכנס איתה בלי לחכות לקוד.':'دخلت برمز. يمكن الآن اختيار كلمة مرور ثابتة جديدة، والدخول بها من المرة القادمة بدون انتظار رمز.',
   'מהפעם הבאה נכנסים עם המייל והסיסמה החדשה. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.':'من المرة القادمة يكون الدخول بالبريد الإلكتروني وكلمة المرور الجديدة. إذا نُسيت، يمكن دائمًا الحصول على رمز للبريد الإلكتروني.',
   'זו הסיסמה שכבר יש לך. אפשר לבחור אחרת.':'هذه كلمة المرور الموجودة لديك. يمكن اختيار أخرى.', 'לא הצלחנו לשמור את הסיסמה כרגע. אפשר לנסות שוב בעוד רגע.':'لم ننجح في حفظ كلمة المرور الآن. يمكن المحاولة مرة أخرى بعد لحظة.',
