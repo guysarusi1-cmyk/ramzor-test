@@ -2281,6 +2281,7 @@
   <!-- ============ APP HOME + INSTRUCTOR PORTAL (only when "portal" is on in the config) ============ -->
   <section class="view" id="view-apphome"></section>
   <section class="view" id="view-portal"></section>
+  <section class="view" id="view-learn"></section>
   <section class="view" id="view-control"></section>
   <section class="view" id="view-therapy"></section>
 
@@ -6146,6 +6147,11 @@ function showAppHome(){
           <span class="home-card-title">פורטל הטיפול</span>
           <span class="home-card-sub">${canTherapistPortal() ? 'מה מחכה לך, התוכניות, התצפיות והמעקב' : 'מה עושים עם כל ילד, וממה להימנע'}</span>
         </button>` : ''}
+        ${portalServerOn && (portalMe() || {}).admin ? `<button type="button" class="home-card" id="apphome-learn">
+          <span class="apphome-emoji" aria-hidden="true">🎬</span>
+          <span class="home-card-title">לומדה</span>
+          <span class="home-card-sub">סרטוני הדרכה, ושיתוף שלהם לצוות</span>
+        </button>` : ''}
         ${portalServerOn && (portalMe() || {}).admin && (portalMe() || {}).role !== 'coordinator' ? `<button type="button" class="home-card" id="apphome-manage">
           <span class="apphome-emoji" aria-hidden="true">🛠️</span>
           <span class="home-card-title">פורטל ניהול</span>
@@ -6158,6 +6164,7 @@ function showAppHome(){
   document.getElementById('apphome-ramzor').addEventListener('click', showHub);
   { const th = document.getElementById('apphome-therapy'); if(th) th.addEventListener('click', () => showTherapyPortal()); }          // (Mercury: the therapy portal, 14w-therapy-portal.js)
   if(document.getElementById('apphome-portal')) document.getElementById('apphome-portal').addEventListener('click', () => { portalUi.manager = false; if(portalServerOn) srvOpenPortal(); else if(typeof srvShowLogin === 'function' && sbPersonal && !window.__portalDemo) srvShowLogin('email'); else showPortal(); });          // (with the staff password: the personal sign-in, not a demo)
+  { const ln = document.getElementById('apphome-learn'); if(ln) ln.addEventListener('click', showLearnHome); }          // (the admin's training videos, 14zh-learn.js)
   const mg = document.getElementById('apphome-manage'); if(mg) mg.addEventListener('click', () => { portalUi.manager = true; srvOpenPortal(); });
   document.getElementById('apphome-logout').addEventListener('click', () => document.getElementById('hub-logout-link').click());
 }
@@ -7336,7 +7343,7 @@ async function srvSubmit(mk, note, goal){
 // ---- the screens in server mode
 function srvTabs(me){
   if(srvEditingFor()) return me.role === 'service' ? [['avail', 'זמינות']] : [['prefs', 'העדפות']];          // (filling for somebody: only that tab — a service girl's availability, an instructor's preferences)
-  if(portalAsCoord(me)) return [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול'], ['learn', 'לומדה']] : []);          // (the admin: the training videos too, 14zh-learn.js)          // (the admin: one more tab, 14s-portal-admin.js)
+  if(portalAsCoord(me)) return [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);          // (the admin: one more tab, 14s-portal-admin.js)
   if(me.role === 'instructor' && srv.profile && srv.profile.manual_only) return [['schedule', 'הסידור'], ['open', 'משמרות חסרות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];          // (not scheduled automatically: she places herself where somebody is missing)
   if(me.role === 'instructor') return [['schedule', 'הסידור'], ['prefs', 'העדפות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];
   if(me.role === 'service') return [['schedule', 'הסידור'], ['avail', 'זמינות'], ['swaps', 'החלפות'], ['vacation', 'חופשה'], ['inbox', 'הודעות']];          // (swaps: only among the service girls)
@@ -7357,7 +7364,6 @@ function srvRenderTab(me, body, t){
   const soon = what => { body.innerHTML = `<div class="pnote">${what} — עדיין בבנייה.</div>`; };
   if(portalAsCoord(me)){
     if(t === 'admin' && me.admin) return srvRenderAdmin(body);
-    if(t === 'learn' && me.admin) return learnAdminRender(body);
     if(t === 'submissions') return srvRenderSubmissions(body);
     if(t === 'swaps') return srvRenderCoordSwaps(body);
     if(t === 'vacations') return srvRenderCoordVacations(body);
@@ -13389,7 +13395,17 @@ const learnReadMs = t => Math.max(2600, String(t || '').length * 62 + 900);
 const learnMinutes = v => Math.max(1, Math.round(learnSteps(v).reduce((a, s) => a + learnReadMs(s.say) + (s.tap ? 1300 : 0) + (s.type ? s.type[1].length * 90 : 0), 0) / 60000));
 const learnUrl = id => location.origin + location.pathname + '#learn:' + id;
 
-// ---------------------------------------------------------------- the admin's tab: the list, watch, share
+// ---------------------------------------------------------------- the admin's "לומדה": a card on the app home (between the therapy portal and the management portal)
+function showLearnHome(){
+  document.body.classList.remove('leopard-bg');
+  portalActivateView('view-learn');
+  const st = portalLoad();
+  document.getElementById('view-learn').innerHTML = `<div class="portal-shell" data-ptheme="${pEsc((st.settings || {}).theme || 'dark')}">
+    <div class="portal-top"><button type="button" class="back-btn portal-back" id="learn-home-back">→ מסך ראשי</button><h1 class="portal-title">לומדה</h1><span class="portal-top-actions"></span></div>
+    <div id="learn-body"></div></div>`;
+  document.getElementById('learn-home-back').addEventListener('click', showAppHome);
+  learnAdminRender(document.getElementById('learn-body'));
+}
 function learnAdminRender(body){
   body.innerHTML = `<div class="pnote">סרטוני הדרכה קצרים. כל סרטון נפתח מקישור, בלי כניסה לפורטל, אז אפשר לשלוח אותו בוואטסאפ לקבוצה או למדריך מסוים. אין בסרטונים שמות אמיתיים.</div>
     ${[...new Set(LEARN_ITEMS.map(v => v.group))].map(g => `<h2 class="psec">${pEsc(g)}</h2>${LEARN_ITEMS.filter(v => v.group === g).map(v => `<div class="learn-row"><span class="learn-ic" aria-hidden="true">${v.icon}</span><span class="learn-txt"><b>${pEsc(v.title)}</b><small>${pEsc(v.sub)} · כ-${learnMinutes(v)} דק'</small></span>
@@ -13941,7 +13957,7 @@ updateBottomNav();
     }
     if(v.id === 'view-portal' && portalOn()) return `portal:${portalUi.tab || ''}|${portalUi.viewAs || ''}${portalUi.actAs ? 'a' : ''}${portalUi.editPrefs ? 'e' : ''}${portalUi.manager ? 'm' : ''}${portalUi.prefsPast ? 'p' : ''}`;
     if(v.id === 'view-therapy' && typeof thp !== 'undefined') return `therapy:${thp.mode}|${thp.tab || ''}|${thp.editing || ''}|${thp.editing ? thp.wtab || '' : ''}`;
-    return ({ 'view-manage':'manage', 'view-display':'display', 'view-apphome':'apphome', 'view-control':'control' })[v.id] || 'hub';
+    return ({ 'view-manage':'manage', 'view-display':'display', 'view-apphome':'apphome', 'view-control':'control', 'view-learn':'learn' })[v.id] || 'hub';
   }
   function snapshot(key){
     if(key.startsWith('portal:')) return { tab:portalUi.tab, viewAs:portalUi.viewAs || null, actAs:!!portalUi.actAs, editPrefs:!!portalUi.editPrefs, manager:!!portalUi.manager, persona:portalUi.persona, prefsPast:!!portalUi.prefsPast };
@@ -13969,6 +13985,7 @@ updateBottomNav();
     if(key === 'apphome' && typeof showAppHome === 'function') return showAppHome();
     if(key === 'manage' && typeof openManagement === 'function') return openManagement();
     if(key === 'control' && typeof showControl === 'function') return showControl();
+    if(key === 'learn' && typeof showLearnHome === 'function') return showLearnHome();
     if(key.startsWith('portal:') && snap){
       if(portalUi.editPrefs && !snap.editPrefs && typeof srvFlush === 'function'){ clearTimeout(srv.timer); await srvFlush(); }          // (what was filled for somebody is saved before leaving)
       const wasEditing = !!portalUi.editPrefs;
