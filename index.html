@@ -1461,6 +1461,13 @@
   .pedit-btns{ display:inline-flex; gap:6px; margin-inline-start:auto; }
   .pedit-row.editing{ flex-wrap:wrap; } .phours-edit{ display:inline-flex; align-items:center; gap:6px; } .phours-edit select{ min-height:40px; width:auto; }
   .mcal-name.sel{ outline:2px solid #fff; outline-offset:1px; }
+  /* a published month: the coordinator's changes that wait for "שליחת עדכונים" (scheduling-v45.sql) */
+  .mcal-name.pend{ outline:2px dashed var(--p-gold, #f0c060); outline-offset:1px; }
+  .cs-pending{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin:0 0 12px; padding:10px 12px; border:1px solid var(--p-gold, #f0c060); border-radius:12px; background:var(--p-panel); }
+  .cs-pending small{ flex:1 1 220px; color:var(--p-muted); line-height:1.45; }
+  .cs-send.blink{ animation:cs-send-blink 2.4s ease-in-out infinite; }
+  @keyframes cs-send-blink{ 0%, 100%{ box-shadow:0 0 0 0 rgba(240, 192, 96, 0); filter:none; } 50%{ box-shadow:0 0 0 6px rgba(240, 192, 96, .35); filter:brightness(1.18); } }
+  @media (prefers-reduced-motion: reduce){ .cs-send.blink{ animation:none; box-shadow:0 0 0 3px rgba(240, 192, 96, .45); } }
   /* the coordinator's schedule: the calendar, and at its left a panel with the instructors and their requests */
   .cs-layout{ display:flex; gap:16px; align-items:flex-start; }
   .cs-main{ flex:1; min-width:0; }
@@ -6275,7 +6282,8 @@ function monthCalHtml(ctx, assignments, opts){
     const lead = c.people.filter(p => picks[c.slot.key] === p.iid), rest = c.people.filter(p => !lead.includes(p));
     const name = (p, isLead) => {
       const mine = opts.me && p.iid === opts.me, ann = ctx.annot && ctx.annot[c.slot.key + '|' + p.iid];
-      return `<span class="mcal-name${mine ? ' me' : ''}${isLead ? ' ahm' : ''}${wish(p)}${opts.sel && opts.sel === p.iid ? ' sel' : ''}"${opts.drag ? ` data-iid="${p.iid}"` : ''}>${pEsc(p.name)}${isLead ? '<small class="ahm-tag">אחמ"ש</small>' : ''}${ann ? `<small>${pEsc(ann)}</small>` : ''}</span>`;
+      const pend = opts.pend && opts.pend[c.slot.key + '|' + p.iid];          // (a change that waits for "שליחת עדכונים": the staff do not see it yet)
+      return `<span class="mcal-name${mine ? ' me' : ''}${isLead ? ' ahm' : ''}${wish(p)}${opts.sel && opts.sel === p.iid ? ' sel' : ''}${pend ? ' pend' : ''}"${pend ? ' title="שינוי שעוד לא נשלח למדריכים"' : ''}${opts.drag ? ` data-iid="${p.iid}"` : ''}>${pEsc(p.name)}${isLead ? '<small class="ahm-tag">אחמ"ש</small>' : ''}${ann ? `<small>${pEsc(ann)}</small>` : ''}</span>`;
     };
     return `<div class="${cls}" data-day="${r.date}" data-shift="${s.id}"${edit}>${teachers}${lead.map(p => name(p, true)).join('')}${rest.map(p => name(p, false)).join('')}${extra}${service}${(liveMiss ? liveMiss[c.slot.key] || 0 : c.missing) ? `<span class="mcal-missing">חסר ${liveMiss ? liveMiss[c.slot.key] : c.missing}</span>` : ''}</div>`;
   };
@@ -7077,8 +7085,17 @@ async function srvLoad(){
   sched.forEach(r => { const m = st.months[monthOf(r.month)]; if(m){ m.status = r.status; m.published = r.status === 'published'; } });
   st.rows = [];
   if(sched.length){                                       // (the database shows a person only the published schedules; the coordinator sees the drafts too)
-    const rows = await srvAll(() => sbPersonal.from('assignment').select('id,staff_id,day,shift,from_time,to_time,flags').in('month', sched.map(r => r.month)).order('day'));
+    const plain = () => srvAll(() => sbPersonal.from('assignment').select('id,staff_id,day,shift,from_time,to_time,flags').in('month', sched.map(r => r.month)).order('day'));
+    let rows = null;
+    if(srv.meRow && (srv.meRow.role === 'coordinator' || srv.meRow.admin) && sched.some(r => r.status === 'published')){          // (the coordinator: with her changes that wait for "שליחת עדכונים", scheduling-v45.sql)
+      try { rows = await srvAll(() => sbPersonal.rpc('sched_rows', { p_months:sched.map(r => r.month) })); srv.pendingOn = true; } catch(e){ rows = null; srv.pendingOn = false; }
+    }
+    if(!rows) rows = await plain();
     rows.forEach(r => srvAddRow(st, r));
+  }
+  st.pending = { waiting:0, discarded:0 };
+  if(srv.pendingOn && srv.meRow && (srv.meRow.role === 'coordinator' || srv.meRow.admin)){
+    try { const pr = await sbPersonal.from('assignment_pending').select('id,discarded_at'); if(!pr.error) (pr.data || []).forEach(x => { st.pending[x.discarded_at ? 'discarded' : 'waiting']++; }); } catch(e){}
   }
   const swapRows = await srvAll(() => sbPersonal.from('swap_requests').select('id,assignment_id,from_staff,to_staff,status,urgent,created_at').order('created_at', { ascending:false })).catch(() => []);
   st.swaps = swapRows.filter(s => st.assignmentIds[s.assignment_id]).map(s => ({ id:s.id, key:st.assignmentIds[s.assignment_id].key, aid:s.assignment_id, urgent:!!s.urgent, from:s.from_staff, to:s.to_staff, status:s.status, at:s.created_at }));
@@ -7118,7 +7135,7 @@ function srvDropRow(st, id){
 }
 function srvAddRow(st, r){
   const t5 = x => x ? x.slice(0, 5) : null, from = t5(r.from_time), to = t5(r.to_time);
-  st.rows.push({ id:r.id, staff:r.staff_id, day:r.day, shift:r.shift, from, to, flags:r.flags || [] });
+  st.rows.push({ id:r.id, staff:r.staff_id, day:r.day, shift:r.shift, from, to, flags:r.flags || [], pending:r.pending || null });
   const who = st.instructors.find(p => p.id === r.staff_id);
   if(who && who.role === 'service' && r.shift !== 'L'){ const key = `${r.day}|${SRV_SHIFT_UI[r.shift] || 'm'}`; st.assignmentIds[r.id] = { key, staff:r.staff_id }; st.assignmentIds[`${key}|${r.staff_id}`] = r.id; }          // (a service girl's shift can be swapped too: scheduling-v28.sql)
   if(!who || who.role !== 'instructor') return;
@@ -7251,7 +7268,7 @@ async function srvSwapAction(fn, args){
   await srvReload();
 }
 // ---- sign in: the personal password (chosen at the first entry), or a code by e-mail (the first entry, or a forgotten password)
-function srvLoginHtml(step, email){
+function srvLoginHtml(step, email, again){
   const staffLink = location.hash === '#portal' || !staffPasswordOn() ? '' : '<button type="button" class="plogin-staff-link" id="plogin-staff">כניסה למכשיר של המרכז (סיסמת צוות)</button>';          // (not on the first screen: a small link at the bottom)
   let inner;
   if(step === 'code') inner = `
@@ -7261,11 +7278,11 @@ function srvLoginHtml(step, email){
         <button type="button" class="btn" id="plogin-verify">כניסה</button>
         <div class="plogin-row"><button type="button" class="btn ghost" id="plogin-resend">שליחת קוד חדש</button><button type="button" class="btn ghost" id="plogin-back">חזרה</button></div>`;
   else if(step === 'setpw') inner = `
-        <h2>בחירת סיסמה אישית</h2>
-        <div class="pnote">מהפעם הבאה נכנסים עם המייל והסיסמה הזו, בלי לחכות לקוד. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.</div>
+        <h2>${again ? 'רוצה לבחור סיסמה חדשה?' : 'בחירת סיסמה אישית'}</h2>
+        <div class="pnote">${again ? 'נכנסת עם קוד. אפשר לבחור עכשיו סיסמה קבועה חדשה, ומהפעם הבאה להיכנס איתה בלי לחכות לקוד.' : 'מהפעם הבאה נכנסים עם המייל והסיסמה הזו, בלי לחכות לקוד. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.'}</div>
         <label class="pfield">סיסמה (לפחות 8 תווים)<input type="password" id="plogin-new" autocomplete="new-password" dir="ltr"></label>
         <label class="pfield">שוב, לאימות<input type="password" id="plogin-new2" autocomplete="new-password" dir="ltr"></label>
-        <button type="button" class="btn" id="plogin-setpw">שמירה וכניסה</button>`;
+        <button type="button" class="btn" id="plogin-setpw">שמירה וכניסה</button>${again ? '<button type="button" class="btn ghost" id="plogin-skip">לא עכשיו</button>' : ''}`;
   else inner = `
         <h2>ברוכים הבאים</h2>
         <label class="pfield">כתובת מייל<input type="email" id="plogin-email" autocomplete="username" inputmode="email" dir="ltr" value="${pEsc(email || '')}"></label>
@@ -7279,10 +7296,10 @@ function srvLoginHtml(step, email){
       <div id="plogin-error" class="plogin-error" role="alert"></div>
     </div></div>`;
 }
-function srvShowLogin(step, email){
+function srvShowLogin(step, email, again){
   portalActivateView('view-portal');
   const view = document.getElementById('view-portal');
-  view.innerHTML = srvLoginHtml(step || 'email', email);
+  view.innerHTML = srvLoginHtml(step || 'email', email, again);
   const $ = id => document.getElementById(id);
   const err = msg => { $('plogin-error').textContent = msg || ''; };
   const guard = async (btn, work) => { btn.disabled = true; err(''); try { await work(); } catch(e){ err('משהו קטן השתבש. אפשר לנסות שוב בעוד רגע.'); } btn.disabled = false; };
@@ -7301,8 +7318,7 @@ function srvShowLogin(step, email){
       const { error } = await sbPersonal.auth.verifyOtp({ email, token:code, type:'email' });
       if(error){ err('הקוד לא התאים, או שהוא כבר לא בתוקף. אפשר לבקש קוד חדש.'); return; }
       const { data:{ user } } = await sbPersonal.auth.getUser();
-      if(!(user && user.user_metadata && user.user_metadata.has_password)){ srvShowLogin('setpw', email); return; }          // (the first entry: a personal password for the next times)
-      await enter();
+      srvShowLogin('setpw', email, !!(user && user.user_metadata && user.user_metadata.has_password));          // (the first entry: a personal password for the next times; later entries with a code: a new one may be chosen, or "לא עכשיו" — Guy 2026-10-28)
     }));
     $('plogin-resend').addEventListener('click', ev => guard(ev.target, async () => { if(await sendCode(email)){ err(''); toast('נשלח קוד חדש'); } }));
     $('plogin-back').addEventListener('click', () => srvShowLogin('email', email));
@@ -7317,6 +7333,7 @@ function srvShowLogin(step, email){
       toast('הסיסמה נשמרה. מהפעם הבאה נכנסים איתה.'); await enter();
     }));
     onEnter('plogin-new2', 'plogin-setpw');
+    if($('plogin-skip')) $('plogin-skip').addEventListener('click', ev => guard(ev.target, enter));
   } else {
     $('plogin-pwbtn').addEventListener('click', ev => guard(ev.target, async () => {
       const mail = $('plogin-email').value.trim().toLowerCase(), pw = $('plogin-pw').value;
@@ -8024,6 +8041,64 @@ function srvOpenShiftsOf(mk){
   return out;
 }
 
+// ---- a published month: the coordinator's changes wait for "שליחת עדכונים" (Guy 2026-10-28, scheduling-v45.sql). Until it is pressed the
+// staff do not see them and nobody is told; then each person gets one message with all of her changes. Before v45 (or a month that was
+// not published) a change is written at once, as before.
+const csPendingOn = mk => !!(srv.pendingOn && portalMonth(mk).published);
+const csTold = mk => csPendingOn(mk) ? ' יישלח למדריכים בלחיצה על "שליחת עדכונים".' : portalMonth(mk).published ? ' מי שנוגע בעניין קיבל עדכון.' : '';
+async function asgWrite(mk, op, id, data, news = true){
+  if(csPendingOn(mk)){
+    const r = await sbPersonal.rpc('sched_pending_write', { p_op:op, p_target:id || null, p_data:data || null });
+    if(!r.error && news){ const st = portalLoad(); st.pending = st.pending || { waiting:0, discarded:0 }; st.pending.waiting = Math.max(1, st.pending.waiting); st.pending.discarded = 0; csFirstPendingNote(); }
+    return { error:r.error, data:r.data && typeof r.data === 'object' ? Object.assign({ pending:op }, r.data) : r.data };
+  }
+  if(op === 'insert') return sbPersonal.from('assignment').insert(data).select('id,staff_id,day,shift,from_time,to_time,flags').single();
+  if(op === 'update') return sbPersonal.from('assignment').update(data).eq('id', id);
+  return sbPersonal.from('assignment').delete().eq('id', id);
+}
+// at her first change of a published month: what happens to it (once on this device)
+function csFirstPendingNote(){
+  try { if(localStorage.getItem('ramzor-pending-told') === '1') return; localStorage.setItem('ramzor-pending-told', '1'); } catch(e){ return; }
+  portalSheet(`<h2>השינוי נשמר, אבל עוד לא נשלח</h2>
+    <div class="pnote">הסידור הזה כבר פורסם. כל שינוי שתעשי בו נשמר אצלך, אבל המדריכים לא רואים אותו ולא מקבלים עליו הודעה עד שתלחצי על "שליחת עדכונים" (הכפתור המהבהב למעלה).</div>
+    <div class="pnote">כשתלחצי, כל מי שהושפע יקבל הודעה ומייל אחד עם כל השינויים שלו. השינויים שעוד לא נשלחו מסומנים בלוח בקו מקווקו, ואפשר גם לבטל את כולם.</div>
+    <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>הבנתי</button></div>`);
+}
+function csPendingBarHtml(mk){
+  if(!csPendingOn(mk)) return '';
+  const p = portalLoad().pending || { waiting:0, discarded:0 };
+  if(p.waiting) return `<div class="cs-pending" id="cs-pending"><button type="button" class="btn cs-send blink" id="cs-send">שליחת עדכונים (${p.waiting})</button><button type="button" class="btn ghost" id="cs-discard">ביטול השינויים</button>
+    <small>${p.waiting === 1 ? 'שינוי אחד שעוד לא נשלח' : `${p.waiting} שינויים שעוד לא נשלחו`} (בקו מקווקו בלוח). המדריכים יראו אותם, ויקבלו הודעה ומייל אחד עם כל השינויים שלהם, רק אחרי הלחיצה.</small></div>`;
+  if(p.discarded) return `<div class="cs-pending" id="cs-pending"><button type="button" class="btn ghost" id="cs-restore">שחזור השינויים שבוטלו (${p.discarded})</button><small>אפשר להחזיר אותם עד השינוי הבא בסידור.</small></div>`;
+  return '';
+}
+function csPendingWire(body, mk){
+  const after = async (msg, ms) => { await srvReloadSafe(); await srvLoadCoord(); toast(msg, ms || 0); if(body.isConnected) srvRenderCoordSchedule(body); };
+  const send = body.querySelector('#cs-send'), discard = body.querySelector('#cs-discard'), restore = body.querySelector('#cs-restore');
+  const n = (portalLoad().pending || {}).waiting || 0;
+  if(send) send.addEventListener('click', async () => {
+    if(!(await confirmSheet({ title:'לשלוח את העדכונים?', text:`${n === 1 ? 'השינוי יופיע' : `${n} השינויים יופיעו`} עכשיו למדריכים, וכל מי שהושפע יקבל הודעה ומייל אחד עם כל השינויים שלו.`, okLabel:'כן, לשלוח', cancelLabel:'חזרה' }))) return;
+    send.disabled = true;
+    const r = await sbPersonal.rpc('sched_send_updates');
+    if(r.error){ send.disabled = false; toast('השליחה נכשלה. אפשר לנסות שוב בעוד רגע'); return; }
+    const d = r.data || {};
+    await after(`העדכונים נשלחו${d.people ? ` ל-${d.people} ${d.people === 1 ? 'איש צוות' : 'אנשי צוות'}` : ''}.${d.skipped ? ` ${d.skipped} שינויים לא נשלחו, כי המשמרת השתנתה בינתיים (למשל החלפה שאושרה).` : ''}`, d.skipped ? 6000 : 0);
+  });
+  if(discard) discard.addEventListener('click', async () => {
+    if(!(await confirmSheet({ title:'לבטל את כל השינויים?', text:`${n === 1 ? 'השינוי שעוד לא נשלח יימחק' : `${n} השינויים שעוד לא נשלחו יימחקו`}, והסידור יחזור למה שהמדריכים רואים. אם זה קרה בטעות, אפשר לשחזר אותם מיד אחר כך (עד השינוי הבא).`, okLabel:'כן, לבטל', cancelLabel:'חזרה', danger:true }))) return;
+    discard.disabled = true;
+    const r = await sbPersonal.rpc('sched_discard_updates');
+    if(r.error){ discard.disabled = false; toast('הביטול נכשל. אפשר לנסות שוב בעוד רגע'); return; }
+    await after('השינויים בוטלו. אפשר לשחזר אותם בכפתור "שחזור".', 5000);
+  });
+  if(restore) restore.addEventListener('click', async () => {
+    restore.disabled = true;
+    const r = await sbPersonal.rpc('sched_restore_updates');
+    if(r.error){ restore.disabled = false; toast('השחזור נכשל. אפשר לנסות שוב בעוד רגע'); return; }
+    await after('השינויים חזרו. הם עדיין מחכים ל"שליחת עדכונים".');
+  });
+}
+
 // ---- the screen
 function srvDefaultCoordMonth(){
   const st = portalLoad(), cur = monthKeyOf(srvToday()), next = addMonths(cur, 1);
@@ -8041,6 +8116,7 @@ function srvRenderCoordSchedule(body){
   const has = !!m.status, issues = has ? csAllIssues(mk) : [];          // (by date; the live checks are worked out again at every drawing: 14jb)
   const keep = csKeepScroll(body);          // (after a change the screen stays where it was: Guy 2026-10-25)
   const group = String((st.waMsg || {}).group || '').trim();
+  const pend = {}; st.rows.forEach(r => { const a = r.pending && (st.assignmentIds || {})[r.id]; if(a) pend[a.key + '|' + r.staff] = true; });
   body.innerHTML = `
     ${monthNavHtml(mk, `<span class="pchip ${m.published ? 'lv-yes' : 'lv-avoid'}">${has ? SRV_STATUS_WORD[m.status] : 'אין סידור'}</span>`)}
     ${srvBuildBoxHtml(mk)}
@@ -8051,11 +8127,12 @@ function srvRenderCoordSchedule(body){
       ${m.published ? '<button type="button" class="btn ghost" id="cs-openday">פתיחת יום לשיבוץ</button>' : ''}
       ${group ? `<a class="btn ghost wa-group" href="${pEsc(waGroupUrl(group))}"${waTarget()}>${WA_SVG}<span>קבוצת המדריכים</span></a>` : ''}
     </div>
+    ${csPendingBarHtml(mk)}
     ${issues.length ? `<details class="pissues" id="cs-issues"${portalUi.csIssuesOpen ? ' open' : ''}><summary>${issues.length} דברים שדורשים תשומת לב</summary>${issues.map(csIssueHtml).join('')}</details>` : '<div class="pstatus ok">אין דברים שדורשים תשומת לב ✓</div>'}
     ${m.published ? srvOdFoldHtml(mk) : ''}
     ${srvCountFoldHtml(mk)}
     <div class="cs-note-row"><button type="button" class="btn ghost small" id="cs-others">הסתר מורות/בנות שירות${csHiddenMode() ? ` · <small>${({ teacher:'המורות מוסתרות', service:'בנות השירות מוסתרות', both:'שתיהן מוסתרות' })[csHiddenMode()]}</small>` : ''}</button></div>
-    <div class="cs-layout"><div class="cs-main">${monthCalHtml(ctx, m.assignments, { edit:true, drag:true, otherRm:!!portalUi.csOthersRm, colour:true, ahmash:srv.ahmash, sel:portalUi.csOpen ? portalUi.csPerson : null, others:false, othersInCells:csHiddenMode() !== 'both', hideRoles:csHiddenMode() === 'teacher' ? ['teacher'] : csHiddenMode() === 'service' ? ['service'] : [] })}</div>${srvSidePanelHtml(mk, issues)}</div>` : ''}
+    <div class="cs-layout"><div class="cs-main">${monthCalHtml(ctx, m.assignments, { edit:true, drag:true, otherRm:!!portalUi.csOthersRm, colour:true, pend, ahmash:srv.ahmash, sel:portalUi.csOpen ? portalUi.csPerson : null, others:false, othersInCells:csHiddenMode() !== 'both', hideRoles:csHiddenMode() === 'teacher' ? ['teacher'] : csHiddenMode() === 'service' ? ['service'] : [] })}</div>${srvSidePanelHtml(mk, issues)}</div>` : ''}
     ${srvHelpFoldHtml(m, has)}`;
   keep();
   wireMonthNav(body);
@@ -8069,6 +8146,7 @@ function srvRenderCoordSchedule(body){
       sh.querySelectorAll('[data-cs-hide]').forEach(b => b.addEventListener('click', () => { try { localStorage.setItem('ramzor-cs-hide-others', b.dataset.csHide || '0'); } catch(e){} sh.close(); srvRenderCoordSchedule(body); }));
     }); }
   if(m.published) srvOdWire(body, mk);
+  csPendingWire(body, mk);
   const csOpen = document.getElementById('cs-open'), csClose = document.getElementById('cs-close');
   if(csOpen) csOpen.addEventListener('click', () => { portalUi.csOpen = true; srvRenderCoordSchedule(body); });
   if(csClose) csClose.addEventListener('click', () => { portalUi.csOpen = false; portalUi.csPerson = null; srvRenderCoordSchedule(body); });
@@ -8117,7 +8195,7 @@ function srvRenderCoordSchedule(body){
   if(pub) pub.addEventListener('click', async () => {
     const open = (st.flags || []).filter(f => f.month && f.month.slice(0, 7) === mk && !['service_absent', 'service'].includes(f.kind)).length;
     const openShifts = srvOpenShiftsOf(mk);
-    if(!(await confirmSheet({ title:'לפרסם את הסידור?', text:`מרגע הפרסום כל המדריכים רואים אותו, ובכל מסך אישי מופיע הסעיף "איך הלכו הבקשות שלך"${open ? ` (עדיין יש ${open} דברים שדורשים תשומת לב)` : ''}.${openShifts.length ? ` יש ${openShifts.length} משמרות שעדיין לא הושלמו (חסרים בהן מדריכים). אחרי הפרסום הן יופיעו למדריכים כמשמרות פתוחות: רק מי שיכול לאייש אותן (לפי המנוחה, המקסימום של מי שאינם מובילים ועוד) יוכל לבקש להצטרף, וכל בקשה תגיע אלייך לאישור. מדריך ישובץ רק אחרי שתאשרי.` : ''} כל שינוי אחר כך שולח הודעה ומייל למי שהושפע.`, okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
+    if(!(await confirmSheet({ title:'לפרסם את הסידור?', text:`מרגע הפרסום כל המדריכים רואים אותו, ובכל מסך אישי מופיע הסעיף "איך הלכו הבקשות שלך"${open ? ` (עדיין יש ${open} דברים שדורשים תשומת לב)` : ''}.${openShifts.length ? ` יש ${openShifts.length} משמרות שעדיין לא הושלמו (חסרים בהן מדריכים). אחרי הפרסום הן יופיעו למדריכים כמשמרות פתוחות: רק מי שיכול לאייש אותן (לפי המנוחה, המקסימום של מי שאינם מובילים ועוד) יוכל לבקש להצטרף, וכל בקשה תגיע אלייך לאישור. מדריך ישובץ רק אחרי שתאשרי.` : ''} כל מי שיש לו משמרות החודש יקבל מייל שהסידור פורסם. שינויים שתעשי אחר כך יישלחו רק כשתלחצי על "שליחת עדכונים".`, okLabel:'כן, לפרסם', cancelLabel:'חזרה' }))) return;
     const u = await sbPersonal.from('schedule').update({ status:'published', published_at:new Date().toISOString() }).eq('month', firstOf(mk));
     if(u.error){ toast('הפרסום נכשל. נסו שוב.'); return; }
     await srvReloadSafe();
@@ -8132,7 +8210,7 @@ const SRV_FLAG_HIDDEN = ['composition', 'min', 'pair', 'service_absent'];
 // the fixed explanations, folded away in one place
 const srvHelpFoldHtml = (m, has) => `<details class="pfold cs-help"><summary><span>ℹ️ הסברים</span></summary><div class="pfold-body">
     ${has ? '' : '<div class="pnote">עוד אין סידור לחודש הזה. כשההגשה נסגרת, לוחצים על "צור סידור אוטומטי" והמערכת בונה אותו לפי ההעדפות והחוקים. מכאן אפשר לערוך אותו ידנית.</div>'}
-    ${has ? (m.published ? '<div class="pnote">הסידור פורסם. כל שינוי בו שולח הודעה ומייל למי שהושפע ולכל מי שנמצא באותה משמרת.</div>' : '<div class="pnote">הסידור עוד לא נראה למדריכים. אחרי הפרסום הם יראו אותו, ויקבלו מייל על כל שינוי.</div>') : ''}
+    ${has ? (m.published ? (srv.pendingOn ? '<div class="pnote">הסידור פורסם. שינויים שתעשי בו נשמרים, אבל המדריכים רואים אותם ומקבלים עליהם הודעה ומייל רק אחרי "שליחת עדכונים". החלפות שאישרת ומשמרות שמדריכים מילאו נכנסות מיד.</div>' : '<div class="pnote">הסידור פורסם. כל שינוי בו שולח הודעה ומייל למי שהושפע.</div>') : '<div class="pnote">הסידור עוד לא נראה למדריכים. אחרי הפרסום הם יראו אותו, וכל מי שיש לו משמרות יקבל מייל.</div>') : ''}
     ${has ? '<div class="pnote">לחיצה על משמרת בלוח פותחת עריכה.</div>' : ''}</div></details>`;
 // ---- "צור סידור אוטומטי": the schedule is built only when the coordinator asks, after the submission closed (the hourly job builds it,
 // within an hour; a published month is never built again). (scheduling-v33.sql; the engine's monthly build is off unless sched_settings.auto_build)
@@ -8260,7 +8338,7 @@ function srvOpenSlot(mk, key, body){
       const row = portalLoad().rows.find(x => x.id === b.dataset.ok); if(!row) return;
       const on = !(row.flags || []).includes('ok'), flags = on ? Array.from(new Set((row.flags || []).concat('ok'))) : (row.flags || []).filter(f => f !== 'ok');
       b.disabled = true;
-      const u = await sbPersonal.from('assignment').update({ flags }).eq('id', row.id);
+      const u = await asgWrite(monthKeyOf(row.day), 'update', row.id, { flags }, false);          // (not news: no message)
       if(u.error){ b.disabled = false; toast('השינוי נכשל'); return; }
       row.flags = flags; draw(); srvRenderCoordSchedule(body); toast(on ? `${nm(row.staff)} סומן/ה כמאשר/ת ✓` : 'האישור בוטל');
     }));
@@ -8270,7 +8348,7 @@ function srvOpenSlot(mk, key, body){
       const w = srvWarnings(who.value, date, code, from.value, to.value);
       if(w.length && !(await confirmSheet({ title:'לשבץ למרות האזהרות?', text:w.join('. ') + '.', okLabel:'כן, לשבץ', cancelLabel:'חזרה', danger:true }))) return;
       const std = SRV_STD[code]; const flags = ['manual'];
-      const ins = await sbPersonal.from('assignment').insert({ month:firstOf(mk), staff_id:who.value, day:date, shift:code, from_time:from.value, to_time:to.value, flags });
+      const ins = await asgWrite(monthKeyOf(date), 'insert', null, { month:firstOf(monthKeyOf(date)), staff_id:who.value, day:date, shift:code, from_time:from.value, to_time:to.value, flags });
       if(ins.error){ toast('השיבוץ נכשל'); return; }
       srvForgetRemoved(who.value, date, code);
       await srvReloadSafe(); await srvLoadCoord(); draw(); srvRenderCoordSchedule(body);
@@ -8290,9 +8368,9 @@ function srvOpenSlot(mk, key, body){
       const w = srvWarnings(row.staff, date, code, from, to, row.id);
       if(w.length && !(await confirmSheet({ title:'לשנות את השעות למרות האזהרות?', text:w.join('. ') + '.', okLabel:'כן, לשנות', cancelLabel:'חזרה', danger:true }))) return;
       const flags = Array.from(new Set((row.flags || []).concat('manual')));
-      const u = await sbPersonal.from('assignment').update({ from_time:from, to_time:to, flags }).eq('id', row.id);
+      const u = await asgWrite(monthKeyOf(row.day), 'update', row.id, { from_time:from, to_time:to, flags });
       if(u.error){ toast('השינוי נכשל'); return; }
-      row.from = from; row.to = to; row.flags = flags; editing = null; draw(); toast('השעות עודכנו. מי שנוגע בעניין קיבל עדכון.');          // (the row is shown at once with its new hours; the reload follows)
+      row.from = from; row.to = to; row.flags = flags; editing = null; draw(); toast('השעות עודכנו.' + csTold(monthKeyOf(row.day)));          // (the row is shown at once with its new hours; the reload follows)
       await srvReloadSafe(); await srvLoadCoord(); draw(); srvRenderCoordSchedule(body);
     }));
     wrap.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', async () => {
@@ -8301,10 +8379,10 @@ function srvOpenSlot(mk, key, body){
       const w = srvShiftWarnings(date, code, after);
       if(w.length && !(await confirmSheet({ title:'להסיר למרות האזהרות?', text:w.join('. ') + '.', okLabel:'כן, להסיר', cancelLabel:'חזרה', danger:true }))) return;
       b.disabled = true;
-      const d = await sbPersonal.from('assignment').delete().eq('id', r.id);
+      const d = await asgWrite(monthKeyOf(r.day), 'delete', r.id);
       if(d.error){ b.disabled = false; toast('ההסרה נכשלה'); return; }
       srvNoteRemoved(r);
-      srvDropRow(portalLoad(), r.id); draw(); srvRenderCoordSchedule(body); toast(`${nm(r.staff)} הוסר/ה מהמשמרת. מי שנוגע בעניין קיבל עדכון.`);
+      srvDropRow(portalLoad(), r.id); draw(); srvRenderCoordSchedule(body); toast(`${nm(r.staff)} הוסר/ה מהמשמרת.` + csTold(monthKeyOf(r.day)));
       srvReloadSafe().then(() => srvLoadCoord()).then(() => { draw(); if(body.isConnected) srvRenderCoordSchedule(body); }).catch(() => {});
     }));
     // replacing: another instructor takes this row (the same hours); the list is ordered by her wish for this shift, then by the priority list
@@ -8321,12 +8399,12 @@ function srvOpenSlot(mk, key, body){
       const w = srvWarnings(nw, date, code, from, to, r.id);
       if(w.length && !(await confirmSheet({ title:'להחליף למרות האזהרות?', text:w.join('. ') + '.', okLabel:'כן, להחליף', cancelLabel:'חזרה', danger:true }))) return;
       const flags = Array.from(new Set((r.flags || []).concat('manual')));
-      const u = await sbPersonal.from('assignment').update({ staff_id:nw, flags:flags.filter(f => f !== 'ok'), from_time:from, to_time:to }).eq('id', r.id);
+      const u = await asgWrite(monthKeyOf(r.day), 'update', r.id, { staff_id:nw, flags:flags.filter(f => f !== 'ok'), from_time:from, to_time:to });
       if(u.error){ toast('ההחלפה נכשלה'); return; }
       srvNoteRemoved(r); srvForgetRemoved(nw, r.day, r.shift);
       const st2 = portalLoad(), was = nm(r.staff);
       srvDropRow(st2, r.id); srvAddRow(st2, { id:r.id, staff_id:nw, day:r.day, shift:r.shift, from_time:from, to_time:to, flags:flags.filter(f => f !== 'ok') });
-      replacing = null; draw(); srvRenderCoordSchedule(body); toast(`${nm(nw)} במקום ${was}. מי שנוגע בעניין קיבל עדכון.`);
+      replacing = null; draw(); srvRenderCoordSchedule(body); toast(`${nm(nw)} במקום ${was}.` + csTold(monthKeyOf(r.day)));
       srvReloadSafe().then(() => srvLoadCoord()).then(() => { draw(); if(body.isConnected) srvRenderCoordSchedule(body); }).catch(() => {});
     }));
     { const rl = wrap.querySelector('.cs-repl-list'); if(rl) rl.scrollIntoView({ block:'nearest' }); }          // (the opened list is shown, not left below the fold)
@@ -8366,11 +8444,11 @@ async function srvMoveToSlot(mk, key, rowId, body){
   const w = srvWarnings(r.staff, date, code, sh.start, sh.end, r.id);
   if(w.length && !(await confirmSheet({ title:'להעביר למרות האזהרות?', text:w.join('. ') + '.', okLabel:'כן, להעביר', cancelLabel:'חזרה', danger:true }))) return;
   const flags = Array.from(new Set((r.flags || []).filter(f => f !== 'ok').concat('manual')));
-  const u = await sbPersonal.from('assignment').update({ month:firstOf(monthKeyOf(date)), day:date, shift:code, from_time:sh.start, to_time:sh.end, flags }).eq('id', r.id);
+  const was = monthKeyOf(r.day), u = await asgWrite(was, 'update', r.id, { month:firstOf(monthKeyOf(date)), day:date, shift:code, from_time:sh.start, to_time:sh.end, flags });
   if(u.error){ toast('ההעברה נכשלה'); return; }
   srvNoteRemoved(r); srvForgetRemoved(r.staff, date, code);
   srvDropRow(st, r.id); srvAddRow(st, { id:r.id, staff_id:r.staff, day:date, shift:code, from_time:sh.start, to_time:sh.end, flags });
-  srvRenderCoordSchedule(body); toast(`${nm} הועבר/ה ל${sh.label} ${dayLabel(date)}. מי שנוגע בעניין קיבל עדכון.`);
+  srvRenderCoordSchedule(body); toast(`${nm} הועבר/ה ל${sh.label} ${dayLabel(date)}.` + csTold(was));
   srvReloadSafe().then(() => srvLoadCoord()).then(() => { if(body.isConnected && portalServerOn) srvRenderCoordSchedule(body); }).catch(() => {});
 }
 // a service girl or a teacher taken off one shift (the × by her name, with a question first: Guy 2026-10-26). When her hours reach two shifts
@@ -8389,11 +8467,11 @@ async function srvRemoveOther(rowId, sid, body){
     s2.addEventListener('click', e => { if(e.target === s2) finish('back'); });
   });
   if(choice !== 'part' && choice !== 'all') return;
-  const u = choice === 'part' ? await sbPersonal.from('assignment').update(keep).eq('id', r.id) : await sbPersonal.from('assignment').delete().eq('id', r.id);
+  const u = choice === 'part' ? await asgWrite(monthKeyOf(r.day), 'update', r.id, keep) : await asgWrite(monthKeyOf(r.day), 'delete', r.id);
   if(u.error){ toast('ההסרה נכשלה'); return; }
   srvDropRow(st, r.id);
   if(choice === 'part') srvAddRow(st, { id:r.id, staff_id:r.staff, day:r.day, shift:keep.shift, from_time:keep.from_time, to_time:keep.to_time, flags:r.flags || [] });
-  srvRenderCoordSchedule(body); toast(choice === 'part' ? `${nm} הוסרה מ${sh.label || 'המשמרת'}` : `${nm} הוסרה מהסידור ביום הזה`);
+  srvRenderCoordSchedule(body); toast((choice === 'part' ? `${nm} הוסרה מ${sh.label || 'המשמרת'}.` : `${nm} הוסרה מהסידור ביום הזה.`) + csTold(monthKeyOf(r.day)));
   srvReloadSafe().then(() => srvLoadCoord()).then(() => { if(body.isConnected && portalServerOn) srvRenderCoordSchedule(body); }).catch(() => {});
 }
 // while a name is dragged the page can still be scrolled (Guy): with the mouse wheel, and by holding the name near the top or the bottom of the screen
@@ -8493,11 +8571,11 @@ async function srvAddToSlot(mk, key, staffId, body){
   // no question for "yes" or "can"; for "no" and for a shift she did not mark: ask her first on WhatsApp, or place anyway
   if(!(await srvAskBeforePlacing(staffId, key))) return;
   if(w.length && !(await confirmSheet({ title:'לשבץ למרות האזהרות?', text:w.join('. ') + '.', okLabel:'כן, לשבץ', cancelLabel:'חזרה', danger:true }))) return;          // (a window, not only a note afterwards: Guy 2026-10-25)
-  const ins = await sbPersonal.from('assignment').insert({ month:firstOf(monthKeyOf(date)), staff_id:staffId, day:date, shift:code, from_time:sh.start, to_time:sh.end, flags:['manual'] }).select('id,staff_id,day,shift,from_time,to_time,flags').single();
+  const ins = await asgWrite(monthKeyOf(date), 'insert', null, { month:firstOf(monthKeyOf(date)), staff_id:staffId, day:date, shift:code, from_time:sh.start, to_time:sh.end, flags:['manual'] });
   if(ins.error){ toast('השיבוץ נכשל'); return; }
   srvForgetRemoved(staffId, date, code);
   srvAddRow(st, ins.data); srvRenderCoordSchedule(body);              // (it shows at once; the full reload follows in the background)
-  toast(`${nm} שובץ/ה. מי שנוגע בעניין קיבל עדכון.`);
+  toast(`${nm} שובץ/ה.` + csTold(monthKeyOf(date)));
   srvReloadSafe().then(() => srvLoadCoord()).then(() => { if(body.isConnected && portalServerOn) srvRenderCoordSchedule(body); }).catch(() => {});
 }
 
@@ -8519,10 +8597,10 @@ async function srvAddOtherToSlot(mk, key, staffId, body){
   if(!h){ toast(`ל${nm} אין שעות קבועות ביום הזה`); return; }
   const { code, from, to } = h;
   if(st.rows.some(r => r.staff === staffId && r.day === date && r.shift === code)){ toast(`${nm} כבר בסידור במשמרת הזו`); return; }
-  const ins = await sbPersonal.from('assignment').insert({ month:firstOf(monthKeyOf(date)), staff_id:staffId, day:date, shift:code, from_time:from, to_time:to, flags:['manual'] }).select('id,staff_id,day,shift,from_time,to_time,flags').single();
+  const ins = await asgWrite(monthKeyOf(date), 'insert', null, { month:firstOf(monthKeyOf(date)), staff_id:staffId, day:date, shift:code, from_time:from, to_time:to, flags:['manual'] });
   if(ins.error){ toast('השיבוץ נכשל'); return; }
   srvAddRow(st, ins.data); srvRenderCoordSchedule(body);
-  toast(`${nm} נוספה לסידור, ${String(from).slice(0, 5)}–${String(to).slice(0, 5)}`);
+  toast(`${nm} נוספה לסידור, ${String(from).slice(0, 5)}–${String(to).slice(0, 5)}.` + csTold(monthKeyOf(date)));
   srvReloadSafe().then(() => srvLoadCoord()).then(() => { if(body.isConnected && portalServerOn) srvRenderCoordSchedule(body); }).catch(() => {});
 }
 
@@ -9219,6 +9297,8 @@ async function srvLoadSettings(){
   try { const fx = await sbPersonal.from('staff_settings').select('fixed_no').eq('staff_id', srv.me).maybeSingle(); if(!fx.error && fx.data && Array.isArray(fx.data.fixed_no)) srv.fixedNo = fx.data.fixed_no; } catch(e){}
   srv.lang = (srv.profile && srv.profile.lang) || null;          // (the language: her own choice, else the admin's default; scheduling-v25.sql)
   try { const lg = await sbPersonal.from('staff_settings').select('lang').eq('staff_id', srv.me).maybeSingle(); if(!lg.error && lg.data && lg.data.lang) srv.lang = lg.data.lang; } catch(e){}
+  srv.mailOff = null;          // (which of her messages come to the portal only: scheduling-v45.sql; null = not on this server yet)
+  try { const mo = await sbPersonal.from('staff_settings').select('mail_off').eq('staff_id', srv.me).maybeSingle(); if(!mo.error) srv.mailOff = (mo.data && mo.data.mail_off) || []; } catch(e){}
   if(!srv.lang){ try { srv.lang = localStorage.getItem('ramzor-portal-lang') || 'he'; } catch(e){ srv.lang = 'he'; } }
   try { localStorage.setItem('ramzor-portal-lang', srv.lang); } catch(e){}
   if(typeof arApply === 'function') arApply();
@@ -9266,12 +9346,15 @@ function openPortalSettings(){
     <div class="pnote">${tx('long_setting')}</div>
     <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${srv.pickOne ? 'on' : ''}" data-set-pick="1">להציג "רק אחד מאלה": כן</button><button type="button" class="${srv.pickOne ? '' : 'on'}" data-set-pick="0">לא</button></div>
     <div class="pnote">${tx('pick_setting')}</div>`) : ''}
+    ${portalAsCoord(portalMe()) && Array.isArray(srv.mailOff) ? fold('mail', 'מיילים', srv.mailOff.filter(k => COORD_MAIL[k]).length ? `${srv.mailOff.filter(k => COORD_MAIL[k]).length} רק בפורטל` : 'הכל גם במייל', `<div class="pnote">ההודעות מופיעות תמיד בפורטל. כאן בוחרים מה מגיע אלייך גם במייל.</div>
+    ${Object.keys(COORD_MAIL).map(k => `<h3 class="psec">${COORD_MAIL[k]}</h3><div class="pchoice wrap"><button type="button" class="${srv.mailOff.includes(k) ? '' : 'on'}" data-mail-key="${k}" data-mail-on="1">גם במייל</button><button type="button" class="${srv.mailOff.includes(k) ? 'on' : ''}" data-mail-key="${k}" data-mail-on="0">רק בפורטל</button></div>`).join('')}`) : ''}
     ${portalAsCoord(portalMe()) ? fold('adv', 'מתקדם', [csShowOk() ? W('✓ מוצג', '✓') : '', waMode() === 'app' ? W('וואטסאפ באפליקציה', 'واتساب في التطبيق') : W('וואטסאפ בדפדפן', 'واتساب في المتصفح')].filter(Boolean).join(' · '), `<h3 class="psec">סימון ✓ ליד מי שאישר/ה ידנית</h3>
     <div class="pchoice wrap"><button type="button" class="${csShowOk() ? '' : 'on'}" data-set-ok="0">רק ירוק, בלי ✓</button><button type="button" class="${csShowOk() ? 'on' : ''}" data-set-ok="1">ירוק עם ✓</button></div>
     <h3 class="psec">שיחות וואטסאפ נפתחות</h3>
     <div class="pchoice wrap"><button type="button" class="${waMode() === 'app' ? 'on' : ''}" data-set-wa="app">באפליקציית וואטסאפ במחשב</button><button type="button" class="${waMode() === 'app' ? '' : 'on'}" data-set-wa="web">בדפדפן</button></div>
     <div class="pnote">באפליקציה לא נפתחות לשוניות בדפדפן. צריך שאפליקציית וואטסאפ תהיה מותקנת במחשב הזה. הבחירות כאן נשמרות במכשיר הזה.</div>`) : ''}
-    <button type="button" class="btn ghost" id="gear-problem" style="margin-top:14px;width:100%">משהו לא עובד? דיווח על תקלה</button>
+    ${portalServerOn ? '<button type="button" class="btn ghost" id="gear-password" style="margin-top:14px;width:100%">שינוי סיסמה</button>' : ''}
+    <button type="button" class="btn ghost" id="gear-problem" style="margin-top:${portalServerOn ? 8 : 14}px;width:100%">משהו לא עובד? דיווח על תקלה</button>
     <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סיום</button></div>`);
   sh.querySelectorAll('[data-gfold]').forEach(d => d.addEventListener('toggle', () => { gf[d.dataset.gfold] = d.open; }));
   sh.querySelectorAll('[data-set-rem]').forEach(b => b.addEventListener('click', async () => {
@@ -9290,6 +9373,16 @@ function openPortalSettings(){
     if(n && portalUi.tab === 'prefs'){ const pb = document.getElementById('portal-body'); if(pb) renderInstructorPrefs(pb); }
   }));
   sh.querySelector('#gear-problem').addEventListener('click', () => { sh.close(); openProblemReport(); });
+  if(sh.querySelector('#gear-password')) sh.querySelector('#gear-password').addEventListener('click', () => { sh.close(); openChangePassword(); });
+  sh.querySelectorAll('[data-mail-key]').forEach(b => b.addEventListener('click', async () => {          // (the coordinator's e-mails, Guy 2026-10-28)
+    const k = b.dataset.mailKey, on = b.dataset.mailOn === '1', was = srv.mailOff.slice();
+    const next = on ? was.filter(x => x !== k) : Array.from(new Set(was.concat(k)));
+    sh.querySelectorAll(`[data-mail-key="${k}"]`).forEach(x => x.classList.toggle('on', x === b)); srv.mailOff = next;
+    let ok = false; try { const r = await sbPersonal.from('staff_settings').upsert({ staff_id:srv.me, mail_off:next }); ok = !r.error; } catch(e){}
+    if(!ok){ srv.mailOff = was; sh.querySelectorAll(`[data-mail-key="${k}"]`).forEach(x => x.classList.toggle('on', (x.dataset.mailOn === '1') === !was.includes(k))); toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע'); return; }
+    const now = sh.querySelector('[data-gfold="mail"] .gear-now'); if(now){ const n = next.filter(x => COORD_MAIL[x]).length; now.textContent = n ? `${n} רק בפורטל` : 'הכל גם במייל'; }
+    toast(on ? 'נשמר. זה יגיע אלייך גם במייל' : 'נשמר. זה יופיע רק בפורטל');
+  }));
   sh.querySelectorAll('[data-set-ok]').forEach(b => b.addEventListener('click', () => {          // ("✓ אישר/ה": by default only green; the ✓ is an advanced choice, Guy 2026-10-26)
     try { localStorage.setItem('ramzor-show-ok', b.dataset.setOk); } catch(e){}
     sh.querySelectorAll('[data-set-ok]').forEach(x => x.classList.toggle('on', x === b)); portalRefresh();
@@ -9331,6 +9424,31 @@ function openPortalSettings(){
     await srvSaveSetting({ pickOne:on }); sh.close(); showPortal();
   }));
   sh.querySelectorAll('[data-set-big]').forEach(b => b.addEventListener('click', () => { try { localStorage.setItem('ramzor-portal-big', b.dataset.setBig); } catch(e){} applyPortalSize(); sh.close(); openPortalSettings(); }));
+}
+// the coordinator's own kinds of messages (the keys of tell_key / tell_staff in scheduling-v45.sql): each may come to the portal only
+const COORD_MAIL = { swap_waiting:'בקשת החלפה שמחכה לאישור שלך', cant_coord:'מדריך/ה שלא יכול/ה להגיע למשמרת', open_req_coord:'בקשה להצטרף למשמרת פתוחה',
+  open_coord:'מישהו מילא משמרת חסרה', open_full:'יום נוסף לשיבוץ שהתמלא', not_submitted:'מי עוד לא הגיש העדפות (לקראת סוף ההגשה)' };
+// a new personal password from the gear, for everybody (Guy 2026-10-28)
+function openChangePassword(){
+  const sh = portalSheet(`<h2>שינוי סיסמה</h2>
+    <div class="pnote">מהפעם הבאה נכנסים עם המייל והסיסמה החדשה. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.</div>
+    <label class="pfield">סיסמה חדשה (לפחות 8 תווים)<input type="password" id="chpw-new" autocomplete="new-password" dir="ltr"></label>
+    <label class="pfield">שוב, לאימות<input type="password" id="chpw-new2" autocomplete="new-password" dir="ltr"></label>
+    <div id="chpw-error" class="plogin-error" role="alert"></div>
+    <div class="confirm-actions"><button type="button" class="btn" id="chpw-save">שמירה</button><button type="button" class="btn ghost" data-close>ביטול</button></div>`);
+  const err = m => { sh.querySelector('#chpw-error').textContent = m || ''; };
+  const save = sh.querySelector('#chpw-save');
+  save.addEventListener('click', async () => {
+    const a = sh.querySelector('#chpw-new').value, b = sh.querySelector('#chpw-new2').value;
+    if(a.length < 8){ err('הסיסמה צריכה להיות באורך 8 תווים לפחות.'); return; }
+    if(a !== b){ err('שתי הסיסמאות לא זהות. אפשר להקליד שוב.'); return; }
+    save.disabled = true; err('');
+    let error = null; try { ({ error } = await sbPersonal.auth.updateUser({ password:a, data:{ has_password:true } })); } catch(e){ error = e; }
+    save.disabled = false;
+    if(error){ err(/different|same/i.test(error.message || '') ? 'זו הסיסמה שכבר יש לך. אפשר לבחור אחרת.' : 'לא הצלחנו לשמור את הסיסמה כרגע. אפשר לנסות שוב בעוד רגע.'); return; }
+    sh.close(); toast('הסיסמה נשמרה. מהפעם הבאה נכנסים איתה.');
+  });
+  sh.querySelector('#chpw-new2').addEventListener('keydown', e => { if(e.key === 'Enter') save.click(); });
 }
 function applyPortalSize(){
   let big = '0'; try { big = localStorage.getItem('ramzor-portal-big') || '0'; } catch(e){}
@@ -10476,6 +10594,10 @@ Object.assign(AR, {
   'הקלידו את הקוד':'اكتبوا الرمز', 'שליחת קוד חדש':'إرسال رمز جديد', 'נשלח קוד חדש':'أُرسل رمز جديد', 'בחירת סיסמה אישית':'اختيار كلمة مرور شخصية',
   'מהפעם הבאה נכנסים עם המייל והסיסמה הזו, בלי לחכות לקוד. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.':'من المرة القادمة يكون الدخول بالبريد الإلكتروني وكلمة المرور هذه، بدون انتظار رمز. إذا نُسيت، يمكن دائمًا الحصول على رمز للبريد الإلكتروني.',
   'סיסמה (לפחות 8 תווים)':'كلمة المرور (8 أحرف على الأقل)', 'שוב, לאימות':'مرة أخرى، للتأكيد', 'שמירה וכניסה':'حفظ ودخول',
+  'רוצה לבחור סיסמה חדשה?':'هل تريد/ين اختيار كلمة مرور جديدة؟', 'לא עכשיו':'ليس الآن', 'שינוי סיסמה':'تغيير كلمة المرور', 'סיסמה חדשה (לפחות 8 תווים)':'كلمة مرور جديدة (8 أحرف على الأقل)',
+  'נכנסת עם קוד. אפשר לבחור עכשיו סיסמה קבועה חדשה, ומהפעם הבאה להיכנס איתה בלי לחכות לקוד.':'دخلت برمز. يمكن الآن اختيار كلمة مرور ثابتة جديدة، والدخول بها من المرة القادمة بدون انتظار رمز.',
+  'מהפעם הבאה נכנסים עם המייל והסיסמה החדשה. אם שוכחים אותה, אפשר תמיד לקבל קוד למייל.':'من المرة القادمة يكون الدخول بالبريد الإلكتروني وكلمة المرور الجديدة. إذا نُسيت، يمكن دائمًا الحصول على رمز للبريد الإلكتروني.',
+  'זו הסיסמה שכבר יש לך. אפשר לבחור אחרת.':'هذه كلمة المرور الموجودة لديك. يمكن اختيار أخرى.', 'לא הצלחנו לשמור את הסיסמה כרגע. אפשר לנסות שוב בעוד רגע.':'لم ننجح في حفظ كلمة المرور الآن. يمكن المحاولة مرة أخرى بعد لحظة.',
   'המייל או הסיסמה לא נכונים. אם שכחתם את הסיסמה, אפשר לקבל קוד למייל.':'البريد الإلكتروني أو كلمة المرور غير صحيحين. إذا نسيتم كلمة المرور، يمكن الحصول على رمز للبريد الإلكتروني.',
   'הסיסמה נשמרה. מהפעם הבאה נכנסים איתה.':'تم حفظ كلمة المرور. من المرة القادمة يكون الدخول بها.', 'הסיסמה צריכה להיות באורך 8 תווים לפחות.':'يجب أن تكون كلمة المرور 8 أحرف على الأقل.',
   'הקוד לא התאים, או שהוא כבר לא בתוקף. אפשר לבקש קוד חדש.':'الرمز غير مطابق، أو انتهت صلاحيته. يمكن طلب رمز جديد.', 'הקלידו את כתובת המייל.':'اكتبوا عنوان البريد الإلكتروني.',
