@@ -2141,6 +2141,12 @@
   .say-ico{ width:1.05em; height:1.05em; vertical-align:-.18em; margin-inline-end:5px; color:var(--gold, #d4a83a); flex:none; }
   .bk-ev-tested{ color:#4caf7d; } .bk-ev-derived{ color:#5b8def; } .bk-ev-new{ color:#c9932b; }
   .bk-age-also{ font-size:12px; opacity:.75; margin-inline-start:6px; }
+  /* the method tiles: the card of the method in a dark bubble while the mouse rests on the tile (Guy 2026-10-29); touch screens keep "מה זו?" */
+  .tp-tile-wrap{ position:relative; }
+  .tp-mpop{ display:none; position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); z-index:40; width:min(320px, 86vw); padding:10px 13px; border-radius:14px;
+    border:1px solid var(--gold, #d4a83a); background:var(--p-panel2, var(--panel-2, #1c2130)); color:var(--p-text, var(--text, #eef0f4)); font-size:12.5px; line-height:1.55; white-space:pre-line; text-align:start; box-shadow:0 10px 26px rgba(0, 0, 0, .4); pointer-events:none; }
+  .tp-mpop::before{ content:''; position:absolute; bottom:100%; left:50%; margin-left:-7px; border:7px solid transparent; border-bottom-color:var(--gold, #d4a83a); }
+  @media (hover:hover){ .tp-tile-wrap:hover .tp-mpop, .tp-tile:focus-visible ~ .tp-mpop{ display:block; } .tp-mcard{ display:none; } }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -13023,7 +13029,7 @@ async function tpBuilder(id, state){
       const nGoals = n => n === 1 ? 'מטרה אחת' : n + ' מטרות';          // (only what exists is offered: the checker, principle 10)
       if(s.entry === 'theme') inner = `<h2>איזו תמה?</h2><div class="tp-grid">${PLAN_CATS.map(t => [t, tpGoalsV2().filter(x => bankThemesOf(x).includes(t)).length]).filter(x => x[1]).map(([t, n]) => `<button type="button" class="tp-tile" data-theme="${pEsc(t)}"><b>${pEsc(t)}</b><small>${nGoals(n)}</small></button>`).join('') || '<div class="pnote">עוד אין מטרות בבנק. אפשר "משהו משלי".</div>'}</div>`;
       else if(s.entry === 'method') inner = `<h2>איזו שיטה?</h2><div class="tp-grid">${bankMethods().map(m => [m, tpGoalsV2().filter(x => (x.methods || []).includes(m)).length]).filter(x => x[1]).map(([m, n]) => { const card = (thp.library || []).find(y => y.kind === 'method' && y.title === m);
-        return `<div class="tp-tile-wrap"><button type="button" class="tp-tile" data-method="${pEsc(m)}"><b>${pEsc(m)}</b><small>${nGoals(n)}</small></button>${card ? `<details class="tp-mcard"><summary>מה זו?</summary><div>${pEsc(card.description || '')}</div></details>` : ''}</div>`; }).join('') || '<div class="pnote">עוד אין מטרות בבנק. אפשר "משהו משלי".</div>'}</div>`;
+        return `<div class="tp-tile-wrap"><button type="button" class="tp-tile" data-method="${pEsc(m)}"><b>${pEsc(m)}</b><small>${nGoals(n)}</small></button>${card ? `<span class="tp-mpop" role="tooltip">${pEsc(card.description || '')}</span><details class="tp-mcard"><summary>מה זו?</summary><div>${pEsc(card.description || '')}</div></details>` : ''}</div>`; }).join('') || '<div class="pnote">עוד אין מטרות בבנק. אפשר "משהו משלי".</div>'}</div>`;
       else inner = `<h2>חיפוש</h2><input type="search" id="tb-q" class="th-search" placeholder="למשל: מעברים, להירגע, פרידה" value="${pEsc(s.q || '')}"><div id="tb-res"></div>`;
       inner += nav(false);
     }
