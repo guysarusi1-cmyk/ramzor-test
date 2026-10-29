@@ -2133,7 +2133,12 @@
   /* from the research report (Guy 2026-10-29): what not to do by every intervention, the age of a goal, how well it is grounded (the therapist only) */
   .tp-avoid{ display:block; margin-top:3px; color:var(--p-muted, #9aa3b2); }
   .tp-age-tag{ margin-inline-start:6px; font-size:11px; opacity:.75; }
-  .bk-ev{ display:inline-block; margin-inline-start:6px; padding:0 7px; border-radius:8px; font-size:11px; line-height:17px; font-weight:600; border:1px solid currentColor; opacity:.85; }
+  .bk-ev{ position:relative; display:inline-block; margin-inline-start:6px; padding:0 7px; border-radius:8px; font-size:11px; line-height:17px; font-weight:600; border:1px solid currentColor; cursor:help; }
+  .bk-ev-pop{ display:none; position:absolute; bottom:calc(100% + 9px); inset-inline-start:-6px; z-index:30; width:max-content; max-width:min(280px, 78vw); padding:9px 12px; border-radius:14px;
+    border:1px solid currentColor; background:var(--p-panel2, var(--panel-2, #1c2130)); color:var(--p-text, var(--text, #eef0f4)); font-size:12.5px; font-weight:400; line-height:1.55; white-space:normal; text-align:start; box-shadow:0 8px 22px rgba(0, 0, 0, .35); }
+  .bk-ev-pop::after{ content:''; position:absolute; top:100%; inset-inline-start:14px; border:7px solid transparent; border-top-color:currentColor; }
+  .bk-ev:hover .bk-ev-pop, .bk-ev:focus .bk-ev-pop, .bk-ev:focus-within .bk-ev-pop{ display:block; }
+  .say-ico{ width:1.05em; height:1.05em; vertical-align:-.18em; margin-inline-end:5px; color:var(--gold, #d4a83a); flex:none; }
   .bk-ev-tested{ color:#4caf7d; } .bk-ev-derived{ color:#5b8def; } .bk-ev-new{ color:#c9932b; }
   .bk-age-also{ font-size:12px; opacity:.75; margin-inline-start:6px; }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
@@ -11054,7 +11059,7 @@ function thpStaffCard(c){
     <div class="th-kcard-head">${thpAvatar(c)}<b class="ar-keep">${pEsc(displayName(c))}</b>${g ? `<button type="button" class="btn ghost small" data-th-kid="${pEsc(c.id)}">עוד</button>` : ''}</div>
     ${thpVideoBtnHtml(c.id)}${careCardHtml(c)}
     ${g ? `${strengths.length ? `<div class="th-chips ar-keep">${strengths.map(s => `<span class="th-chip">${pEsc(s)}</span>`).join('')}</div>` : ''}
-      ${focus.map(x => tpIsV2(x) ? `<div class="th-kfocus">${tpStaffGoalHtml(c.id, x, true)}</div>` : `<div class="th-kfocus"><b class="ar-keep">${pEsc(x.title)}</b>${x.interventions ? `<div class="ar-keep">${pEsc(x.interventions)}</div>` : ''}${x.sentences ? `<div class="th-ksent ar-keep"><span aria-hidden="true">💬</span> ${pEsc(x.sentences)}</div>` : ''}${careWeekLine(c.id, x.id)}</div>`).join('')}
+      ${focus.map(x => tpIsV2(x) ? `<div class="th-kfocus">${tpStaffGoalHtml(c.id, x, true)}</div>` : `<div class="th-kfocus"><b class="ar-keep">${pEsc(x.title)}</b>${x.interventions ? `<div class="ar-keep">${pEsc(x.interventions)}</div>` : ''}${x.sentences ? `<div class="th-ksent ar-keep">${SAY}${pEsc(x.sentences)}</div>` : ''}${careWeekLine(c.id, x.id)}</div>`).join('')}
       ${ct.avoid ? `<div class="th-avoid"><b>ממה להימנע</b><div class="ar-keep">${pEsc(ct.avoid)}</div></div>` : ''}
       ${!ct.avoid && !focus.length ? '<div class="pnote">אין כרגע מטרות במוקד. "עוד" פותח את כל התוכנית.</div>' : ''}`
       : '<div class="th-kcard-none">עוד אין תוכנית טיפולית</div>'}
@@ -11991,7 +11996,10 @@ const BANK_AGE_WORD = Object.assign({ '5-8':'גילאי 5–8', '8-12':'גילא
 const BANK_LEGACY = { '6-9':'5-8', '10-12':'5-8', '13-15':'5-8' };          // (the first bank had 2-5 and 5-8, and older children got 5-8)
 // how well a goal is grounded in research (the therapist only): tested / derived from a supported approach / a new adaptation not tested yet
 const BANK_EVIDENCE = { tested:'נבדק מחקרית', derived:'נגזר מגישה מבוססת', new:'התאמה חדשה, טרם נבדקה' };
-const bankEvidenceTag = ev => ev && BANK_EVIDENCE[ev.level] ? `<span class="bk-ev bk-ev-${pEsc(ev.level)}" title="${pEsc(ev.note || '')}">${BANK_EVIDENCE[ev.level]}</span>` : '';
+// the label opens a small dark bubble in its own colour with the reason (hover, or a tap / focus on a phone) — not the browser's white box
+const bankEvidenceTag = ev => ev && BANK_EVIDENCE[ev.level] ? `<span class="bk-ev bk-ev-${pEsc(ev.level)}" tabindex="0">${BANK_EVIDENCE[ev.level]}${ev.note ? `<span class="bk-ev-pop" role="tooltip">${pEsc(ev.note)}</span>` : ''}</span>` : '';
+// a sentence to say to the child: a round speech bubble in the portal's gold
+const SAY = '<svg class="say-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.2c-5.1 0-9.2 3.4-9.2 7.7 0 2.3 1.2 4.4 3.1 5.8-.2 1.5-1 2.9-2.2 3.9 2.1 0 4.1-.8 5.6-2 .9.2 1.8.3 2.7.3 5.1 0 9.2-3.4 9.2-7.9S17.1 3.2 12 3.2z"/></svg>';
 const BANK_METHODS0 = ['ARC', 'DDP/PACE', 'TF-CBT', 'Theraplay', 'ויסות חושי', 'NMT'];
 const BANK_PART_KINDS = ['avoid', 'signs', 'calm', 'routine'];
 const bankIsAdmin = () => !!(srv.profile && srv.profile.admin);
@@ -12079,7 +12087,7 @@ function bankPreviewHtml(x, age){
   if(c.v === 2){          // (the bank of the walkthrough: targets and interventions per age)
     const w = bankWording(x, age) || {};
     return `${c.evidence ? `<div class="bk-pv-row"><b>ביסוס</b><span>${bankEvidenceTag(c.evidence)}${c.evidence.note ? ` <small>${pEsc(c.evidence.note)}</small>` : ''}</span></div>` : ''}<div class="bk-pv-row"><b>יעדים</b><span>${(w.targets || []).map(t => `<span class="bk-line">• ${pEsc(t.text)} <small>(לצוות: ${pEsc(t.staff)})</small></span>`).join('')}</span></div>
-      <div class="bk-pv-row"><b>דרכי התערבות</b><span>${(w.interventions || []).map(i => `<span class="bk-line"><b>${pEsc(i.name)}</b> ${pEsc(i.what)} <em class="tp-appr">${pEsc(i.approach)}</em><br><small>${pEsc(i.freq || '')} · ${(i.sentences || []).map(s => '💬 ' + pEsc(s)).join(' ')}</small>${i.avoid ? `<small class="tp-avoid">🚫 ${pEsc(i.avoid)}</small>` : ''}</span>`).join('')}</span></div>
+      <div class="bk-pv-row"><b>דרכי התערבות</b><span>${(w.interventions || []).map(i => `<span class="bk-line"><b>${pEsc(i.name)}</b> ${pEsc(i.what)} <em class="tp-appr">${pEsc(i.approach)}</em><br><small>${pEsc(i.freq || '')} · ${(i.sentences || []).map(s => SAY + pEsc(s)).join(' ')}</small>${i.avoid ? `<small class="tp-avoid">🚫 ${pEsc(i.avoid)}</small>` : ''}</span>`).join('')}</span></div>
       ${(c.strengths || []).length ? `<div class="bk-pv-row"><b>חוזקות</b><span>${c.strengths.map(pEsc).join(' · ')}</span></div>` : ''}`;
   }
   if(x.kind !== 'goal' && x.kind !== 'plan') return `<div class="bk-pv-text">${pEsc(bankHasAges(x) ? (bankWording(x, age) || '') : (x.description || ''))}</div>`;
@@ -12840,7 +12848,7 @@ function tpGoalCard(id, g, i, can){
   const targets = v2 ? g.targets_list.map((t, k) => `<details class="tp-target"><summary><span>יעד ${k + 1} – ${pEsc(t.text)}</span>${t.now ? `<em class="tp-now">עכשיו ${t.now}${t.target ? ' · רוצים ' + t.target : ''}</em>` : ''}</summary>
       <div class="tp-t-body"><div><span class="tp-lbl">לצוות:</span> ${pEsc(t.staff || '')}</div>${(t.scale || []).length ? `<ol class="tp-stations">${t.scale.map((s, j) => `<li class="${t.now === j + 1 ? 'now' : ''}${t.target === j + 1 ? ' goal' : ''}">${pEsc(s)}</li>`).join('')}</ol>` : ''}</div></details>`).join('')
     : (g.targets ? `<div class="tp-legacy"><span class="tp-lbl">יעדים:</span> ${pEsc(g.targets)}</div>` : '');
-  const ints = v2 ? (g.interventions_list || []).map(x => `<div class="tp-int"><span><b>${pEsc(x.name)}</b> ${pEsc(x.what)}${x.freq ? ` <small>(${pEsc(x.freq)})</small>` : ''}${(x.sentences || []).length ? `<span class="tp-sent">${x.sentences.map(s => '💬 ' + pEsc(s)).join('<br>')}</span>` : ''}${x.avoid ? `<small class="tp-avoid">🚫 ${pEsc(x.avoid)}</small>` : ''}</span><em class="tp-appr">${pEsc(x.approach || '')}</em></div>`).join('')
+  const ints = v2 ? (g.interventions_list || []).map(x => `<div class="tp-int"><span><b>${pEsc(x.name)}</b> ${pEsc(x.what)}${x.freq ? ` <small>(${pEsc(x.freq)})</small>` : ''}${(x.sentences || []).length ? `<span class="tp-sent">${x.sentences.map(s => SAY + pEsc(s)).join('<br>')}</span>` : ''}${x.avoid ? `<small class="tp-avoid">🚫 ${pEsc(x.avoid)}</small>` : ''}</span><em class="tp-appr">${pEsc(x.approach || '')}</em></div>`).join('')
     : (g.interventions ? `<div class="tp-legacy"><span class="tp-lbl">מה עושים:</span> ${pEsc(g.interventions)}</div>` : '');
   const acts = can ? `<div class="tp-acts">${v2 ? `<button type="button" class="btn ghost small" data-tp-edit="${i}">עריכה</button>` : ''}
       <details class="tp-more-acts"><summary aria-label="עוד פעולות">⋯</summary><div>${v2 ? `<button type="button" class="btn ghost small" data-tp-route="${i}">פתיחה במסלול</button>` : ''}
@@ -13053,8 +13061,8 @@ async function tpBuilder(id, state){
     }
     else if(s.step === 'sents'){
       inner = `<h2>משפטים לומר לילד/ה</h2><div class="pnote">בוחרים אחד אחד. רק מה שבחרת יגיע לצוות.</div>
-        ${s.ints.map(x => `<div class="tp-sent-block"><b>${pEsc(x.name)}</b><div class="tp-chips">${(x.sentencesAll || []).map((t, k) => `<button type="button" class="th-chip${(x.sentences || []).includes(G(t)) ? ' on' : ''}" data-sent="${pEsc(x.id)}" data-k="${k}">💬 ${pEsc(G(t))}</button>`).join('')}</div>
-          ${(x.sentences || []).filter(t => !(x.sentencesAll || []).map(G).includes(t)).map(t => `<span class="th-chip on">💬 ${pEsc(t)}</span>`).join('')}
+        ${s.ints.map(x => `<div class="tp-sent-block"><b>${pEsc(x.name)}</b><div class="tp-chips">${(x.sentencesAll || []).map((t, k) => `<button type="button" class="th-chip${(x.sentences || []).includes(G(t)) ? ' on' : ''}" data-sent="${pEsc(x.id)}" data-k="${k}">${SAY}${pEsc(G(t))}</button>`).join('')}</div>
+          ${(x.sentences || []).filter(t => !(x.sentencesAll || []).map(G).includes(t)).map(t => `<span class="th-chip on">${SAY}${pEsc(t)}</span>`).join('')}
           <div class="th-add-row"><input type="text" data-own-sent="${pEsc(x.id)}" placeholder="משפט משלי"><button type="button" class="btn ghost small" data-own-sent-add="${pEsc(x.id)}">הוספה</button></div></div>`).join('')}${nav(true)}`;
     }
     else if(s.step === 'journey'){          // (its own step: Guy, after the simplicity checker)
@@ -13072,7 +13080,7 @@ async function tpBuilder(id, state){
       inner = `<h2>סיכום</h2><div class="tp-sum"><div><span class="tp-lbl">מטרה</span><b>${pEsc(G(s.title))}</b> <em class="tp-now">${s.status === 'focus' ? 'תיכנס למוקד' : 'תחכה בהמתנה'}</em></div>
         <div><span class="tp-lbl">יעדים</span>${s.targets.map(t => `<div>• ${pEsc(G(t.text))}${t.now ? ` <em class="tp-now">עכשיו ${t.now}${t.target ? ' · רוצים ' + t.target : ''}</em>` : ''}</div>`).join('')}</div>
         <div><span class="tp-lbl">דרכי התערבות</span>${s.ints.map(x2 => `<div>• ${pEsc(x2.name)} <em class="tp-appr">${pEsc(x2.approach || '')}</em></div>`).join('')}</div>
-        <div><span class="tp-lbl">משפטים</span>${s.ints.flatMap(x2 => x2.sentences || []).map(t => `<div>💬 ${pEsc(t)}</div>`).join('') || '<div class="pnote">לא נבחרו משפטים.</div>'}</div>
+        <div><span class="tp-lbl">משפטים</span>${s.ints.flatMap(x2 => x2.sentences || []).map(t => `<div>${SAY}${pEsc(t)}</div>`).join('') || '<div class="pnote">לא נבחרו משפטים.</div>'}</div>
         <div><span class="tp-lbl">מסע ומקדש</span>${s.strengths.map(t => `<span class="th-chip">${pEsc(t)}</span>`).join(' ') || '<span class="pnote">בלי חוזקות</span>'}${s.planet ? ` · 🪐 ${pEsc(((thp.planets || []).find(p => p.id === s.planet) || {}).name || '')}` : ''}</div></div>
         ${nav(true, 'לתצוגה של הצוות ←')}`;
     }
@@ -13165,7 +13173,7 @@ function tpStaffGoalHtml(childId, g, withFeedback){
     ${(g.targets_list || []).length ? `<div class="tp-sg-t">${g.targets_list.map(t => `<div class="ar-keep">🎯 ${pEsc(t.staff || '')}</div>`).join('')}</div>` : ''}
     ${(g.interventions_list || []).map(i => `<div class="tp-sg-i"><span class="ar-keep"><b>${pEsc(i.name)}</b> ${pEsc(i.what)}${i.freq ? ` <small>(${pEsc(i.freq)})</small>` : ''}${i.avoid ? `<small class="tp-avoid">🚫 ${pEsc(i.avoid)}</small>` : ''}</span><em class="tp-appr">${pEsc(i.approach || '')}</em>
       ${withFeedback ? `<span class="tp-fb"><button type="button" data-fb="${pEsc(childId)}|${pEsc(g.id)}|${pEsc(i.id)}|up" aria-label="עבד">👍</button><button type="button" data-fb="${pEsc(childId)}|${pEsc(g.id)}|${pEsc(i.id)}|down" aria-label="לא עבד">👎</button></span>` : ''}</div>`).join('')}
-    ${sents.length ? `<div class="tp-sg-s ar-keep">${sents.slice(0, 2).map(t => `<div>💬 ${pEsc(t)}</div>`).join('')}${sents.length > 2 ? `<details><summary>עוד</summary>${sents.slice(2).map(t => `<div>💬 ${pEsc(t)}</div>`).join('')}</details>` : ''}</div>` : ''}</div>`;
+    ${sents.length ? `<div class="tp-sg-s ar-keep">${sents.slice(0, 2).map(t => `<div>${SAY}${pEsc(t)}</div>`).join('')}${sents.length > 2 ? `<details><summary>עוד</summary>${sents.slice(2).map(t => `<div>${SAY}${pEsc(t)}</div>`).join('')}</details>` : ''}</div>` : ''}</div>`;
 }
 function tpWireFeedback(box){
   box.querySelectorAll('[data-fb]').forEach(b => b.addEventListener('click', () => {
