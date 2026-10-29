@@ -1662,9 +1662,9 @@
   .pcands{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:-4px 0 10px; padding:6px 10px; border-radius:10px; background:var(--p-panel); }
   .pcands-title{ flex-basis:100%; color:var(--p-muted); } .pcand{ display:inline-flex; align-items:center; gap:6px; } .pcand .mcal-name{ font-size:11px; padding:1px 7px; }
   /* the middle shift 12–20 (Guy 2026-10-28): the tag by a name, and on the shift while she is dragged over it */
-  .mid-tag{ display:inline-block; margin-inline-start:6px; padding:0 6px; border-radius:8px; font-size:11px; line-height:16px; background:#123322; color:#7be0a0; font-weight:700; }
-  .mcal-cell.drop-mid{ position:relative; }
-  .mcal-cell.drop-mid::after{ content:'12–20'; position:absolute; top:3px; inset-inline-end:4px; direction:ltr; unicode-bidi:isolate; padding:0 6px; border-radius:8px; font-size:11px; line-height:16px; background:#123322; color:#7be0a0; font-weight:700; }
+  .mid-tag{ display:inline-block; margin-inline-start:6px; padding:0 6px; border-radius:8px; font-size:11px; line-height:16px; background:rgba(0, 0, 0, .55); color:#fff; font-weight:700; }
+  .mcal-cell.drop-hrs{ position:relative; }
+  .mcal-cell.drop-hrs::after{ content:attr(data-hrs); position:absolute; top:3px; inset-inline-end:4px; direction:ltr; unicode-bidi:isolate; padding:0 6px; border-radius:8px; font-size:11px; line-height:16px; background:rgba(0, 0, 0, .7); color:#fff; font-weight:700; }
   .hours-mid{ width:100%; margin:4px 0 8px; }
 
 /* ---- the children's characters ---- */
@@ -2130,6 +2130,12 @@
 
 /* the checker, round 3: thumbs the size of a finger */
 .tp-fb button{ min-width:44px; min-height:44px; } .cs-rebuild-opts .btn.danger{ border-color:#ff6b6b; color:#ff9b9b; }
+  /* from the research report (Guy 2026-10-29): what not to do by every intervention, the age of a goal, how well it is grounded (the therapist only) */
+  .tp-avoid{ display:block; margin-top:3px; color:var(--p-muted, #9aa3b2); }
+  .tp-age-tag{ margin-inline-start:6px; font-size:11px; opacity:.75; }
+  .bk-ev{ display:inline-block; margin-inline-start:6px; padding:0 7px; border-radius:8px; font-size:11px; line-height:17px; font-weight:600; border:1px solid currentColor; opacity:.85; }
+  .bk-ev-tested{ color:#4caf7d; } .bk-ev-derived{ color:#5b8def; } .bk-ev-new{ color:#c9932b; }
+  .bk-age-also{ font-size:12px; opacity:.75; margin-inline-start:6px; }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -8481,8 +8487,8 @@ function srvOpenSlot(mk, key, body){
     const rows = rowsHere(), people = portalLoad().instructors.filter(p => p.active && p.role === 'instructor' && !rows.some(r => r.staff === p.id));
     // what each of them wrote for THIS shift: yes (green), can (yellow), not marked (blue), no / away (red); the list is ordered the same way
     const mprefs = portalMonth(monthKeyOf(date)).prefs || {}, LV = { yes:['yes', 'כן'], avoid:['can', 'יכול'], none:['none', 'לא סומן'], no:['no', 'לא'] }, RANK = { yes:0, avoid:1, none:2, no:3 };
-    const levelFor = id => { const pr = mprefs[id] || { slots:{}, absent:[], fixed:[] }; if((pr.absent || []).includes(date) || (pr.fixed || []).some(f => f.day === date)) return 'no'; if(srvMidKey(id, key)) return 'yes'; return (pr.slots || {})[key] || 'none'; };
-    const midTag = id => srvMidKey(id, key) ? SRV_MID_TAG : '';
+    const levelFor = id => { const pr = mprefs[id] || { slots:{}, absent:[], fixed:[] }; if((pr.absent || []).includes(date) || (pr.fixed || []).some(f => f.day === date)) return 'no'; const lv0 = (pr.slots || {})[key]; if(!lv0 && srvHoursPlace(id, key)) return 'yes'; return lv0 || 'none'; };
+    const midTag = id => srvHoursTag(id, key);
     const prio = id => (((portalLoad().priv || {})[id] || {}).leader_priority) ?? 999;
     const rankOf = list => list.map((p, i) => ({ p, lv:levelFor(p.id), i })).sort((a, b) => RANK[a.lv] - RANK[b.lv] || prio(a.p.id) - prio(b.p.id) || a.i - b.i);          // (green first, then by the priority list)
     const ranked = rankOf(people);
@@ -8512,7 +8518,7 @@ function srvOpenSlot(mk, key, body){
     pickList.querySelectorAll('.cs-pick-item').forEach(it => it.addEventListener('click', e => { e.stopPropagation(); who.value = it.dataset.val; pickList.hidden = true; pickBtn.setAttribute('aria-expanded', 'false'); who.dispatchEvent(new Event('change')); }));
     wrap.addEventListener('click', e => { if(!e.target.closest('.cs-pick')){ pickList.hidden = true; pickBtn.setAttribute('aria-expanded', 'false'); } });
     const goBtn = wrap.querySelector('#add-go');
-    who.addEventListener('change', () => { if(who.value && srvMidKey(who.value, key)){ from.value = '12:00'; to.value = '20:00'; } tint(); upd(); const o = who.selectedOptions[0]; wrap.querySelector('#add-hours').hidden = goBtn.hidden = !who.value; if(who.value) goBtn.textContent = `הוסף את ${o ? o.textContent : ''}`; }); from.addEventListener('change', upd); to.addEventListener('change', upd);
+    who.addEventListener('change', () => { const hp = who.value && srvHoursPlace(who.value, key); if(hp){ from.value = hp.from; to.value = hp.to; } tint(); upd(); const o = who.selectedOptions[0]; wrap.querySelector('#add-hours').hidden = goBtn.hidden = !who.value; if(who.value) goBtn.textContent = `הוסף את ${o ? o.textContent : ''}`; }); from.addEventListener('change', upd); to.addEventListener('change', upd);
     wrap.querySelectorAll('[data-ok]').forEach(b => b.addEventListener('click', async () => {          // (confirmed by hand: the name turns green; no message is sent, nothing else changes)
       const row = portalLoad().rows.find(x => x.id === b.dataset.ok); if(!row) return;
       const on = !(row.flags || []).includes('ok'), flags = on ? Array.from(new Set((row.flags || []).concat('ok'))) : (row.flags || []).filter(f => f !== 'ok');
@@ -8526,7 +8532,7 @@ function srvOpenSlot(mk, key, body){
       if(!(await srvAskBeforePlacing(who.value, key))) return;
       const w = srvWarnings(who.value, date, code, from.value, to.value);
       if(w.length && !(await confirmSheet({ title:'לשבץ למרות האזהרות?', text:w.join('. ') + '.', okLabel:'כן, לשבץ', cancelLabel:'חזרה', danger:true }))) return;
-      const mid = srvMidKey(who.value, key) && from.value === '12:00' && to.value === '20:00', flags = mid ? ['manual', 'mid'] : ['manual'];          // (12–20: one afternoon row)
+      const hp = srvHoursPlace(who.value, key), mid = !!(hp && hp.mid) && from.value === '12:00' && to.value === '20:00', flags = mid ? ['manual', 'mid'] : hp && from.value === hp.from && to.value === hp.to ? ['manual', 'partial'] : ['manual'];          // (12–20: one afternoon row)
       const ins = await asgWrite(monthKeyOf(date), 'insert', null, { month:firstOf(monthKeyOf(date)), staff_id:who.value, day:date, shift:mid ? 'A' : code, from_time:from.value, to_time:to.value, flags });
       if(ins.error){ toast('השיבוץ נכשל'); return; }
       srvForgetRemoved(who.value, date, code);
@@ -8617,7 +8623,7 @@ function csKeepScroll(body){
 async function srvMoveToSlot(mk, key, rowId, body){
   const st = portalLoad(), r = st.rows.find(x => x.id === rowId), { date, shiftId } = splitKey(key), sh0 = st.shiftTypes.find(x => x.id === shiftId);
   if(!r || !sh0 || r.shift === 'L') return;
-  const mid = srvMidKey(r.staff, key), code = mid ? 'A' : SRV_SHIFT_DB[shiftId], sh = mid ? Object.assign({}, sh0, { start:'12:00', end:'20:00' }) : sh0;          // (12–20 that day: there only)
+  const hp = srvHoursPlace(r.staff, key), code = hp ? hp.code : SRV_SHIFT_DB[shiftId], sh = hp ? Object.assign({}, sh0, { start:hp.from, end:hp.to }) : sh0;          // (hours of her own that day: in them)
   if(r.day === date && SRV_SHIFT_UI[r.shift === 'S' ? 'M' : r.shift] === shiftId) return;          // (dropped back where it was)
   const person = st.instructors.find(p => p.id === r.staff), nm = person ? instrName(person, st.instructors) : '';
   if(st.rows.some(x => x.id !== r.id && x.staff === r.staff && x.day === date && (x.shift === code || (code === 'M' && x.shift === 'S')))){ toast(`${nm} כבר במשמרת הזו`); return; }
@@ -8733,35 +8739,47 @@ function srvSidePanelHtml(mk, issues){
 let srvDragWho = null, srvDragRow = null, srvRenderAfterDrag = null;          // (srvDragRow: a name dragged from the calendar itself, the row that moves)
 // the middle shift 12:00–20:00 (Guy 2026-10-28): an instructor who chose it that day ("שעות אחרות" 12–20) is a "yes" for that day's morning
 // and afternoon, and wherever she is dropped there she is placed 12–20: one row of the afternoon, shown in the morning too (overlapExtras)
-function srvMidFor(staffId, date){ const pr = (portalMonth(monthKeyOf(date)).prefs || {})[staffId]; return !!pr && ((pr.hours || {})[date] || []).some(([a, b]) => a === 12 && b === 20); }
-const srvMidKey = (staffId, key) => /\|[me]$/.test(key) && srvMidFor(staffId, splitKey(key).date);
-const SRV_MID_TAG = '<small class="mid-tag"><bdi dir="ltr">12–20</bdi></small>';
+// her own hours that day ("שעות אחרות", all of them: Guy 2026-10-28), for a morning or an afternoon: where she would be placed and the tag with
+// her hours, or null. 12–20 is the middle shift (one afternoon row 12–20); other hours: her hours inside the shift (two hours at least)
+function srvHoursPlace(staffId, key){
+  const { date, shiftId } = splitKey(key); if(!['m', 'e'].includes(shiftId)) return null;
+  const pr = (portalMonth(monthKeyOf(date)).prefs || {})[staffId], ws = pr && (pr.hours || {})[date]; if(!ws || !ws.length) return null;
+  const tag = ws.map(([a, b]) => a + '–' + b).join(', '), hh = h => String(h).padStart(2, '0') + ':00';
+  if(ws.some(([a, b]) => a === 12 && b === 20)) return { from:'12:00', to:'20:00', code:'A', mid:true, tag };
+  const [s, e] = shiftId === 'm' ? [7, 15] : [14, 22], w = ws.map(([a, b]) => [Math.max(a, s), Math.min(b, e)]).filter(([a, b]) => b - a >= 2).sort((x, y) => (y[1] - y[0]) - (x[1] - x[0]))[0];
+  return w ? { from:hh(w[0]), to:hh(w[1]), code:shiftId === 'm' ? 'M' : 'A', mid:false, tag } : null;
+}
+const srvMidKey = (staffId, key) => { const h = srvHoursPlace(staffId, key); return !!(h && h.mid); };
+const srvHoursTag = (staffId, key) => { const h = srvHoursPlace(staffId, key); return h ? `<small class="mid-tag"><bdi dir="ltr">${h.tag}</bdi></small>` : ''; };
 // what this instructor wrote for this shift (key = 'date|m/e/n'): yes / can / no (also when she is away that day) / none
 function srvWishFor(staffId, key){
   const date = splitKey(key).date, pr = (portalMonth(monthKeyOf(date)).prefs || {})[staffId] || { slots:{}, absent:[], fixed:[] };
   if((pr.absent || []).includes(date) || (pr.fixed || []).some(f => f.day === date)) return 'no';
-  if(srvMidKey(staffId, key)) return 'yes';          // (she chose 12–20 that day)
   const lv = (pr.slots || {})[key];
+  if(!lv && srvHoursPlace(staffId, key)) return 'yes';          // (hours of her own that reach this shift: a "yes", unless she marked the shift itself — as the engine)
   if(!lv && /\|n$/.test(key) && ((portalLoad().priv || {})[staffId] || {}).no_nights) return 'no';          // (somebody who does not do nights: a night she did not mark counts as "no")
   if(!lv && ((portalLoad().fixedNo || {})[staffId] || []).includes(key.split('|')[1])) return 'no';          // (her fixed preferences: "does not do mornings / afternoons / nights")
   return lv === 'yes' ? 'yes' : lv === 'avoid' ? 'can' : lv === 'no' ? 'no' : 'none';
 }
 const srvDropLevel = cell => srvDragWho && !String(srvDragWho).startsWith('other:') ? srvWishFor(srvDragWho, cell.dataset.key) : 'yes';          // (a service girl or a teacher: no wishes to colour by)
-function srvDropShow(cell){ const c = 'drop-' + srvDropLevel(cell), mid = srvDragWho && !String(srvDragWho).startsWith('other:') && srvMidKey(srvDragWho, cell.dataset.key); if(!cell.classList.contains(c) || mid !== cell.classList.contains('drop-mid')){ srvDropClear(cell); cell.classList.add('drop-ok', c); if(mid) cell.classList.add('drop-mid'); } }
-function srvDropClear(cell){ cell.classList.remove('drop-ok', 'drop-yes', 'drop-can', 'drop-no', 'drop-none', 'drop-mid'); }
+function srvDropShow(cell){
+  const c = 'drop-' + srvDropLevel(cell), hp = srvDragWho && !String(srvDragWho).startsWith('other:') ? srvHoursPlace(srvDragWho, cell.dataset.key) : null, tag = hp ? hp.tag : '';
+  if(!cell.classList.contains(c) || (cell.dataset.hrs || '') !== tag){ srvDropClear(cell); cell.classList.add('drop-ok', c); if(hp){ cell.classList.add('drop-hrs'); cell.dataset.hrs = tag; } }          // (her own hours as a tag on the shift)
+}
+function srvDropClear(cell){ cell.classList.remove('drop-ok', 'drop-yes', 'drop-can', 'drop-no', 'drop-none', 'drop-hrs'); delete cell.dataset.hrs; }
 
 // put an instructor on a shift (a name dragged from the panel and dropped on the shift): the warnings are shown first, and the coordinator may go ahead anyway
 async function srvAddToSlot(mk, key, staffId, body){
-  const st = portalLoad(), { date, shiftId } = splitKey(key), mid = srvMidKey(staffId, key), code = mid ? 'A' : SRV_SHIFT_DB[shiftId], sh0 = st.shiftTypes.find(x => x.id === shiftId), person = st.instructors.find(p => p.id === staffId);
+  const st = portalLoad(), { date, shiftId } = splitKey(key), hp = srvHoursPlace(staffId, key), mid = !!(hp && hp.mid), code = hp ? hp.code : SRV_SHIFT_DB[shiftId], sh0 = st.shiftTypes.find(x => x.id === shiftId), person = st.instructors.find(p => p.id === staffId);
   if(!person || person.role !== 'instructor' || !sh0) return;
-  const sh = mid ? Object.assign({}, sh0, { start:'12:00', end:'20:00' }) : sh0;          // (she chose 12–20 that day: placed 12–20 only, Guy 2026-10-28)
+  const sh = hp ? Object.assign({}, sh0, { start:hp.from, end:hp.to }) : sh0;          // (hours of her own that day: placed in them — 12–20 whole, others inside the shift; Guy 2026-10-28)
   const nm = instrName(person, st.instructors);
   if(st.rows.some(r => r.staff === staffId && r.day === date && (r.shift === code || (code === 'M' && r.shift === 'S') || (mid && ['M', 'S'].includes(r.shift))))){ toast(`${nm} כבר במשמרת הזו`); return; }
   const w = srvWarnings(staffId, date, code, sh.start, sh.end);
   // no question for "yes" or "can"; for "no" and for a shift she did not mark: ask her first on WhatsApp, or place anyway
   if(!(await srvAskBeforePlacing(staffId, key))) return;
   if(w.length && !(await confirmSheet({ title:'לשבץ למרות האזהרות?', text:w.join('. ') + '.', okLabel:'כן, לשבץ', cancelLabel:'חזרה', danger:true }))) return;          // (a window, not only a note afterwards: Guy 2026-10-25)
-  const ins = await asgWrite(monthKeyOf(date), 'insert', null, { month:firstOf(monthKeyOf(date)), staff_id:staffId, day:date, shift:code, from_time:sh.start, to_time:sh.end, flags:mid ? ['manual', 'mid'] : ['manual'] });
+  const ins = await asgWrite(monthKeyOf(date), 'insert', null, { month:firstOf(monthKeyOf(date)), staff_id:staffId, day:date, shift:code, from_time:sh.start, to_time:sh.end, flags:mid ? ['manual', 'mid'] : hp ? ['manual', 'partial'] : ['manual'] });
   if(ins.error){ toast('השיבוץ נכשל'); return; }
   srvForgetRemoved(staffId, date, code);
   srvAddRow(st, ins.data); srvRenderCoordSchedule(body);              // (it shows at once; the full reload follows in the background)
@@ -11967,7 +11985,13 @@ function thpOverviewHtml(){
 // the text; ⭐ favourites first, then the most used. What Claude wrote is a draft until the admin approves it (a review screen, one after another).
 // A therapist who changes a Mercury template gets a copy in the center's library. Changing a template never changes a child's plan.
 const BANK_THEMES = PLAN_CATS;          // (14x: the ten themes)
-const BANK_AGES = [['2-5', 'גילאי 2–5'], ['5-8', 'גילאי 5–8'], ['8-12', 'גילאי 8–12']];
+// four age groups (Guy 2026-10-29, after the research report): every goal is written for one of them, and may be marked fit for an adjacent one too
+const BANK_AGES = [['2-5', 'גילאי 2–5'], ['6-9', 'גילאי 6–9'], ['10-12', 'גילאי 10–12'], ['13-15', 'גילאי 13–15']];
+const BANK_AGE_WORD = Object.assign({ '5-8':'גילאי 5–8', '8-12':'גילאי 8–12' }, Object.fromEntries(BANK_AGES));          // (+ the two of the first bank)
+const BANK_LEGACY = { '6-9':'5-8', '10-12':'5-8', '13-15':'5-8' };          // (the first bank had 2-5 and 5-8, and older children got 5-8)
+// how well a goal is grounded in research (the therapist only): tested / derived from a supported approach / a new adaptation not tested yet
+const BANK_EVIDENCE = { tested:'נבדק מחקרית', derived:'נגזר מגישה מבוססת', new:'התאמה חדשה, טרם נבדקה' };
+const bankEvidenceTag = ev => ev && BANK_EVIDENCE[ev.level] ? `<span class="bk-ev bk-ev-${pEsc(ev.level)}" title="${pEsc(ev.note || '')}">${BANK_EVIDENCE[ev.level]}</span>` : '';
 const BANK_METHODS0 = ['ARC', 'DDP/PACE', 'TF-CBT', 'Theraplay', 'ויסות חושי', 'NMT'];
 const BANK_PART_KINDS = ['avoid', 'signs', 'calm', 'routine'];
 const bankIsAdmin = () => !!(srv.profile && srv.profile.admin);
@@ -11989,7 +12013,9 @@ async function bankLoad(){
 
 // ---- the child's age band: the developmental age written in the plan (when the center turns it on), else the age in the list of children
 const bankAgeNum = v => { const m = String(v == null ? '' : v).replace(',', '.').match(/[0-9]+(?:\.[0-9]+)?/); return m ? parseFloat(m[0]) : null; };
-const bankBand = n => n == null ? '' : n < 5 ? '2-5' : n < 8 ? '5-8' : '8-12';          // (5 counts with 5-8, 8 with 8-12: Guy)
+const bankBand = n => n == null ? '' : n < 6 ? '2-5' : n < 10 ? '6-9' : n < 13 ? '10-12' : '13-15';          // (5 with 2-5, 9 with 6-9, 12 with 10-12)
+// does a goal fit this age group: written for it, marked fit for it ("also"), or a goal of the first bank in its 5-8 wording
+const bankFits = (x, age) => { if(!age || !bankHasAges(x)) return true; const a = x.content.ages; return !!(a[age] || (x.content.also || []).includes(age) || a[BANK_LEGACY[age]]); };
 function bankAgeOf(id, d){
   if(thp.mopts && thp.mopts.dev_age && d && bankAgeNum(d.dev_age) != null) return bankBand(bankAgeNum(d.dev_age));
   const c = roster.find(x => x.id === id); return bankBand(c ? bankAgeNum(c.age) : null);
@@ -12008,7 +12034,7 @@ function bankGender(text, gender){
     return b;
   });
 }
-const bankWording = (x, age) => { const a = (x.content && x.content.ages) || {}; return a[age] || a['5-8'] || a[Object.keys(a)[0]] || null; };
+const bankWording = (x, age) => { const a = (x.content && x.content.ages) || {}; return a[age] || a[BANK_LEGACY[age]] || a['5-8'] || a[Object.keys(a)[0]] || null; };
 const bankSig = g => { const s = [g.title, g.targets, g.interventions, g.sentences, g.why_staff, g.seen, g.needs, g.why].join('|'); let h = 0; for(let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return String(h); };
 // the planet whose skill has the most words of the goal's title and skills (none if nothing matches)
 function bankPlanetFor(g){
@@ -12026,7 +12052,7 @@ function bankGoalFrom(x, age, gender){
     strengths:(c.strengths || []).slice(0, 4), skills:(c.skills || []).slice(0, 2), review_months:c.review || 3, methods:x.methods || [],
     scale:(c.scale || []).length ? { anchors:c.scale.map(G), now:null, target:null } : null });
   g.planet_id = bankPlanetFor(g);          // (a planet for now, by the goal's skill: Mercury 120; the final one in the design meeting)
-  const ages = c.ages || {}, used = ages[age] ? age : ages['5-8'] ? '5-8' : Object.keys(ages)[0] || age;
+  const ages = c.ages || {}, used = ages[age] ? age : ages[BANK_LEGACY[age]] ? BANK_LEGACY[age] : ages['5-8'] ? '5-8' : Object.keys(ages)[0] || age;
   g.bank = { id:x.id, age:used, method:w.method || '', edited:false };
   g.bank.sig = bankSig(g);
   return { goal:g, avoid:G(c.avoid || '') };
@@ -12040,7 +12066,7 @@ function bankList(kind, f){
   return (thp.library || []).filter(x => x.kind === kind && x.active
       && (!f.theme || bankThemesOf(x).includes(f.theme))
       && (!f.method || (x.methods || []).includes(f.method))
-      && (!f.age || !bankHasAges(x) || !!x.content.ages[f.age])
+      && bankFits(x, f.age)
       && (!q || `${x.title} ${x.description || ''} ${x.content ? JSON.stringify(x.content) : ''}`.includes(q)))
     .sort((a, b) => (fav.has(b.id) ? 1 : 0) - (fav.has(a.id) ? 1 : 0) || (n[b.id] || 0) - (n[a.id] || 0) || a.title.localeCompare(b.title, 'he'));
 }
@@ -12051,9 +12077,9 @@ const bankThemeChips = x => bankThemesOf(x).map(t => `<span class="bk-theme">${p
 function bankPreviewHtml(x, age){
   const c = x.content || {};
   if(c.v === 2){          // (the bank of the walkthrough: targets and interventions per age)
-    const w = c.ages[age] || c.ages['5-8'] || {};
-    return `<div class="bk-pv-row"><b>יעדים</b><span>${(w.targets || []).map(t => `<span class="bk-line">• ${pEsc(t.text)} <small>(לצוות: ${pEsc(t.staff)})</small></span>`).join('')}</span></div>
-      <div class="bk-pv-row"><b>דרכי התערבות</b><span>${(w.interventions || []).map(i => `<span class="bk-line"><b>${pEsc(i.name)}</b> ${pEsc(i.what)} <em class="tp-appr">${pEsc(i.approach)}</em><br><small>${pEsc(i.freq || '')} · ${(i.sentences || []).map(s => '💬 ' + pEsc(s)).join(' ')}</small></span>`).join('')}</span></div>
+    const w = bankWording(x, age) || {};
+    return `${c.evidence ? `<div class="bk-pv-row"><b>ביסוס</b><span>${bankEvidenceTag(c.evidence)}${c.evidence.note ? ` <small>${pEsc(c.evidence.note)}</small>` : ''}</span></div>` : ''}<div class="bk-pv-row"><b>יעדים</b><span>${(w.targets || []).map(t => `<span class="bk-line">• ${pEsc(t.text)} <small>(לצוות: ${pEsc(t.staff)})</small></span>`).join('')}</span></div>
+      <div class="bk-pv-row"><b>דרכי התערבות</b><span>${(w.interventions || []).map(i => `<span class="bk-line"><b>${pEsc(i.name)}</b> ${pEsc(i.what)} <em class="tp-appr">${pEsc(i.approach)}</em><br><small>${pEsc(i.freq || '')} · ${(i.sentences || []).map(s => '💬 ' + pEsc(s)).join(' ')}</small>${i.avoid ? `<small class="tp-avoid">🚫 ${pEsc(i.avoid)}</small>` : ''}</span>`).join('')}</span></div>
       ${(c.strengths || []).length ? `<div class="bk-pv-row"><b>חוזקות</b><span>${c.strengths.map(pEsc).join(' · ')}</span></div>` : ''}`;
   }
   if(x.kind !== 'goal' && x.kind !== 'plan') return `<div class="bk-pv-text">${pEsc(bankHasAges(x) ? (bankWording(x, age) || '') : (x.description || ''))}</div>`;
@@ -12067,7 +12093,7 @@ function bankPreviewHtml(x, age){
     ${row('שיטה', pEsc(w.method))}${(c.strengths || []).length ? row('חוזקות', c.strengths.map(pEsc).join(' · ')) : ''}${(c.skills || []).length ? row('מיומנויות למעקב', c.skills.map(pEsc).join(' · ')) : ''}
     ${row('ממה להימנע', pEsc(c.avoid))}${c.review ? row('בדיקה מחדש', `בעוד ${c.review === 1 ? 'חודש' : c.review + ' חודשים'}`) : ''}`;
 }
-const bankAgeChips = (x, age) => bankHasAges(x) ? `<div class="bk-ages">${BANK_AGES.filter(([k]) => x.content.ages[k]).map(([k, w]) => `<button type="button" class="bk-age${k === age ? ' on' : ''}" data-bk-age="${k}">${w}</button>`).join('')}</div>` : '';
+const bankAgeChips = (x, age) => bankHasAges(x) ? `<div class="bk-ages">${Object.keys(x.content.ages).map(k => `<button type="button" class="bk-age${k === age ? ' on' : ''}" data-bk-age="${k}">${BANK_AGE_WORD[k] || k}</button>`).join('')}${(x.content.also || []).map(k => `<span class="bk-age-also">מתאים גם ל${(BANK_AGE_WORD[k] || k).replace('גילאי', 'גילאי')}</span>`).join('')}</div>` : '';
 const bankNote = () => '<details class="pfold bk-note"><summary><span>על הבנק</span></summary><div class="pfold-body">הנוסחים הם נקודת פתיחה, לא תחליף לשיקול דעת מקצועי. כל תוכנית מותאמת לילד/ה. נוסח שנבחר נעתק לתוכנית ונערך שם, והנוסח בבנק לא משתנה. "טיוטה" היא נוסח שעוד לא נבדק ואושר.</div></details>';
 
 // ---- choosing from the bank (a goal, a part, a whole plan) -> onPick(item, age)
@@ -12761,7 +12787,7 @@ const TP_STATUS = { focus:'במוקד', waiting:'בהמתנה', achieved:'הוש
 const tpFocusMax = () => Math.max(1, Math.min(3, +((thp.mopts || {}).focus_max) || 1));
 const tpStatusOf = g => g.status || (g.focus ? 'focus' : 'waiting');
 const tpIsV2 = g => Array.isArray(g.targets_list);
-const tpBankAge = id => { const b = bankAgeOf(id, ((thp.plans[id] || {}).draft) || {}); return b === '8-12' ? '5-8' : b; };          // (over 8: the 5-8 wording until there is a group, Q33)
+const tpBankAge = id => bankAgeOf(id, ((thp.plans[id] || {}).draft) || {});          // (the four age groups: Guy 2026-10-29)
 const tpGoalsV2 = () => (thp.library || []).filter(x => x.kind === 'goal' && x.active && x.content && x.content.v === 2);
 const tpUid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const tpDraftOf = id => { const r = thp.plans[id] || {}; return JSON.parse(JSON.stringify(r.draft || r.published || planEmpty())); };
@@ -12814,13 +12840,13 @@ function tpGoalCard(id, g, i, can){
   const targets = v2 ? g.targets_list.map((t, k) => `<details class="tp-target"><summary><span>יעד ${k + 1} – ${pEsc(t.text)}</span>${t.now ? `<em class="tp-now">עכשיו ${t.now}${t.target ? ' · רוצים ' + t.target : ''}</em>` : ''}</summary>
       <div class="tp-t-body"><div><span class="tp-lbl">לצוות:</span> ${pEsc(t.staff || '')}</div>${(t.scale || []).length ? `<ol class="tp-stations">${t.scale.map((s, j) => `<li class="${t.now === j + 1 ? 'now' : ''}${t.target === j + 1 ? ' goal' : ''}">${pEsc(s)}</li>`).join('')}</ol>` : ''}</div></details>`).join('')
     : (g.targets ? `<div class="tp-legacy"><span class="tp-lbl">יעדים:</span> ${pEsc(g.targets)}</div>` : '');
-  const ints = v2 ? (g.interventions_list || []).map(x => `<div class="tp-int"><span><b>${pEsc(x.name)}</b> ${pEsc(x.what)}${x.freq ? ` <small>(${pEsc(x.freq)})</small>` : ''}${(x.sentences || []).length ? `<span class="tp-sent">${x.sentences.map(s => '💬 ' + pEsc(s)).join('<br>')}</span>` : ''}</span><em class="tp-appr">${pEsc(x.approach || '')}</em></div>`).join('')
+  const ints = v2 ? (g.interventions_list || []).map(x => `<div class="tp-int"><span><b>${pEsc(x.name)}</b> ${pEsc(x.what)}${x.freq ? ` <small>(${pEsc(x.freq)})</small>` : ''}${(x.sentences || []).length ? `<span class="tp-sent">${x.sentences.map(s => '💬 ' + pEsc(s)).join('<br>')}</span>` : ''}${x.avoid ? `<small class="tp-avoid">🚫 ${pEsc(x.avoid)}</small>` : ''}</span><em class="tp-appr">${pEsc(x.approach || '')}</em></div>`).join('')
     : (g.interventions ? `<div class="tp-legacy"><span class="tp-lbl">מה עושים:</span> ${pEsc(g.interventions)}</div>` : '');
   const acts = can ? `<div class="tp-acts">${v2 ? `<button type="button" class="btn ghost small" data-tp-edit="${i}">עריכה</button>` : ''}
       <details class="tp-more-acts"><summary aria-label="עוד פעולות">⋯</summary><div>${v2 ? `<button type="button" class="btn ghost small" data-tp-route="${i}">פתיחה במסלול</button>` : ''}
       ${st !== 'achieved' ? `<button type="button" class="btn ghost small" data-tp-ach="${i}">✓ הושגה</button>` : ''}${st === 'focus' ? `<button type="button" class="btn ghost small" data-tp-st="${i}" data-to="waiting">להמתנה</button>` : ''}
       ${st === 'waiting' || st === 'stopped' ? `<button type="button" class="btn ghost small" data-tp-st="${i}" data-to="focus">למוקד</button>` : ''}${st !== 'stopped' && st !== 'achieved' ? `<button type="button" class="btn ghost small" data-tp-stop="${i}">הפסקה</button>` : ''}</div></details></div>` : '';
-  return `<details class="tp-goal st-${st}"${st === 'focus' ? ' open' : ''}><summary><b>מטרה ${i + 1} – ${pEsc(g.title || 'בלי שם')}</b>${g.planet_id ? '<span class="tp-planet" title="כוכב במסע">🪐</span>' : ''}</summary>
+  return `<details class="tp-goal st-${st}"${st === 'focus' ? ' open' : ''}><summary><b>מטרה ${i + 1} – ${pEsc(g.title || 'בלי שם')}</b>${g.bank && g.bank.evidence ? bankEvidenceTag(g.bank.evidence) : ''}${g.planet_id ? '<span class="tp-planet" title="כוכב במסע">🪐</span>' : ''}</summary>
     <div class="tp-goal-body">${targets}${ints ? `<div class="tp-ints"><span class="tp-lbl">דרכי התערבות</span>${ints}</div>` : ''}
       ${(g.strengths || []).length ? `<div class="th-chips">${g.strengths.map(s => `<span class="th-chip">${pEsc(s)}</span>`).join('')}</div>` : ''}
       ${st === 'stopped' && g.stop_reason ? `<div class="pnote">הופסקה: ${pEsc(g.stop_reason)}</div>` : ''}${st === 'achieved' && g.achieved_at ? `<div class="pnote">הושגה ${pEsc(dayLabel(g.achieved_at))} 🎉</div>` : ''}
@@ -12950,7 +12976,7 @@ function tpEditGoal(id, gi, after){
   const sh = portalSheet(`<h2>עריכה: ${pEsc(g.title)}</h2>
     <label class="pfield">שם המטרה<input type="text" id="te-title" maxlength="80" value="${pEsc(g.title)}"></label>
     ${(g.targets_list || []).map((t, k) => `<div class="tp-ed-block"><b>יעד ${k + 1}</b><label class="pfield">מקצועי<textarea data-te-t="${k}" data-f="text" rows="2">${pEsc(t.text)}</textarea></label><label class="pfield">לצוות<input type="text" data-te-t="${k}" data-f="staff" value="${pEsc(t.staff || '')}"></label></div>`).join('')}
-    ${(g.interventions_list || []).map((x, k) => `<div class="tp-ed-block"><b>${pEsc(x.name)}</b><label class="pfield">מה עושים<textarea data-te-i="${k}" data-f="what" rows="2">${pEsc(x.what)}</textarea></label><label class="pfield">תדירות<input type="text" data-te-i="${k}" data-f="freq" value="${pEsc(x.freq || '')}"></label>
+    ${(g.interventions_list || []).map((x, k) => `<div class="tp-ed-block"><b>${pEsc(x.name)}</b><label class="pfield">מה עושים<textarea data-te-i="${k}" data-f="what" rows="2">${pEsc(x.what)}</textarea></label><label class="pfield">תדירות<input type="text" data-te-i="${k}" data-f="freq" value="${pEsc(x.freq || '')}"></label><label class="pfield">מה לא לעשות<input type="text" data-te-i="${k}" data-f="avoid" value="${pEsc(x.avoid || '')}"></label>
       <label class="pfield">משפטים (משפט בכל שורה)<textarea data-te-i="${k}" data-f="sentences" rows="2">${pEsc((x.sentences || []).join('\n'))}</textarea></label></div>`).join('')}
     <label class="pfield">בדיקה מחדש של המטרה<input type="date" id="te-review" value="${pEsc(g.review_date || '')}"></label>
     <div class="confirm-actions"><button type="button" class="btn ghost" data-close>ביטול</button><button type="button" class="btn" id="te-save">שמירה</button></div>`);
@@ -12967,14 +12993,14 @@ const TP_STEPS = [['start', 'התחלה'], ['pick', 'בחירה'], ['goal', 'מ�
 function tpStateFromGoal(id, g){
   const x = (thp.library || []).find(y => y.id === g.library_id), age = (g.bank && g.bank.age) || tpBankAge(id);
   return { step:'targets', editIndex:(tpDraftOf(id).goals || []).findIndex(y => y.id === g.id), goalId:g.id, libId:g.library_id || null, title:g.title, theme:g.theme || '', age,
-    targets:(g.targets_list || []).map(t => Object.assign({}, t)), ints:(g.interventions_list || []).map(i => Object.assign({}, i, { sentencesAll:((x && ((x.content.ages[age] || {}).interventions || []).find(b => b.id === i.id)) || {}).sentences || i.sentences })),
+    targets:(g.targets_list || []).map(t => Object.assign({}, t)), ints:(g.interventions_list || []).map(i => Object.assign({}, i, { sentencesAll:((x && ((bankWording(x, age) || {}).interventions || []).find(b => b.id === i.id)) || {}).sentences || i.sentences })),
     strengths:(g.strengths || []).slice(), planet:g.planet_id || '', status:tpStatusOf(g), why:g.why_staff || '' };
 }
 async function tpBuilder(id, state){
   const s = state ? JSON.parse(JSON.stringify(state)) : { step:'start', age:tpBankAge(id), targets:[], ints:[], strengths:[], planet:'' };
-  if(!s.age) s.age = tpBankAge(id) || '5-8';
+  if(!s.age || s.age === '5-8' || s.age === '8-12') s.age = tpBankAge(id) || '6-9';
   const body = document.getElementById('therapy-body'); if(!body) return;
-  let gender = (tpDraftOf(id).gender) || ''; const G = t => bankGender(t || '', gender), lib = () => s.libId ? (thp.library || []).find(y => y.id === s.libId) : null, ageW = () => { const x = lib(); return x ? (x.content.ages[s.age] || x.content.ages['5-8'] || {}) : {}; };
+  let gender = (tpDraftOf(id).gender) || ''; const G = t => bankGender(t || '', gender), lib = () => s.libId ? (thp.library || []).find(y => y.id === s.libId) : null, ageW = () => { const x = lib(); return x ? (bankWording(x, s.age) || {}) : {}; };
   const persist = async () => { const d = tpDraftOf(id); d.builder = Object.assign({}, s); await planSave(id, d, (thp.plans[id] || {}).review_date || null); };
   const go = async step => { s.step = step; await persist(); draw(); };
   const c = roster.find(x => x.id === id);
@@ -12995,7 +13021,9 @@ async function tpBuilder(id, state){
     }
     else if(s.step === 'goal'){
       const l = tpGoalsV2().filter(x => s.entry === 'theme' ? bankThemesOf(x).includes(s.theme) : s.entry === 'method' ? (x.methods || []).includes(s.method) : `${x.title} ${x.description || ''} ${JSON.stringify(x.content)}`.includes(s.q || ''));
-      inner = `<h2>איזו מטרה?</h2><div class="tp-names">${l.map(x => `<button type="button" class="tp-name${s.libId === x.id ? ' on' : ''}" data-goal="${x.id}">${pEsc(G(x.title))}${x.draft ? ' <small class="bk-draft" title="נוסח שמנהל המערכת עוד לא בדק">נוסח בבדיקה</small>' : ''}</button>`).join('') || '<div class="pnote">אין מטרות כאן עדיין.</div>'}</div>
+      l.sort((a, b) => (bankFits(b, s.age) ? 1 : 0) - (bankFits(a, s.age) ? 1 : 0));          // (the goals of the child's age group first)
+      const ageWord = x => { const k = Object.keys(x.content.ages || {})[0]; return k && !(x.content.ages[s.age] || (x.content.also || []).includes(s.age)) ? ` <small class="tp-age-tag">${pEsc(BANK_AGE_WORD[k] || k)}</small>` : ''; };
+      inner = `<h2>איזו מטרה?</h2><div class="tp-names">${l.map(x => `<button type="button" class="tp-name${s.libId === x.id ? ' on' : ''}" data-goal="${x.id}">${pEsc(G(x.title))}${ageWord(x)}${bankEvidenceTag(x.content.evidence)}${x.draft ? ' <small class="bk-draft" title="נוסח שמנהל המערכת עוד לא בדק">נוסח בבדיקה</small>' : ''}</button>`).join('') || '<div class="pnote">אין מטרות כאן עדיין.</div>'}</div>
         ${l.some(x => x.draft) ? '<div class="pnote">"נוסח בבדיקה" = נוסח שעוד לא נבדק ואושר. אפשר להשתמש בו ולערוך.</div>' : ''}
         <details class="pfold"><summary><span>משהו משלי</span></summary><div class="pfold-body"><input type="text" id="tb-own-title" maxlength="80" placeholder="שם המטרה" value="${s.libId ? '' : pEsc(s.title || '')}"><button type="button" class="btn small" id="tb-own-go">המשך עם המטרה שלי</button></div></details>${nav(false)}`;
     }
@@ -13005,7 +13033,7 @@ async function tpBuilder(id, state){
       const row = (t, k, w) => `<div role="group" aria-label="${w}"><span>${w}</span>${[1, 2, 3, 4, 5].map(v => `<button type="button" class="${t[k] === v ? 'on' : ''}" aria-pressed="${t[k] === v}" aria-label="${w} ${v}: ${pEsc((t.scale || [])[v - 1] || '')}" data-rate="${pEsc(t.id)}" data-k="${k}" data-v="${v}">${v}</button>`).join('')}</div>${mean(t, k)}`;
       const ratings = t => `<div class="tp-rate">${row(t, 'now', 'איפה עכשיו')}${row(t, 'target', 'לאן רוצים להגיע')}</div>`;
       const scaleEd = t => `<details class="tp-scale-ed"><summary>הספירלה של היעד (5 תחנות)</summary>${[0, 1, 2, 3, 4].map(k => `<input type="text" data-scale="${pEsc(t.id)}" data-k="${k}" value="${pEsc((t.scale || [])[k] || '')}" placeholder="${k + 1}">`).join('')}</details>`;
-      inner = `<h2>יעדים <small>(1–3)</small></h2>${s.age !== tpBankAge(id) || bankAgeOf(id, {}) === '8-12' ? '<div class="pnote">לילדים מעל 8: בינתיים מוצג הנוסח של גילאי 5–8.</div>' : ''}
+      inner = `<h2>יעדים <small>(1–3)</small></h2>${lib() && !lib().content.ages[s.age] ? `<div class="pnote">המטרה נכתבה ל${pEsc(BANK_AGE_WORD[Object.keys(lib().content.ages)[0]] || '')}, ומוצג הנוסח שלה.</div>` : ''}
         ${bank.map(t => { const on = sel.has(t.id), mine = s.targets.find(x => x.id === t.id) || t;
           return `<div class="tp-pick${on ? ' on' : ''}"><label><input type="checkbox" data-target="${pEsc(t.id)}"${on ? ' checked' : ''}> <span><b>${pEsc(G(t.text))}</b><small>לצוות: ${pEsc(G(t.staff))}</small></span></label>${on ? scaleEd(mine) + ratings(mine) : ''}</div>`; }).join('')}
         ${s.targets.filter(t => t.own).map(t => `<div class="tp-pick on"><span><b>${pEsc(t.text)}</b><small>לצוות: ${pEsc(t.staff)}</small></span>${scaleEd(t)}${ratings(t)}<button type="button" class="btn ghost small" data-own-x="${pEsc(t.id)}">הסרה</button></div>`).join('')}
@@ -13016,7 +13044,7 @@ async function tpBuilder(id, state){
       const w = ageW(), tids = new Set(s.targets.map(t => t.id)), all = (w.interventions || []);
       let l = s.showAll ? all : all.filter(x => (x.targets || []).some(t => tids.has(t)));
       const by = s.sortAppr ? [...new Set(l.map(x => x.approach))] : null, sel = new Set(s.ints.map(x => x.id));
-      const item = x => `<label class="tp-int-pick${sel.has(x.id) ? ' on' : ''}"><input type="checkbox" data-int="${pEsc(x.id)}"${sel.has(x.id) ? ' checked' : ''}><span><b>${pEsc(G(x.name))}</b> ${pEsc(G(x.what))}<small>${pEsc(G(x.freq || ''))}</small></span><em class="tp-appr">${pEsc(x.approach)}</em></label>`;
+      const item = x => `<label class="tp-int-pick${sel.has(x.id) ? ' on' : ''}"><input type="checkbox" data-int="${pEsc(x.id)}"${sel.has(x.id) ? ' checked' : ''}><span><b>${pEsc(G(x.name))}</b> ${pEsc(G(x.what))}<small>${pEsc(G(x.freq || ''))}</small>${x.avoid ? `<small class="tp-avoid">🚫 ${pEsc(G(x.avoid))}</small>` : ''}</span><em class="tp-appr">${pEsc(x.approach)}</em></label>`;
       inner = `<h2>דרכי התערבות <small>(עד 3)</small></h2><div class="tp-tools"><label><input type="checkbox" id="tb-sort"${s.sortAppr ? ' checked' : ''}> מיון לפי גישה</label>${all.length > l.length || s.showAll ? `<label><input type="checkbox" id="tb-all"${s.showAll ? ' checked' : ''}> כל דרכי ההתערבות של המטרה</label>` : ''}</div>
         ${by ? by.map(a => `<h3 class="psec tp-appr-h">${pEsc(a)}</h3>${l.filter(x => x.approach === a).map(item).join('')}`).join('') : l.map(item).join('')}
         ${s.ints.filter(x => x.own).map(x => `<div class="tp-int-pick on"><span><b>${pEsc(x.name)}</b> ${pEsc(x.what)}</span><em class="tp-appr">${pEsc(x.approach || '')}</em><button type="button" class="btn ghost small" data-own-ix="${pEsc(x.id)}">הסרה</button></div>`).join('')}
@@ -13084,7 +13112,7 @@ async function tpBuilder(id, state){
     const al = $('#tb-all'); if(al) al.addEventListener('change', () => { s.showAll = al.checked; draw(); });
     body.querySelectorAll('[data-int]').forEach(b => b.addEventListener('change', () => {
       const x = (ageW().interventions || []).find(y => y.id === b.dataset.int);
-      if(b.checked){ if(s.ints.length >= 3){ b.checked = false; toast('אפשר עד 3 דרכי התערבות'); return; } s.ints.push({ id:x.id, name:G(x.name), what:G(x.what), why:G(x.why), freq:G(x.freq), approach:x.approach, sentencesAll:x.sentences || [], sentences:[] }); }
+      if(b.checked){ if(s.ints.length >= 3){ b.checked = false; toast('אפשר עד 3 דרכי התערבות'); return; } s.ints.push({ id:x.id, name:G(x.name), what:G(x.what), why:G(x.why), freq:G(x.freq), avoid:G(x.avoid || ''), approach:x.approach, sentencesAll:x.sentences || [], sentences:[] }); }
       else s.ints = s.ints.filter(y => y.id !== x.id);
       draw(); }));
     on('#tb-i-add', () => { const name = $('#tb-i-name').value.trim(), what = $('#tb-i-what').value.trim(); if(!name || !what){ toast('כותבים שם ומה עושים'); return; } if(s.ints.length >= 3){ toast('אפשר עד 3 דרכי התערבות'); return; }
@@ -13124,9 +13152,9 @@ function tpGoalFromState(s, G){
   const x = s.libId ? (thp.library || []).find(y => y.id === s.libId) : null, review = isoDate(new Date(Date.now() + (((x && x.content.review) || 3) * 30) * 864e5));
   return tpSync({ id:s.goalId || (s.goalId = tpUid('g')), title:G(s.title), theme:s.theme || '', library_id:s.libId || null, status:s.status || 'focus',
     targets_list:s.targets.map(t => ({ id:t.id, text:t.text, staff:t.staff, scale:t.scale || [], now:t.now || null, target:t.target || null })),
-    interventions_list:s.ints.map(i => ({ id:i.id, name:i.name, what:i.what, why:i.why || '', freq:i.freq || '', approach:i.approach || '', sentences:(i.sentences || []).slice() })),
+    interventions_list:s.ints.map(i => ({ id:i.id, name:i.name, what:i.what, why:i.why || '', freq:i.freq || '', avoid:i.avoid || '', approach:i.approach || '', sentences:(i.sentences || []).slice() })),
     strengths:s.strengths.slice(), planet_id:s.planet || null, why_staff:G(s.why || ''), avoid_line:x ? G(x.content.avoid || '') : '', review_date:review,
-    methods:[...new Set(s.ints.map(i => i.approach).filter(Boolean))], bank:x ? { id:x.id, age:s.age } : null });
+    methods:[...new Set(s.ints.map(i => i.approach).filter(Boolean))], bank:x ? { id:x.id, age:s.age, evidence:(x.content || {}).evidence || null } : null });          // (the evidence stays with the therapist: plan_guidance leaves "bank" out)
 }
 
 // ---- the staff's view of one goal (Q21, Q25-27): the plain targets, the interventions with their approach, 2 sentences + "עוד", 👍/👎
@@ -13135,7 +13163,7 @@ function tpStaffGoalHtml(childId, g, withFeedback){
   const sents = (g.interventions_list || []).flatMap(i => i.sentences || []);
   return `<div class="tp-sg"><b class="ar-keep">${pEsc(g.title)}</b>${g.why_staff ? `<div class="tp-sg-why ar-keep">${pEsc(g.why_staff)}</div>` : ''}
     ${(g.targets_list || []).length ? `<div class="tp-sg-t">${g.targets_list.map(t => `<div class="ar-keep">🎯 ${pEsc(t.staff || '')}</div>`).join('')}</div>` : ''}
-    ${(g.interventions_list || []).map(i => `<div class="tp-sg-i"><span class="ar-keep"><b>${pEsc(i.name)}</b> ${pEsc(i.what)}${i.freq ? ` <small>(${pEsc(i.freq)})</small>` : ''}</span><em class="tp-appr">${pEsc(i.approach || '')}</em>
+    ${(g.interventions_list || []).map(i => `<div class="tp-sg-i"><span class="ar-keep"><b>${pEsc(i.name)}</b> ${pEsc(i.what)}${i.freq ? ` <small>(${pEsc(i.freq)})</small>` : ''}${i.avoid ? `<small class="tp-avoid">🚫 ${pEsc(i.avoid)}</small>` : ''}</span><em class="tp-appr">${pEsc(i.approach || '')}</em>
       ${withFeedback ? `<span class="tp-fb"><button type="button" data-fb="${pEsc(childId)}|${pEsc(g.id)}|${pEsc(i.id)}|up" aria-label="עבד">👍</button><button type="button" data-fb="${pEsc(childId)}|${pEsc(g.id)}|${pEsc(i.id)}|down" aria-label="לא עבד">👎</button></span>` : ''}</div>`).join('')}
     ${sents.length ? `<div class="tp-sg-s ar-keep">${sents.slice(0, 2).map(t => `<div>💬 ${pEsc(t)}</div>`).join('')}${sents.length > 2 ? `<details><summary>עוד</summary>${sents.slice(2).map(t => `<div>💬 ${pEsc(t)}</div>`).join('')}</details>` : ''}</div>` : ''}</div>`;
 }
