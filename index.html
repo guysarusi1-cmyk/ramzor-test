@@ -1666,6 +1666,31 @@
   .mcal-cell.drop-hrs{ position:relative; }
   .mcal-cell.drop-hrs::after{ content:attr(data-hrs); position:absolute; top:3px; inset-inline-end:4px; direction:ltr; unicode-bidi:isolate; padding:0 6px; border-radius:8px; font-size:11px; line-height:16px; background:rgba(0, 0, 0, .7); color:#fff; font-weight:700; }
   .hours-mid{ width:100%; margin:4px 0 8px; }
+  /* the preferences without colours and week by week (Guy 2026-10-30, for רעות): a dot = not marked yet, bold = yes, faded = no; never a colour */
+  .pcal.plain .pshift, .pweek.plain .pshift, .pcal.plain .plong, .pplain-demo{ background:transparent !important; color:var(--p-text) !important; border:1px solid var(--p-line) !important; font-weight:500; }
+  .pcal.plain .pshift.lv-yes, .pcal.plain .pshift.lv-avoid, .pweek.plain .pshift.lv-yes, .pweek.plain .pshift.lv-avoid, .pcal.plain .plong.lv-yes, .pcal.plain .plong.lv-avoid, .pplain-demo.lv-yes{ font-weight:900; border:2px solid var(--p-text) !important; }
+  .pcal.plain .pshift.lv-no, .pweek.plain .pshift.lv-no, .pcal.plain .plong.lv-no, .pplain-demo.lv-no{ opacity:.3; font-weight:400; }
+  .pcal.plain .pshift.lv-neutral::after, .pweek.plain .pshift.lv-neutral::after, .pcal.plain .plong.lv-neutral::after, .pplain-demo.lv-neutral::after{ content:'●'; font-size:9px; margin-inline-start:4px; vertical-align:middle; }
+  .pcal.plain .pshift, .pweek.plain .pshift{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation; }
+  .pplain-help{ display:grid; gap:10px; font-size:16px; } .pplain-help > div{ display:flex; align-items:center; gap:10px; } .pplain-demo{ display:inline-flex; align-items:center; padding:4px 12px; border-radius:8px; min-width:74px; justify-content:center; }
+  .pplain-bar{ justify-content:center; } .pplain-bar .pplain-q{ min-width:44px; opacity:.6; }
+  .pweek-head{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin:4px 0 10px; }
+  .pweek-steps{ display:flex; gap:5px; } .pweek-steps i{ width:8px; height:8px; border-radius:50%; background:var(--p-line); } .pweek-steps i.on{ background:var(--p-text); }
+  .pweek-q h2, .pweek-title{ font-size:20px; margin:8px 0; } .pweek-title small{ font-size:14px; color:var(--p-muted); font-weight:400; margin-inline-start:6px; }
+  .pweek-opts{ display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:8px; margin:12px 0; }
+  .pweek-opt{ min-height:52px; border-radius:12px; border:1px solid var(--p-line); background:var(--p-panel2); color:var(--p-text); font:inherit; font-size:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .pweek-opt.on{ border:2px solid var(--p-text); font-weight:800; } .pweek-opt small{ font-size:11px; color:var(--p-muted); font-weight:400; }
+  .pweek-nav{ display:flex; justify-content:space-between; gap:10px; margin-top:14px; } .pweek-nav .btn{ min-height:48px; flex:1; } .pweek-nav .btn[disabled]{ opacity:.4; }
+  .pwdays{ display:grid; gap:6px; }
+  .pwday{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; padding:8px 10px; border-radius:12px; background:var(--p-panel); border:1px solid var(--p-line); }
+  .pwday.out{ opacity:.35; } .pwday.away .pwday-away{ color:var(--p-muted); font-size:14px; }
+  .pwday-name{ font-size:16px; } .pwday-name small{ color:var(--p-muted); }
+  .pwday-shifts{ display:flex; gap:6px; } .pwshift{ min-height:44px; min-width:78px; padding:0 10px; font-size:15px; }
+  .pweek-bottom{ margin-top:10px; } .pweek-left{ text-align:center; margin-top:10px; font-size:15px; color:var(--p-muted); }
+  .pweek-month{ display:block; margin:14px auto 0; opacity:.7; }
+  .phg-days{ display:grid; gap:8px; margin:8px 0; } .phg-days .btn{ justify-content:space-between; min-height:48px; } .phg-now{ color:var(--p-muted); }
+  .phg-mid, .phg-other{ width:100%; min-height:52px; margin:6px 0; font-size:17px; }
+  .phg-time{ display:block; width:100%; font-size:28px; padding:10px; margin:12px 0; text-align:center; border-radius:12px; border:1px solid var(--p-line); background:var(--p-panel2); color:var(--p-text); direction:ltr; }
 
 /* ---- the children's characters ---- */
   .avatar-initials.avatar-has-char{ background:#fff; overflow:hidden; padding:0; }
@@ -6614,6 +6639,8 @@ function renderInstructorPrefs(body){
   const locked = portalServerOn && !srvPrefsOpen(mk);                                  // the database refuses changes after the closing time, so the screen does not offer them
   if(portalServerOn && me.role === 'instructor' && !locked && !submitted && prefStartFill(mk, me.id, prefs, days))
     toast(srv.prefStart === 'yes' ? 'כל המשמרות סומנו "כן", לפי ההגדרות שלך. משנים רק את מה שצריך' : 'כל המשמרות סומנו "לא", לפי ההגדרות שלך. משנים רק את מה שצריך');
+  if(portalServerOn && me.role === 'instructor' && !locked && !submitted) prefFixedDaysFill(mk, prefs, days);          // (the weekdays she never comes: her settings, Guy 2026-10-30)
+  if(prefWeekOn(me, locked, submitted)) return renderWeekPrefs(body, mk, m, prefs);          // ("שבוע אחרי שבוע": 14zj)
   const dl = m.deadline ? parseIso(m.deadline) : null;
   const fixedOn = date => portalServerOn ? prefs.fixed.find(f => f.day === date) : null;
   // the long weekend: one button under the Friday and the Saturday of a weekend (and, when the person switched it on in the settings, the small "only one of these" next to it)
@@ -6700,7 +6727,7 @@ function renderInstructorPrefs(body){
     const [name, v] = b.dataset.consent.split(':'); prefs.consent[name] = v === 'ask' ? 'ask' : v === '1'; portalSave(); renderInstructorPrefs(body);
   }));
   body.querySelectorAll('[data-pslot]').forEach(b => b.addEventListener('click', () => {
-    if(locked) return;
+    if(locked || prefPlainOn()) return;          // (without colours the taps are 14zj's)
     const shown = b.dataset.pslot.split('|')[0], key = prefKeyOf(b.dataset.pslot), date = key.split('|')[0], lv = portalUi.level;
     if(fixedOn(date) || fixedOn(shown)) return;
     if(prefInsideLong(prefs, key) && lv !== 'absent'){ toast(tx('long_inside')); return; }
@@ -6711,7 +6738,7 @@ function renderInstructorPrefs(body){
     portalSave(); renderInstructorPrefs(body);
   }));
   body.querySelectorAll('[data-plong]').forEach(b => b.addEventListener('click', () => {          // the long weekend: kept on the Friday, independent of the other shifts
-    if(locked) return;
+    if(locked || prefPlainOn()) return;
     const fri = b.dataset.plong, key = `${fri}|l`, lv = portalUi.level;
     if(fixedOn(fri) || prefs.absent.includes(fri)) return;
     if(lv === 'hours' || lv === 'absent'){ toast(tx('long_levels')); return; }
@@ -6728,7 +6755,7 @@ function renderInstructorPrefs(body){
     portalSave(); renderInstructorPrefs(body);
   }));
   body.querySelectorAll('[data-pday]').forEach(b => b.addEventListener('click', () => {
-    if(locked) return;
+    if(locked || prefPlainOn()) return;
     const date = b.dataset.pday, lv = portalUi.level, keys = prefShiftsFor(date).map(s => prefKeyOf(`${date}|${s.id}`)).filter(k => !prefFixedNo(k) && !prefInsideLong(prefs, k));          // (a shift of a fixed preference changes only when it is pressed by itself)
     if(fixedOn(date)) return;
     if(lv === 'hours'){ openHoursSheet(date, prefs, () => renderInstructorPrefs(body)); return; }
@@ -6758,6 +6785,7 @@ function renderInstructorPrefs(body){
     }
     m.submitted[me.id] = true; portalSave(); toast(tx('submit_ok')); renderInstructorPrefs(body);
   });
+  prefMonthExtras(body, mk, prefs, locked, submitted);
 }
 // custom hours for one day: up to two ranges (whole hours); used only when they complete a full shift
 function openHoursSheet(date, prefs, done){
@@ -8227,8 +8255,8 @@ async function srvLoadCoord(){
   rows(ph).forEach(r => { if(st.priv[r.staff_id]) st.priv[r.staff_id].phone = r.phone; });
   rows(pm).forEach(r => { if(st.priv[r.staff_id]) Object.assign(st.priv[r.staff_id], r); });
   st.waMsg = (wm && !wm.error && wm.data && wm.data.value) || {};
-  st.voices = {}; st.fixedNo = {}; st.langs = {};
-  rows(sv).forEach(r => { if(r.voice) st.voices[r.staff_id] = r.voice; if((r.fixed_no || []).length) st.fixedNo[r.staff_id] = r.fixed_no; if(r.lang) st.langs[r.staff_id] = r.lang; });
+  st.voices = {}; st.fixedNo = {}; st.langs = {}; st.simple = {};
+  rows(sv).forEach(r => { if(r.pref_weekly || r.pref_plain) st.simple[r.staff_id] = { w:!!r.pref_weekly, p:!!r.pref_plain }; if(r.voice) st.voices[r.staff_id] = r.voice; if((r.fixed_no || []).length) st.fixedNo[r.staff_id] = r.fixed_no; if(r.lang) st.langs[r.staff_id] = r.lang; });
   st.flags = flags; st.vacations = vac;
   st.reasons = {}; rows(sr).forEach(x => { if(x.note) st.reasons[x.assignment_id] = x.note; });
   st.buildReqs = rows(br); st.openReqs = rows(orq);
@@ -9051,7 +9079,7 @@ function srvRenderCoordSettings(body){
       ${instr.map((p, i) => `<div class="pstaff-row" data-sid="${p.id}"><label class="pstaff-photo" title="החלפת תמונה"><img src="${p.photo}" alt=""><input type="file" accept="image/*" data-photo="${p.id}" hidden></label><span class="pstaff-name">${pEsc(p.first)}${(priv[p.id] || {}).is_leader ? ' <small>מוביל/ה</small>' : ''}</span>
         <span class="pstaff-order"><button type="button" class="btn ghost small" data-up="${p.id}"${i === 0 ? ' disabled' : ''} aria-label="למעלה">↑</button><button type="button" class="btn ghost small" data-down="${p.id}"${i === instr.length - 1 ? ' disabled' : ''} aria-label="למטה">↓</button></span>
         <input type="email" dir="ltr" placeholder="מייל" value="${pEsc((priv[p.id] || {}).email || '')}" data-mail="${p.id}"><input type="tel" dir="ltr" placeholder="טלפון" value="${pEsc((priv[p.id] || {}).phone || '')}" data-phone="${p.id}">
-        ${(priv[p.id] || {}).auth_user_id ? '<em class="pst pst-approved">מחובר/ת</em>' : `<button type="button" class="btn ghost small" data-login="${p.id}">יצירת התחברות</button>`}${p.active ? `<button type="button" class="btn ghost small" data-left="${p.id}">עזב/ה</button>` : `<em class="pst">לא פעיל/ה</em><button type="button" class="btn ghost small" data-back="${p.id}">החזרה</button>`}</div>`).join('')}
+        ${(priv[p.id] || {}).auth_user_id ? '<em class="pst pst-approved">מחובר/ת</em>' : `<button type="button" class="btn ghost small" data-login="${p.id}">יצירת התחברות</button>`}${srv.meRow && srv.meRow.admin ? `<button type="button" class="btn ghost small" data-simple="${p.id}">${(st.simple || {})[p.id] ? 'הגשה פשוטה ✓' : 'הגשה פשוטה'}</button>` : ''}${p.active ? `<button type="button" class="btn ghost small" data-left="${p.id}">עזב/ה</button>` : `<em class="pst">לא פעיל/ה</em><button type="button" class="btn ghost small" data-back="${p.id}">החזרה</button>`}</div>`).join('')}
       <h3 class="psec">בנות שירות, מורות ואחרים</h3>
       ${st.instructors.filter(p => p.role !== 'instructor').map(p => `<div class="pstaff-row" data-sid="${p.id}"><label class="pstaff-photo" title="החלפת תמונה"><img src="${p.photo}" alt=""><input type="file" accept="image/*" data-photo="${p.id}" hidden></label><span class="pstaff-name">${pEsc(p.first)} <small>${p.admin ? 'מנהל' : p.role === 'teacher' ? calRoleWord(p.id, 'teacher') : KIND_WORD[p.role]}</small></span>
         ${p.role === 'teacher' && p.active ? `<button type="button" class="btn ghost small" data-fixed-hours="${p.id}">שעות קבועות</button>` : ''}
@@ -9060,6 +9088,7 @@ function srvRenderCoordSettings(body){
       <h3 class="psec">הוספת איש צוות</h3>
       <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם (כפי שיוצג)"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option>${mercuryOn() && srv.profile && 'therapist' in srv.profile ? '<option value="therapist">איש/אשת טיפול</option>' : ''}</select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
       const wire = box => {
+        box.querySelectorAll('[data-simple]').forEach(b => b.addEventListener('click', () => simplePrefsSheet(b.dataset.simple, again)));          // (the admin only: "שבוע אחרי שבוע" / "בלי צבעים" for somebody, Guy 2026-10-30)
         box.querySelectorAll('[data-fixed-hours]').forEach(b => b.addEventListener('click', () => teacherHoursSheet(b.dataset.fixedHours)));
         box.querySelectorAll('[data-left], [data-back]').forEach(b => b.addEventListener('click', async () => {
           const id = b.dataset.left || b.dataset.back, on = !!b.dataset.back, p = st.instructors.find(x => x.id === id), nm = p ? instrName(p, st.instructors) : '';
@@ -9292,6 +9321,24 @@ function resizePhoto(file, size){
     img.src = url;
   });
 }
+// the admin switches the simpler preferences screen on or off for an instructor (scheduling-v48.sql: set_simple_prefs)
+function simplePrefsSheet(id, again){
+  const st = portalLoad(), p = st.instructors.find(x => x.id === id), cur = Object.assign({ w:false, p:false }, (st.simple || {})[id]);
+  const row = (k, on, off) => `<div class="pchoice wrap"><button type="button" class="${cur[k] ? 'on' : ''}" data-sp="${k}:1">${on}</button><button type="button" class="${cur[k] ? '' : 'on'}" data-sp="${k}:0">${off}</button></div>`;
+  const sh = portalSheet(`<h2>הגשת העדפות פשוטה: ${pEsc(p ? instrName(p, st.instructors) : '')}</h2>
+    <h3 class="psec">איך ממלאים</h3>${row('w', 'שבוע אחרי שבוע', 'כל החודש יחד')}
+    <h3 class="psec">סימון</h3>${row('p', 'בלי צבעים', 'עם צבעים')}
+    <div class="pnote">רק המסך שלה משתנה. ההעדפות מגיעות לרכזת כמו מכולם. היא יכולה לשנות את זה בעצמה בהגדרות.</div>
+    <div class="confirm-actions"><button type="button" class="btn ghost" data-close>ביטול</button><button type="button" class="btn" id="sp-save">שמירה</button></div>`);
+  sh.querySelectorAll('[data-sp]').forEach(b => b.addEventListener('click', () => { const [k, v] = b.dataset.sp.split(':'); cur[k] = v === '1'; sh.querySelectorAll(`[data-sp^="${k}:"]`).forEach(x => x.classList.toggle('on', x === b)); }));
+  sh.querySelector('#sp-save').addEventListener('click', async () => {
+    const r = await sbPersonal.rpc('set_simple_prefs', { p_staff:id, p_weekly:cur.w, p_plain:cur.p });
+    if(r.error){ toast(/set_simple_prefs/.test(r.error.message || '') ? 'צריך קודם להריץ את scheduling-v48.sql' : 'השינוי נכשל'); return; }
+    st.simple = st.simple || {}; if(cur.w || cur.p) st.simple[id] = { w:cur.w, p:cur.p }; else delete st.simple[id];
+    sh.close(); toast('נשמר'); if(again) again();
+  });
+}
+
 // ---------- THE PORTAL ON THE SERVER: the personal feedback after a schedule is published (warm, honest, never blaming) ----------
 // Pure functions (nothing here talks to the server), so that the same words are used for the e-mail, for the notice and for the card in the portal.
 const FB_SHIFT_WORD = { m:'בוקר', e:'צהריים', n:'לילה', l:'סופ"ש ארוך' };
@@ -9549,6 +9596,7 @@ async function srvLoadSettings(){
   try { const pr = await sbPersonal.from('staff_settings').select('pref_start').eq('staff_id', srv.me).maybeSingle(); if(!pr.error && pr.data) srv.prefStart = pr.data.pref_start || null; } catch(e){}
   srv.fixedNo = [];          // (fixed preferences: scheduling-v27.sql)
   try { const fx = await sbPersonal.from('staff_settings').select('fixed_no').eq('staff_id', srv.me).maybeSingle(); if(!fx.error && fx.data && Array.isArray(fx.data.fixed_no)) srv.fixedNo = fx.data.fixed_no; } catch(e){}
+  srvLoadSimplePrefs((await (async () => { try { const r = await sbPersonal.from('staff_settings').select('pref_weekly,pref_plain,fixed_no_days').eq('staff_id', srv.me).maybeSingle(); return r.error ? null : (r.data || {}); } catch(e){ return null; } })()));          // (scheduling-v48.sql)
   srv.lang = (srv.profile && srv.profile.lang) || null;          // (the language: her own choice, else the admin's default; scheduling-v25.sql)
   try { const lg = await sbPersonal.from('staff_settings').select('lang').eq('staff_id', srv.me).maybeSingle(); if(!lg.error && lg.data && lg.data.lang) srv.lang = lg.data.lang; } catch(e){}
   srv.mailOff = null;          // (which of her messages come to the portal only: scheduling-v45.sql; null = not on this server yet)
@@ -9567,6 +9615,22 @@ async function srvSaveSetting(patch){
     const row = { staff_id:srv.me }; if('voice' in patch) row.voice = patch.voice; if('reminders' in patch) row.reminders = patch.reminders; if('pickOne' in patch) row.pick_one = !!patch.pickOne; if('showLong' in patch) row.show_long = !!patch.showLong; if('portalTheme' in patch) row.portal_theme = patch.portalTheme;
     const r = await sbPersonal.from('staff_settings').upsert(row);
     return !r.error;
+  } catch(e){ return false; }
+}
+// "שבוע אחרי שבוע", "בלי צבעים" and the weekdays she never comes (scheduling-v48.sql); until the columns exist, kept on this device
+const SIMPLE_LOCAL = { prefWeekly:'ramzor-pref-weekly', prefPlain:'ramzor-pref-plain', fixedDays:'ramzor-fixed-days' };
+function srvLoadSimplePrefs(row){
+  srv.simpleCols = !!row;
+  if(row){ srv.prefWeekly = !!row.pref_weekly; srv.prefPlain = !!row.pref_plain; srv.fixedDays = Array.isArray(row.fixed_no_days) ? row.fixed_no_days : []; return; }
+  try { srv.prefWeekly = localStorage.getItem(SIMPLE_LOCAL.prefWeekly + '-' + srv.me) === '1'; srv.prefPlain = localStorage.getItem(SIMPLE_LOCAL.prefPlain + '-' + srv.me) === '1'; srv.fixedDays = JSON.parse(localStorage.getItem(SIMPLE_LOCAL.fixedDays + '-' + srv.me) || '[]'); } catch(e){ srv.prefWeekly = srv.prefPlain = false; srv.fixedDays = []; }
+}
+async function srvSaveSimplePrefs(patch){
+  Object.assign(srv, patch);
+  try { Object.keys(patch).forEach(k => localStorage.setItem(SIMPLE_LOCAL[k] + '-' + srv.me, k === 'fixedDays' ? JSON.stringify(patch[k]) : patch[k] ? '1' : '0')); } catch(e){}
+  if(!srv.simpleCols) return true;
+  try {
+    const row = { staff_id:srv.me }; if('prefWeekly' in patch) row.pref_weekly = patch.prefWeekly; if('prefPlain' in patch) row.pref_plain = patch.prefPlain; if('fixedDays' in patch) row.fixed_no_days = patch.fixedDays;
+    const r = await sbPersonal.from('staff_settings').upsert(row); return !r.error;
   } catch(e){ return false; }
 }
 function openPortalSettings(){
@@ -9595,6 +9659,13 @@ function openPortalSettings(){
     <h3 class="psec">העדפות קבועות</h3>
     <div class="pnote">מה שמסמנים כאן מופיע אצלך "לא" בכל חודש. אפשר לבחור יותר מאחד, ואפשר תמיד לשנות משמרת מסוימת בלחיצה עליה.</div>
     <div class="pchoice wrap fixed-no">${[['m', 'לא עושה בקרים'], ['e', 'לא עושה צהריים'], ['n', 'לא עושה לילות']].map(([k, w]) => { const admin = k === 'n' && srv.profile && srv.profile.no_nights; return `<button type="button" class="${admin || (srv.fixedNo || []).includes(k) ? 'on' : ''}" data-fixed-no="${k}"${admin ? ' disabled title="הוגדר בפורטל הניהול"' : ''}>${w}</button>`; }).join('')}</div>
+    <h3 class="psec">ימים שאני לא באה בהם</h3>
+    <div class="pnote">הימים שמסמנים כאן מסומנים אצלך "לא" בתחילת כל חודש.</div>
+    <div class="pchoice wrap fixed-days">${DOW_SHORT.map((d, i) => `<button type="button" class="${(srv.fixedDays || []).includes(i) ? 'on' : ''}" data-fixed-day="${i}">${pEsc(d)}</button>`).join('')}</div>
+    <h3 class="psec">איך ממלאים את ההעדפות</h3>
+    <div class="pchoice wrap"><button type="button" class="${srv.prefWeekly ? 'on' : ''}" data-set-weekly="1">שבוע אחרי שבוע</button><button type="button" class="${srv.prefWeekly ? '' : 'on'}" data-set-weekly="0">כל החודש יחד</button></div>
+    <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${srv.prefPlain ? 'on' : ''}" data-set-plain="1">בלי צבעים</button><button type="button" class="${srv.prefPlain ? '' : 'on'}" data-set-plain="0">עם צבעים</button></div>
+    <div class="pnote">"בלי צבעים": לחיצה = כן, עוד לחיצה = לא, לחיצה ארוכה מחזירה לנקודה.</div>
     <h3 class="psec">סופי שבוע</h3>
     <div class="pchoice wrap"><button type="button" class="${srv.showLong ? 'on' : ''}" data-set-long="1">להציג סופ"ש ארוך: כן</button><button type="button" class="${srv.showLong ? '' : 'on'}" data-set-long="0">לא</button></div>
     <div class="pnote">${tx('long_setting')}</div>
@@ -9659,6 +9730,15 @@ function openPortalSettings(){
     if(!ok){ srv.fixedNo = was; b.classList.toggle('on', (was || []).includes(k)); toast('לא הצלחנו לשמור כרגע. אפשר לנסות שוב בעוד רגע'); return; }
     toast('נשמר. ההעדפה תופיע בכל חודש');
     if(portalUi.tab === 'prefs'){ const body = document.getElementById('portal-body'); if(body) renderInstructorPrefs(body); }
+  }));
+  sh.querySelectorAll('[data-set-weekly], [data-set-plain]').forEach(b => b.addEventListener('click', async () => {          // (the two ways of filling the preferences, Guy 2026-10-30)
+    const patch = 'setWeekly' in b.dataset ? { prefWeekly:b.dataset.setWeekly === '1' } : { prefPlain:b.dataset.setPlain === '1' };
+    await srvSaveSimplePrefs(patch); sh.close(); showPortal();
+  }));
+  sh.querySelectorAll('[data-fixed-day]').forEach(b => b.addEventListener('click', async () => {
+    const d = Number(b.dataset.fixedDay), cur = new Set(srv.fixedDays || []); if(cur.has(d)) cur.delete(d); else cur.add(d);
+    b.classList.toggle('on', cur.has(d));
+    await srvSaveSimplePrefs({ fixedDays:[0, 1, 2, 3, 4, 5, 6].filter(x => cur.has(x)) }); toast('נשמר. הימים האלה יסומנו "לא" בתחילת כל חודש');
   }));
   sh.querySelectorAll('[data-set-lang]').forEach(b => b.addEventListener('click', async () => {
     const lang = b.dataset.setLang; if(lang === srv.lang) return;
@@ -10849,6 +10929,8 @@ Object.assign(AR, {
   'כל המשמרות מסומנות':'كل المناوبات محددة', 'ביקשתם החלפה':'طلبتم استبدالًا', 'מחפש/ת מחליף/ה':'يبحث/تبحث عن بديل/ة', 'אי אפשר לשבץ אותך כרגע':'لا يمكن جدولتك الآن',
   'התקנה כאפליקציה':'التثبيت كتطبيق', 'אשמח להצטרף':'يسعدني الانضمام', 'רק אחד':'واحدة فقط', 'שירות':'خدمة', 'מורות':'معلمات', 'הסתרת בנות שירות ומורות':'إخفاء فتيات الخدمة والمعلمات', 'הצגת בנות שירות ומורות':'إظهار فتيات الخدمة والمعلمات', 'רק אחד מאלה':'واحدة فقط من هذه', '🕯️ סופ"ש ארוך':'🕯️ نهاية أسبوع طويلة', 'מתוך המשמרות שסימנת "כן" או "יכול"':'من المناوبات التي اخترت لها "نعم" أو "ممكن"',
   'לעבוד כמה שיותר החודש (מתוך מה שסימנתי "כן" או "יכול")':'أن أعمل أكثر ما يمكن هذا الشهر (من بين ما اخترت له "نعم" أو "ممكن")',
+  // the simpler preferences screen (Guy 2026-10-30, 14zj)
+  'ימים שאני לא באה בהם':'أيام لا آتي فيها', 'הימים שמסמנים כאן מסומנים אצלך "לא" בתחילת כל חודש.':'الأيام التي تحدَّد هنا تُحدَّد عندك "لا" في بداية كل شهر.', 'איך ממלאים את ההעדפות':'كيف أعبّئ التفضيلات', 'שבוע אחרי שבוע':'أسبوعًا بعد أسبوع', 'כל החודש יחד':'الشهر كله معًا', 'בלי צבעים':'بدون ألوان', 'עם צבעים':'مع ألوان', '"בלי צבעים": לחיצה = כן, עוד לחיצה = לא, לחיצה ארוכה מחזירה לנקודה.':'"بدون ألوان": ضغطة = نعم، ضغطة أخرى = لا، ضغطة طويلة تعيد النقطة.', 'א':'ح', 'ב':'ن', 'ג':'ث', 'ד':'ر', 'ה':'خ', 'ו':'ج', 'ש':'س', 'דלג':'تخطٍّ', 'המשך ←':'متابعة ←', '→ הקודם':'→ السابق', 'השבוע הבא ←':'الأسبوع القادم ←', 'לסיום ←':'إلى النهاية ←', 'לראות את כל החודש':'رؤية الشهر كله', 'חזרה לשבוע אחרי שבוע':'العودة إلى أسبوع بعد أسبوع', 'כמעט סיימנו':'أوشكنا على الانتهاء', 'הגשת ההעדפות':'تقديم التفضيلات', 'איך מסמנים':'كيف أحدّد', 'הבנתי':'فهمت', 'באיזה יום?':'في أي يوم؟', 'קבוע בהגדרות':'ثابت في الإعدادات',
   'העדפות קבועות':'تفضيلات ثابتة', 'לא עושה בקרים':'لا أعمل صباحًا', 'לא עושה צהריים':'لا أعمل بعد الظهر', 'לא עושה לילות':'لا أعمل ليلًا',
   'מה שמסמנים כאן מופיע אצלך "לא" בכל חודש. אפשר לבחור יותר מאחד, ואפשר תמיד לשנות משמרת מסוימת בלחיצה עליה.':'ما تختارونه هنا يظهر عندك "لا" في كل شهر. يمكن اختيار أكثر من واحد، ويمكن دائمًا تغيير مناوبة معيّنة بالضغط عليها.',
   'נשמר. ההעדפה תופיע בכל חודש':'تم الحفظ. سيظهر التفضيل في كل شهر', 'הוגדר בפורטל הניהול':'تم تحديده في بوابة الإدارة',
@@ -13900,6 +13982,214 @@ function learnToggle(){
 // ---------- THE RECORDED NARRATION of the training videos: made by tools\learn-voice.ps1, do not edit by hand ----------
 // sentence -> file in learn\ (next to the page). A sentence that is not here is read by the device's own voice.
 const LEARN_VOICE = {"ברוכים הבאים! כלי אחד לצוות, לילדים ולטיפול.":"89290bb5df69.mp3","הרמזור: לכל התנהגות צבע, ולכל צבע דרך ברורה, צעד אחרי צעד.":"86f1a1c51afa.mp3","ובחדר, הילדים רואים כוכבים, בונוסים ואת המסע בחלל, בזמן אמת.":"7150b713066c.mp3","בסידור העבודה, כל מדריך מסמן מהטלפון מתי הכי נוח לו לעבוד.":"ea9c55a6bd3e.mp3","והרכזת בונה סידור לכל החודש בלחיצה אחת, לפי ההעדפות והבטיחות.":"0ceec398d5ea.mp3","צריכים החלפה? רוצים לעזור? הכל כאן, והרכזת רק מאשרת.":"17b622ca5611.mp3","בפורטל הטיפול בונים לכל ילד תוכנית אישית: מטרות, יעדים ודרכים לעזור לו.":"b4c748b77b1b.mp3","וכל מדריך יודע בדיוק מה עובד עם כל ילד, וממה כדאי להימנע.":"868cbe03b721.mp3","הכל במקום אחד: בטלפון, במחשב, ועל המסך בחדר.":"e7a75dacfe13.mp3","היי! בואו נראה איך נכנסים לפורטל המדריך, בפעם הראשונה ובכל פעם אחרי זה.":"6568840ccffb.mp3","בפעם הראשונה, פשוט כותבים את המייל שלכם, זה שנתתם לרכזת.":"4d14b52c3598.mp3","ולוחצים על \"שלחו לי קוד למייל\".":"7c257788c68d.mp3","תוך דקה מגיע אליכם קוד של שש ספרות. לא הגיע? שווה להציץ גם בספאם.":"a02e925bd1fa.mp3","מקלידים את הקוד, ולוחצים \"כניסה\".":"dd0e33838c8a.mp3","עכשיו בוחרים סיסמה משלכם, לפחות שמונה תווים.":"d69a9d8c7b03.mp3","כותבים אותה עוד פעם, ולוחצים \"שמירה וכניסה\".":"e43e5a99452d.mp3","מעכשיו נכנסים פשוט עם המייל והסיסמה, בלי לחכות לקוד. ואם שכחתם את הסיסמה, לא נורא: לוחצים שוב \"שלחו לי קוד למייל\".":"3a8c4d005fd2.mp3","והנה אתם במסך הבית. בוחרים \"פורטל המדריך\".":"b117930e6116.mp3","זהו, אתם בפנים! בסרטון הבא נציץ בסידור שלכם.":"7fe1df2ff1d8.mp3","בואו נראה איפה מוצאים את הסידור: שלכם, ושל כל הצוות.":"40c82d940749.mp3","ברוכים הבאים לפורטל המדריך! למעלה יש לשוניות: הסידור, העדפות, החלפות, חופשה והודעות. אנחנו עכשיו ב\"הסידור\".":"dfcf0b7f4000.mp3","יש לכם הודעה חדשה? היא מחכה כאן למעלה. לוחצים ופותחים.":"074ffebf9eaa.mp3","קראתם? לוחצים \"הבנתי, תודה\", וההודעה נעלמת.":"cda848363bd9.mp3","בשורה הזו תמיד תראו מתי המשמרת הבאה שלכם: היום, סוג המשמרת והשעות.":"1d3347956635.mp3","עם החצים אפשר לקפוץ בין החודשים.":"1db5e87f30fc.mp3","לחיצה על \"המשמרות שלי\" פותחת את כל המשמרות שלכם בחודש.":"708478ddd919.mp3","המשמרת הבאה מסומנת, ומה שכבר עבר מופיע בצבע חלש יותר.":"ff252540d29b.mp3","וממש מתחת, הסידור של כל הצוות, לפי ימים ומשמרות.":"9d6d88103104.mp3","את השם שלכם קל למצוא, הוא מודגש. לחיצה עליו במשמרת שעוד לפניכם פותחת בקשת החלפה, או דיווח שלא תוכלו להגיע.":"ec355159f99d.mp3","על החלפות יש סרטון משלהן. בינתיים, \"חזרה\".":"6b65045a4430.mp3","זהו! בסרטון הבא נמלא העדפות לחודש הבא.":"cac335abae08.mp3","בואו נסמן ביחד את ההעדפות לחודש הבא.":"a8c37fdffd60.mp3","את ההעדפות ממלאים בלשונית \"העדפות\".":"3fc2120c4f6e.mp3","כאן רואים אם כבר הגשתם, ועד מתי אפשר: עד ה-24 בחודש, בעשר וחצי בלילה. וכל סימון נשמר לבד.":"8e0d8fe29c41.mp3","משהו לא ברור? \"איך ממלאים?\" פותח הסבר קצר.":"5d395accd839.mp3","יש לכם העדפה קבועה, למשל שאתם לא עושים לילות? מגדירים אותה פעם אחת ב\"שינוי\", והיא תסומן לבד כל חודש.":"5ab5ff6f2d79.mp3","וכאן אפשר לראות את השעות של כל משמרת: בוקר, צהריים ולילה.":"28639e37e19c.mp3","בלוח, לכל יום יש שלוש משמרות: בוקר, צהריים ולילה. בהתחלה הכל עוד ריק.":"9b234aadfb26.mp3","למטה בוחרים איך זה מרגיש לכם. \"כן\": אשמח! \"יכול\": אפשר, אבל פחות נוח. \"לא\": לא מתאים לי.":"d34fa47a2033.mp3","נבחר \"כן\"...":"c6ecfda4c005.mp3","ונלחץ על המספר של היום, וכל המשמרות שלו מסומנות.":"fb074bc078f9.mp3","אפשר גם לבחור משמרת אחת. נבחר \"לא\"...":"036e42eff038.mp3","ונלחץ על הלילה של אותו יום.":"ac22a0c78e14.mp3","עם \"יכול\" זה בדיוק אותו דבר: בוחרים \"יכול\"...":"245660258255.mp3","ולוחצים על יום, או על משמרת.":"3ebbaa008cac.mp3","טעיתם? לחיצה נוספת מחזירה את זה למצב ריק.":"208d446d967c.mp3","זמינים רק בחלק מהשעות? בוחרים \"שעות אחרות\", לוחצים על היום, ומסמנים את השעות שמתאימות לכם.":"dbc8bc557d6c.mp3","ו\"נקה הכל\" מוחק הכל, אם בא לכם להתחיל מחדש.":"1c7a0abac009.mp3","זהו! בסרטון הבא נגיש את ההעדפות.":"ae11b8b51b3a.mp3","נשאר רק לסיים ולהגיש. בואו נעשה את זה ביחד.":"349edb29b857.mp3","עברתם על כל החודש? גוללים למטה. כאן אפשר לספר לנו כמה משמרות ירגישו לכם נכון. לגמרי לא חובה.":"64757229f4be.mp3","למשל, ארבע עד חמש משמרות בשבוע.":"17c6aad42a29.mp3","ועוד שתי שאלות קטנות, כל חודש. עונים \"כן\", \"לא\", או \"תבדקו איתי\".":"59d095fa5538.mp3","בראשונה נבחר \"כן\"...":"18bf6ace339c.mp3","ובשנייה, \"תבדקו איתי\".":"c88feb1d7d97.mp3","יש משהו שחשוב לכם שהרכזת תדע? כותבים לה כאן.":"72719ddd2de2.mp3","ובסוף, לוחצים \"הגשת ההעדפות\".":"18f43d186992.mp3","נשארו משמרות שלא סימנתם? המערכת תשאל מה לעשות איתן: לסמן \"יכול\", לסמן \"לא\", או לחזור ולסמן.":"a0799e91f0ed.mp3","נבחר \"יכול\".":"b3b102a28926.mp3","יש! ההעדפות הוגשו. עד שההגשה נסגרת אפשר עוד לשנות, וללחוץ \"עדכון והגשה מחדש\".":"8d5610bb8282.mp3","זהו, ההעדפות אצל הרכזת! בסרטון הבא נבקש החלפה.":"e07a41cdf90e.mp3","קורה לכולם: צריכים שמישהו יחליף אתכם. בואו נראה איך.":"36549c6407ac.mp3","בלשונית \"הסידור\", ב\"המשמרות שלי\", לוחצים \"בקשת החלפה\".":"88a1aed2aac5.mp3","בוחרים \"בקשת החלפה\"...":"68d3b0a70441.mp3","ואת המשמרת.":"221f66e90b2f.mp3","המערכת כבר מראה לכם מי מהצוות פנוי, ושואלת אם לפרסם. לוחצים \"כן, לפרסם\".":"d43d0adc44ef.mp3","הבקשה אצל כל המדריכים, וליד המשמרת תמיד תראו מה המצב שלה.":"5bc37d06c7e3.mp3","ואם פתאום אי אפשר להגיע? לוחצים שוב \"בקשת החלפה\"...":"35499f5fbbbe.mp3","בוחרים \"לא יכולה להגיע\"...":"c317d5398caf.mp3","כותבים במשפט קצר מה קרה.":"5df137790663.mp3","ולוחצים \"כן, לדווח\". הרכזת מקבלת את זה מיד, וכל הצוות רואה שזה דחוף.":"25ef732f15a3.mp3","זהו! בסרטון הבא נראה איך עוזרים לחברים בצוות.":"e57f1f144cd7.mp3","בואו נראה איך עוזרים לחברים בצוות, ואיך מצטרפים למשמרת שחסר בה מישהו.":"0574effc325c.mp3","בלשונית \"החלפות\" רואים את הבקשות שלכם, ומה קורה עם כל אחת.":"3c6677f34b0a.mp3","ומתחת, חברים מהצוות שמחפשים מחליף. מה שדחוף, מסומן.":"2d7cd6622b52.mp3","רוצים לעזור? לוחצים \"אני יכול/ה להחליף\".":"e85aa50a0185.mp3","ההצעה עוברת לרכזת. כשהיא מאשרת, הסידור מתעדכן, ושניכם מקבלים הודעה.":"120c49ca807e.mp3","ומתחת לבקשה שלכם, תראו מי יכול לקחת את המשמרת, עם כפתור וואטסאפ לשאול אותם ישר.":"dd2d3eda0984.mp3","לפעמים חסר מישהו במשמרת. רואים את זה בלשונית \"הסידור\", ב\"משמרות פתוחות\".":"d78a625ff312.mp3","הרשימה לפי ימים, וליד כל משמרת כתוב כמה חסרים.":"5ff13f47270e.mp3","בא לכם להצטרף? לוחצים \"אשמח להצטרף\"...":"575bf023b18b.mp3","ומאשרים. הבקשה כבר אצל הרכזת.":"754d990965c7.mp3","עד שהיא מאשרת, כתוב \"מחכה לאישור\". שיניתם את דעתכם? אפשר לבטל.":"845efffdc9b8.mp3","זהו! תודה שאתם עוזרים אחד לשני.":"53135ccea34c.mp3"};
+// ---- a simpler way to fill the preferences, two settings of the instructor's own (Guy 2026-10-30, made for רעות; scheduling-v48.sql):
+//   "שבוע אחרי שבוע": two opening questions (kinds of shifts / weekdays she does not do this month, both may be skipped), then one week at a time,
+//     then submitting. Every tap is saved at once; coming back she goes on from the week she stopped at. Once handed in, the whole month is shown.
+//   "בלי צבעים": taps instead of colours: a dot = not marked yet, the first tap = כן (bold), another tap = לא (faded), a long press = the dot again;
+//     no "יכול". A week is done when it has no dots left.
+//   "שעות אחרות": guided — which day, then a quick 12:00–20:00 or the start and the end on the phone's own time wheel.
+// Only the screen changes: the marks are stored as everybody's, so the coordinator sees them as from everyone.
+const prefPlainOn = () => portalServerOn && !!srv.prefPlain && !prefOther();
+const prefWeekOn = (me, locked, submitted) => portalServerOn && !!srv.prefWeekly && me.role === 'instructor' && !prefOther() && !locked && !submitted && !portalUi.prefsPast && !portalUi.prefsWholeMonth;
+const prefFem = () => !(srv.profile && srv.profile.female === false);
+const prefG = (f, m) => prefFem() ? f : m;
+const PW_KINDS = [['m', 'בוקר'], ['e', 'צהריים'], ['n', 'לילה']];
+const pwPosKey = mk => `ramzor-weekpos-${srv.me}-${mk}`;
+const pwGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } };
+const pwSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+// the weeks of a month, Sunday to Saturday; days of the next or the last month stay in the week, faded
+function prefWeeksOf(mk){
+  const days = daysOfMonth(mk), out = []; let start = addDays(days[0], -dowOf(days[0]));
+  while(start <= days[days.length - 1]){ out.push(Array.from({ length:7 }, (_, i) => addDays(start, i))); start = addDays(start, 7); }
+  return out;
+}
+// the shifts of a day that still wait for a mark (a dot)
+function prefDotsOf(mk, prefs, dates){
+  const inMonth = new Set(daysOfMonth(mk)), ks = [];
+  dates.filter(d => inMonth.has(d)).forEach(date => {
+    if(prefs.absent.includes(date) || (prefs.fixed || []).some(f => f.day === date)) return;
+    prefShiftsFor(date).forEach(s => { const k = `${date}|${s.id}`; if(!prefs.slots[k] && !prefNoNight(k) && !prefInsideLong(prefs, k)) ks.push(k); });
+  });
+  return ks;
+}
+// a tap without colours: dot -> כן -> לא -> כן ...; a long press: the dot again
+function prefPlainTap(prefs, key){ prefs.slots[key] = prefs.slots[key] === 'yes' || prefs.slots[key] === 'avoid' ? 'no' : prefs.slots[key] === 'no' ? 'yes' : 'yes'; portalSave(); }
+function prefPlainReset(prefs, key){ delete prefs.slots[key]; portalSave(); }
+function prefPlainHelp(force){
+  const k = 'ramzor-plain-help'; if(!force){ try { if(localStorage.getItem(k)) return; localStorage.setItem(k, '1'); } catch(e){ return; } }
+  const sh = portalSheet(`<h2>איך מסמנים</h2><div class="pplain-help"><div><span class="pshift lv-neutral pplain-demo">בוקר</span> נקודה = עוד לא סימנת</div><div><span class="pshift lv-yes pplain-demo">בוקר</span> לחיצה אחת = כן</div><div><span class="pshift lv-no pplain-demo">בוקר</span> עוד לחיצה = לא</div><div>לחיצה ארוכה = חוזרים לנקודה</div></div>
+    <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>הבנתי</button></div>`);
+  sh.classList.add('pplain-sheet');
+}
+// taps and long presses on the shifts of a screen without colours
+function prefWirePlain(root, prefs, redraw){
+  root.querySelectorAll('[data-pslot], [data-plong]').forEach(b => {
+    let timer = null, long = false;
+    const key = () => b.dataset.pslot || `${b.dataset.plong}|l`;
+    b.addEventListener('pointerdown', () => { long = false; clearTimeout(timer); timer = setTimeout(() => { long = true; prefPlainReset(prefs, key()); if(navigator.vibrate) try { navigator.vibrate(20); } catch(e){} redraw(); }, 550); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, () => clearTimeout(timer)));
+    b.addEventListener('contextmenu', e => e.preventDefault());
+    b.addEventListener('click', e => {
+      e.stopImmediatePropagation(); if(long){ long = false; return; }
+      const k = key(); if(prefInsideLong(prefs, k)){ toast(tx('long_inside')); return; }
+      prefPlainTap(prefs, k); prefPlainHelp(false);
+      if(b.dataset.plong && ['yes', 'avoid'].includes(prefs.slots[k])){ const fri = b.dataset.plong, sat = addDays(fri, 1); [`${fri}|e`, `${fri}|n`, `${sat}|m`, `${sat}|e`].forEach(x => delete prefs.slots[x]); portalSave(); }
+      redraw();
+    }, true);
+  });
+}
+// the weekdays she never comes (her settings): marked "לא" once when a month opens, like "how the preferences start"
+function prefFixedDaysFill(mk, prefs, days){
+  const ds = srv.fixedDays || []; if(!portalServerOn || !ds.length || prefOther()) return 0;
+  const key = `ramzor-fixeddays-${srv.me}-${mk}`; try { if(localStorage.getItem(key)) return 0; localStorage.setItem(key, '1'); } catch(e){ return 0; }
+  let n = 0;
+  days.filter(d => ds.includes(dowOf(d))).forEach(date => {
+    if(prefs.absent.includes(date) || (prefs.fixed || []).some(f => f.day === date)) return;
+    prefShiftsFor(date).forEach(s => { const k = `${date}|${s.id}`; if(!prefs.slots[k]){ prefs.slots[k] = 'no'; n++; } });
+  });
+  if(n) portalSave(); return n;
+}
+// "שעות אחרות", guided: which day (when there is a choice) -> 12:00–20:00 at once, or the start and the end on the time wheel
+function prefHoursGuided(dates, prefs, done){
+  const dayName = d => 'יום ' + DOW_NAMES[dowOf(d)];
+  const toH = v => { const [h, m] = String(v || '').split(':').map(Number); if(isNaN(h)) return null; const x = h + ((m || 0) >= 30 ? 1 : 0); return x === 0 ? 24 : x; };
+  const sh = portalSheet('<div id="phg"></div>'), box = sh.querySelector('#phg');
+  let date = dates.length === 1 ? dates[0] : null, from = null;
+  const fin = () => { portalSave(); sh.close(); done(); };
+  const draw = step => {
+    if(step === 'day') box.innerHTML = `<h2>באיזה יום?</h2><div class="phg-days">${dates.map(d => `<button type="button" class="btn ghost" data-hgday="${d}">${pEsc(dayName(d))} <small>${parseIso(d).getDate()}/${parseIso(d).getMonth() + 1}</small>${prefs.hours[d] ? ` <small class="phg-now"><bdi dir="ltr">${prefs.hours[d].map(([a, b]) => a + '–' + b).join(', ')}</bdi></small>` : ''}</button>`).join('')}</div>
+      <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>ביטול</button></div>`;
+    else if(step === 'how') box.innerHTML = `<h2>שעות אחרות ב${pEsc(dayName(date))}</h2>${prefs.hours[date] ? `<div class="pnote">כרגע: <bdi dir="ltr">${prefs.hours[date].map(([a, b]) => a + ':00–' + b + ':00').join(', ')}</bdi></div>` : ''}
+      <button type="button" class="btn hours-mid phg-mid" data-hg="mid"><span>משמרת אמצע</span> <bdi dir="ltr">12:00–20:00</bdi></button>
+      <button type="button" class="btn ghost phg-other" data-hg="other">שעות אחרות</button>
+      <div class="confirm-actions">${prefs.hours[date] ? '<button type="button" class="btn ghost" data-hg="clear">מחיקה</button>' : ''}<button type="button" class="btn ghost" data-close>ביטול</button></div>`;
+    else box.innerHTML = `<h2>${step === 'from' ? `מתי ${prefG('תוכלי', 'תוכל')} להתחיל ב${pEsc(dayName(date))}?` : `מתי ${prefG('תרצי', 'תרצה')} לסיים ב${pEsc(dayName(date))}?`}</h2>
+      <input type="time" class="phg-time" id="phg-t" step="3600" value="${step === 'from' ? '08:00' : String(Math.min((from || 8) + 8, 23)).padStart(2, '0') + ':00'}">
+      <div id="phg-err" class="pwarn" aria-live="polite"></div>
+      <div class="confirm-actions"><button type="button" class="btn ghost" data-hg="back">חזרה</button><button type="button" class="btn" data-hg="${step === 'from' ? 'next' : 'save'}">${step === 'from' ? 'המשך' : 'שמירה'}</button></div>`;
+    box.querySelectorAll('[data-hgday]').forEach(b => b.addEventListener('click', () => { date = b.dataset.hgday; draw('how'); }));
+    box.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => sh.close()));
+    box.querySelectorAll('[data-hg]').forEach(b => b.addEventListener('click', () => {
+      const a = b.dataset.hg, err = t => { box.querySelector('#phg-err').textContent = t; };
+      if(a === 'mid'){ prefs.hours[date] = [[12, 20]]; fin(); }
+      else if(a === 'clear'){ delete prefs.hours[date]; fin(); }
+      else if(a === 'other') draw('from');
+      else if(a === 'back') draw(step === 'to' ? 'from' : 'how');
+      else if(a === 'next'){ const h = toH(box.querySelector('#phg-t').value); if(h === null || h < 6 || h > 23){ err('אפשר להתחיל בין 06:00 ל-23:00'); return; } from = h; draw('to'); }
+      else if(a === 'save'){ const h = toH(box.querySelector('#phg-t').value); if(h === null || h <= from){ err('השעה צריכה להיות אחרי ' + String(from).padStart(2, '0') + ':00'); return; } prefs.hours[date] = [[from, h]]; fin(); }
+    }));
+    const t = box.querySelector('#phg-t'); if(t) setTimeout(() => { try { t.focus(); } catch(e){} }, 50);
+  };
+  draw(date ? 'how' : 'day');
+}
+// the line under a screen without colours: "שעות אחרות" and the small "?"
+function prefPlainBarHtml(){ return `<div class="plevelbar pplain-bar"><button type="button" class="lvbtn" id="pplain-hours">שעות אחרות</button><button type="button" class="lvbtn pplain-q" id="pplain-q" aria-label="איך מסמנים">?</button></div>`; }
+
+// ---- week by week
+function renderWeekPrefs(body, mk, m, prefs){
+  const me = portalMe(), weeks = prefWeeksOf(mk), inMonth = new Set(daysOfMonth(mk)), plain = prefPlainOn();
+  let pos = pwGet(pwPosKey(mk), 'kinds'); if(typeof pos === 'number' && (pos < 0 || pos >= weeks.length)) pos = 0;
+  const go = p => { pwSet(pwPosKey(mk), p); renderInstructorPrefs(body); };
+  const head = `<div class="pweek-head"><b>ההעדפות ל${pEsc(monthLabel(mk))}</b><span class="pweek-steps" aria-hidden="true">${['kinds', 'days'].concat(weeks.map((_, i) => i)).concat(['end']).map(p => `<i class="${p === pos ? 'on' : ''}"></i>`).join('')}</span></div>`;
+  // the opening questions: the kinds of shifts and the weekdays she does not do this month (both may be skipped)
+  if(pos === 'kinds' || pos === 'days'){
+    const isK = pos === 'kinds', chosenKey = `ramzor-week${isK ? 'kinds' : 'days'}-${srv.me}-${mk}`;
+    const fixedK = isK ? prefFixedKinds() : new Set();
+    let chosen = new Set(pwGet(chosenKey, isK ? [] : (srv.fixedDays || [])));
+    const opts = isK ? PW_KINDS : DOW_NAMES.map((d, i) => [i, d]);
+    body.innerHTML = `${head}<div class="pweek-q"><h2>${isK ? `יש משמרות ש${prefG('את', 'אתה')} לא ${prefG('עושה', 'עושה')} החודש?` : `יש יום בשבוע ש${prefG('את', 'אתה')} לא ${prefG('באה', 'בא')} בו החודש?`}</h2>
+      <div class="pnote">${isK ? 'אפשר לבחור יותר מאחת. הן יסומנו "לא" בכל החודש.' : 'אפשר לבחור יותר מיום אחד. כל המשמרות בימים האלה יסומנו "לא".'}</div>
+      <div class="pweek-opts">${opts.map(([k, w]) => { const fx = isK && fixedK.has(k); return `<button type="button" class="pweek-opt${fx || chosen.has(k) ? ' on' : ''}" data-pwopt="${k}"${fx ? ' disabled' : ''}>${pEsc(w)}${fx ? '<small>קבוע בהגדרות</small>' : ''}</button>`; }).join('')}</div>
+      <div class="pweek-nav"><button type="button" class="btn ghost" id="pw-skip">דלג</button><button type="button" class="btn" id="pw-next">המשך ←</button></div></div>`;
+    body.querySelectorAll('[data-pwopt]').forEach(b => b.addEventListener('click', () => { const k = isK ? b.dataset.pwopt : Number(b.dataset.pwopt); if(chosen.has(k)) chosen.delete(k); else chosen.add(k); b.classList.toggle('on', chosen.has(k)); }));
+    const next = isK ? 'days' : 0;
+    body.querySelector('#pw-skip').addEventListener('click', () => go(next));
+    body.querySelector('#pw-next').addEventListener('click', () => {
+      const was = new Set(pwGet(chosenKey, isK ? [] : (srv.fixedDays || []))), match = (date, sid, k) => isK ? sid === k : dowOf(date) === k;
+      daysOfMonth(mk).forEach(date => {
+        if(prefs.absent.includes(date) || (prefs.fixed || []).some(f => f.day === date)) return;
+        prefShiftsFor(date).forEach(s => { const key = `${date}|${s.id}`;
+          if([...chosen].some(k => match(date, s.id, k))){ if(!prefs.slots[key] || prefs.slots[key] !== 'no') prefs.slots[key] = 'no'; }
+          else if([...was].some(k => match(date, s.id, k)) && prefs.slots[key] === 'no') delete prefs.slots[key]; });          // (taken back from the list: those shifts wait for a mark again)
+      });
+      pwSet(chosenKey, [...chosen]); portalSave(); go(next);
+    });
+    return;
+  }
+  // the end: the two small questions every instructor answers, and handing in
+  if(pos === 'end'){
+    const cons = prefs.consent || { extend:null, pull:null };
+    const choice = name => `<div class="pchoice" role="group"><button type="button" class="${cons[name] === true ? 'on' : ''}" data-consent="${name}:1">כן</button><button type="button" class="${cons[name] === false ? 'on' : ''}" data-consent="${name}:0">לא</button><button type="button" class="${cons[name] === 'ask' ? 'on' : ''}" data-consent="${name}:ask">תבדקו איתי</button></div>`;
+    const left = prefDotsOf(mk, prefs, daysOfMonth(mk)).length;
+    body.innerHTML = `${head}<div class="pweek-q"><h2>כמעט סיימנו</h2>
+      <div class="pconsents"><div class="pconsent"><span>אם נצטרך, האם יהיה לך נוח להישאר עד 16:00 במשמרת בוקר?</span>${choice('extend')}</div>
+      <div class="pconsent"><span>אם נצטרך, האם יהיה לך נוח להמשיך משבת בלילה עד יום ראשון ב-11:00?</span>${choice('pull')}</div></div>
+      ${left ? `<div class="pnote pnote-soft">עוד ${left} משמרות עם נקודה</div>` : ''}
+      <div class="pweek-nav"><button type="button" class="btn ghost" id="pw-prev">→ הקודם</button><button type="button" class="btn" id="pw-submit">הגשת ההעדפות</button></div></div>`;
+    body.querySelectorAll('[data-consent]').forEach(b => b.addEventListener('click', () => { const [n, v] = b.dataset.consent.split(':'); prefs.consent[n] = v === 'ask' ? 'ask' : v === '1'; portalSave(); renderInstructorPrefs(body); }));
+    body.querySelector('#pw-prev').addEventListener('click', () => go(weeks.length - 1));
+    body.querySelector('#pw-submit').addEventListener('click', async () => {
+      const c = prefs.consent || {}; if(c.extend === null || c.extend === undefined || c.pull === null || c.pull === undefined){ toast(tx('consent_needed')); return; }
+      const um = prefUnmarkedKeys(mk, prefs);
+      if(um.length){ const w = weeks.findIndex(wk => wk.includes(um[0].split('|')[0])); toast(`עוד ${um.length} משמרות עם נקודה`); go(w < 0 ? 0 : w); return; }
+      try { await srvSubmit(mk, (m.notes && m.notes[me.id]) || '', m.goals[me.id] || null); } catch(e){ toast(tx('submit_fail')); return; }
+      toast(tx('submit_ok')); renderInstructorPrefs(body);
+    });
+    return;
+  }
+  // one week
+  const wk = weeks[pos], dots = prefDotsOf(mk, prefs, wk).length, fixedOn = d => (prefs.fixed || []).find(f => f.day === d);
+  const lvOf = key => prefInsideLong(prefs, key) ? prefs.slots[`${prefLongFri(key)}|l`] : prefLevelOf(prefs, key);
+  const rows = wk.map(date => {
+    const out = !inMonth.has(date), fx = !out && fixedOn(date), away = !out && (fx || prefs.absent.includes(date)), hrs = !out && prefs.hours[date];
+    return `<div class="pwday${out ? ' out' : ''}${away ? ' away' : ''}"><div class="pwday-name"><b>${pEsc(DOW_NAMES[dowOf(date)])}</b> <small>${parseIso(date).getDate()}/${parseIso(date).getMonth() + 1}</small>${hrs ? ` <small class="pday-hrs"><bdi dir="ltr">${hrs.map(([a, b]) => a + '–' + b).join(', ')}</bdi></small>` : ''}</div>
+      ${out ? '' : away ? `<span class="pwday-away">${pEsc(fx ? FIXED_REASON[fx.reason] || 'היעדרות' : 'לא באה')}</span>` : `<div class="pwday-shifts">${prefShiftsFor(date).map(s => { const key = `${date}|${s.id}`, inLong = prefInsideLong(prefs, key);
+        return `<button type="button" class="pshift pwshift lv-${lvOf(key) || 'neutral'}${inLong ? ' in-long' : ''}" data-pslot="${key}">${inLong ? '🕯️ ' : ''}${pEsc(s.label)}</button>`; }).join('')}</div>`}</div>`;
+  }).join('');
+  const last = pos === weeks.length - 1, blocked = plain && dots > 0;
+  const range = `${parseIso(wk[0]).getDate()}/${parseIso(wk[0]).getMonth() + 1}–${parseIso(wk[6]).getDate()}/${parseIso(wk[6]).getMonth() + 1}`;
+  body.innerHTML = `${head}<div class="pweek${plain ? ' plain' : ''}"><h2 class="pweek-title">שבוע ${pos + 1} מתוך ${weeks.length} <small><bdi dir="ltr">${range}</bdi></small></h2>
+    ${plain ? '' : `<div class="plevelbar pweek-levels">${SRV_LEVEL_BUTTONS.filter(b => b[0] !== 'hours').map(b => `<button type="button" class="lvbtn lv-${b[0]}${(portalUi.level || 'yes') === b[0] ? ' active' : ''}" data-plevel="${b[0]}">${b[1]}</button>`).join('')}</div>`}
+    <div class="pwdays">${rows}</div>
+    <div class="pweek-bottom">${plain ? prefPlainBarHtml() : '<div class="plevelbar pplain-bar"><button type="button" class="lvbtn" id="pplain-hours">שעות אחרות</button></div>'}</div>
+    ${dots ? `<div class="pweek-left">עוד ${dots} ${dots === 1 ? 'נקודה' : 'נקודות'}</div>` : ''}
+    <div class="pweek-nav"><button type="button" class="btn ghost" id="pw-prev">→ הקודם</button><button type="button" class="btn" id="pw-next"${blocked ? ' disabled' : ''}>${last ? 'לסיום ←' : 'השבוע הבא ←'}</button></div>
+    <button type="button" class="btn ghost small pweek-month" id="pw-month">לראות את כל החודש</button></div>`;
+  const redraw = () => renderInstructorPrefs(body);
+  if(plain) prefWirePlain(body, prefs, redraw);
+  else {
+    if(!portalUi.level || portalUi.level === 'hours') portalUi.level = 'yes';
+    body.querySelectorAll('[data-plevel]').forEach(b => b.addEventListener('click', () => { portalUi.level = b.dataset.plevel; redraw(); }));
+    body.querySelectorAll('[data-pslot]').forEach(b => b.addEventListener('click', () => {
+      const key = b.dataset.pslot, lv = portalUi.level; if(prefInsideLong(prefs, key)){ toast(tx('long_inside')); return; }
+      if(prefs.slots[key] === lv) delete prefs.slots[key]; else prefs.slots[key] = lv; portalSave(); redraw();
+    }));
+  }
+  body.querySelector('#pplain-hours').addEventListener('click', () => prefHoursGuided(wk.filter(d => inMonth.has(d) && !fixedOn(d) && !prefs.absent.includes(d)), prefs, redraw));
+  { const q = body.querySelector('#pplain-q'); if(q) q.addEventListener('click', () => prefPlainHelp(true)); }
+  body.querySelector('#pw-prev').addEventListener('click', () => go(pos === 0 ? 'days' : pos - 1));
+  body.querySelector('#pw-next').addEventListener('click', () => { if(blocked) return; go(last ? 'end' : pos + 1); });
+  body.querySelector('#pw-month').addEventListener('click', () => { portalUi.prefsWholeMonth = true; redraw(); });
+  if(plain) prefPlainHelp(false);
+}
+// the whole month without colours: the same calendar, with dots, bold and faded; "שעות אחרות" asks which day
+function prefPlainMonth(body, mk, prefs){
+  const cal = body.querySelector('.pcal'); if(cal) cal.classList.add('plain');
+  const bar = body.querySelector('.plevelbar'); if(bar) bar.outerHTML = prefPlainBarHtml();
+  const redraw = () => renderInstructorPrefs(body);
+  prefWirePlain(body, prefs, redraw);
+  body.querySelectorAll('[data-pday]').forEach(b => b.addEventListener('click', e => e.stopImmediatePropagation(), true));          // (no "the whole day" without colours)
+  const h = body.querySelector('#pplain-hours'); if(h) h.addEventListener('click', () => prefHoursGuided(daysOfMonth(mk).filter(d => !(prefs.fixed || []).some(f => f.day === d) && !prefs.absent.includes(d)), prefs, redraw));
+  const q = body.querySelector('#pplain-q'); if(q) q.addEventListener('click', () => prefPlainHelp(true));
+}
+// after the month screen is drawn: without colours its own taps; and, for "שבוע אחרי שבוע" seen as a whole month, the way back
+function prefMonthExtras(body, mk, prefs, locked, submitted){
+  if(prefPlainOn() && !locked) prefPlainMonth(body, mk, prefs);
+  if(portalServerOn && srv.prefWeekly && portalUi.prefsWholeMonth && !locked && !submitted && !portalUi.prefsPast && !prefOther()){
+    const s = body.querySelector('.pstatus'); if(s) s.insertAdjacentHTML('afterend', '<button type="button" class="btn ghost small" id="pw-back-week">חזרה לשבוע אחרי שבוע</button>');
+    const bw = body.querySelector('#pw-back-week'); if(bw) bw.addEventListener('click', () => { portalUi.prefsWholeMonth = false; renderInstructorPrefs(body); });
+  }
+}
 // ---------- MERCURY: OBSERVATIONS AND TRACKING (stage 5) ----------
 // Anybody on the staff (with the personal sign-in) sends a short free observation on a child to the responsible therapist: words, or a
 // recording (kept in private storage, never in the phone's gallery), optionally tied to a goal in focus. The therapist answers
