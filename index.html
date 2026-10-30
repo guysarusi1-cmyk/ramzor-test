@@ -1624,7 +1624,7 @@
   .cs-side{ padding-bottom:90px; } .cs-issue > .btn{ padding:2px 9px; font-size:12px; min-height:0; line-height:20px; }          /* the last note can be scrolled above the floating back button; a small "טופל" */
   .mcal-x{ background:none; border:0; padding:0 3px; margin-inline-start:2px; font:inherit; font-size:12px; line-height:1; color:var(--p-muted); cursor:pointer; opacity:.7; } .mcal-x:hover, .mcal-x:focus-visible{ color:var(--p-no); opacity:1; }          /* the × by a service girl or a teacher in the coordinator's calendar */
   .cs-others-rm{ margin:0 0 8px; } .cs-others-rm.on{ border-color:var(--p-no); color:var(--p-no); }
-  .cs-rebuild-opts{ display:flex; flex-direction:column; gap:10px; margin:12px 0; } .cs-rebuild-opts .btn{ display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:start; padding:12px 14px; white-space:normal; height:auto; } .cs-rebuild-opts .btn small{ font-weight:400; color:var(--p-muted); }          /* the two ways to build again (14j) */
+  .cs-rebuild-opts{ display:flex; flex-direction:column; gap:10px; margin:12px 0; } .cs-rebuild-opts .btn{ display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:start; padding:12px 14px; white-space:normal; height:auto; } .cs-rebuild-opts .btn small{ font-weight:400; color:var(--p-muted); } .cs-rebuild-opts .btn:not(.ghost):not(.danger) small{ color:inherit; opacity:.88; }          /* the two ways to build again (14j) */
   .cs-req.cs-long{ border-inline-start:3px solid #f2c14e; padding-inline-start:8px; }          /* the long weekend and "only one of these" stand out in her requests */
   .mcal.lbl-center .mcal-label{ justify-content:center; padding-top:0; gap:2px; } .mcal.lbl-center .mcal-label b{ font-size:11px; } .mcal.lbl-center .mcal-label small{ font-size:10.5px; color:var(--p-text); }
   @media (min-width:700px){ .mcal.lbl-center .mcal-label b{ font-size:15px; } .mcal.lbl-center .mcal-label small{ font-size:13.5px; } }
@@ -2437,6 +2437,31 @@ body:has(#view-therapy.active .therapy-shell[data-ptheme=light]){ background:#FA
 }
 /* the look on a phone (Guy 2026-10-30): the same switch, small, in the top row */
 .therapy-shell[data-ptheme] .th-look-sm{ justify-self:end; } .therapy-shell[data-ptheme] .th-look-sm button{ padding:0 10px; font-size:14px; }
+/* a phone or a tablet (Guy 2026-10-30): every area open as a tile with its icon, nothing folded under "עוד"; the daily ones first, the rest after a quiet line */
+@media (max-width:1023px){
+  .therapy-shell[data-ptheme] .portal-tabs.th-nav-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:var(--space-2); border:0; margin:0 0 var(--space-6); padding:0; overflow:visible; }
+  .therapy-shell[data-ptheme] .th-nav-grid button{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:72px; padding:var(--space-2);
+    background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); box-shadow:var(--shadow-card); color:var(--color-text); font-size:15px; line-height:1.25; text-align:center; }
+  .therapy-shell[data-ptheme] .th-nav-grid button:hover{ background:var(--color-surface-alt); }
+  .therapy-shell[data-ptheme] .th-nav-grid button.active{ background:var(--color-primary-soft); border-color:var(--color-primary); }
+  .therapy-shell[data-ptheme] .th-nav-grid button.active::after{ display:none; }
+  .therapy-shell[data-ptheme] .th-nav-grid .th-nav-ico{ display:inline-flex; width:22px; height:22px; color:var(--color-text-secondary); }
+  .therapy-shell[data-ptheme] .th-nav-grid button.active .th-nav-ico{ color:var(--color-primary); }
+  .therapy-shell[data-ptheme] .th-nav-grid .pcount{ position:absolute; top:6px; inset-inline-start:6px; margin:0; background:var(--color-primary); color:var(--color-on-primary); }
+  .therapy-shell[data-ptheme] .th-nav-grid .th-nav-sep{ display:block; grid-column:1 / -1; height:1px; margin:var(--space-1) 0; background:var(--color-border); }
+}
+@media (max-width:480px){ .therapy-shell[data-ptheme] .portal-title{ font-size:19px; white-space:nowrap; } .therapy-shell[data-ptheme] .portal-top .back-btn{ padding:0 var(--space-3); font-size:14px; } }
+/* the second line inside a filled (primary) button takes the button's own text colour, never the grey of secondary text (Guy 2026-10-30: "מהמקום שעצרת" was almost invisible on the green) */
+.therapy-shell[data-ptheme] .btn:not(.ghost):not(.danger) :is(small, .pnote, em, span:not(.pcount)), .mx-sheet .btn:not(.ghost):not(.danger) :is(small, .pnote, em, span:not(.pcount)){ color:var(--color-on-primary); opacity:.92; }
+/* the spiral's stations and the staff's thumbs on the new colours (a contrast check, 2026-10-30: white on the old green was 3.4:1) */
+.therapy-shell[data-ptheme] .tp-sp-st{ background:var(--color-surface); border-color:var(--color-border-strong); color:var(--color-text); }
+.therapy-shell[data-ptheme] .tp-sp-st:hover{ border-color:var(--color-primary); }
+.therapy-shell[data-ptheme] .tp-sp-st:focus-visible{ outline:2px solid var(--color-primary); outline-offset:2px; }
+.therapy-shell[data-ptheme] .tp-sp-st.now{ background:var(--color-primary); border-color:var(--color-primary); color:var(--color-on-primary); }
+.therapy-shell[data-ptheme] .tp-sp-st.goal{ border-color:var(--color-primary); color:var(--color-text); box-shadow:0 0 0 3px var(--color-primary-soft); }
+.therapy-shell[data-ptheme] .tp-sp-st.now.goal{ color:var(--color-on-primary); }
+.therapy-shell[data-ptheme] .tp-fb button, .mx-sheet .tp-fb button{ color:var(--color-text); border-color:var(--color-border-strong); }
+.therapy-shell[data-ptheme] .cr-mk-row .pchoice button.on, .mx-sheet .cr-mk-row .pchoice button.on{ background:var(--color-primary-soft); color:var(--color-text); border-color:var(--color-primary); }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -11484,7 +11509,7 @@ function thpRender(){
       <aside class="th-side" aria-label="פורטל הטיפול">
       <div class="portal-top"><button type="button" class="back-btn portal-back" id="therapy-home">→ מסך ראשי</button><h1 class="portal-title">פורטל הטיפול</h1>${side ? '<span></span>' : `<div class="mx-seg th-look-sm" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</div>`}</div>
       <div class="portal-hello">שלום ${pEsc(me.first || '')}</div>
-      ${tabs.length > 1 ? thpTabsRow(tabs.map(t => [t[0], t[1], t[0] === 'todo' ? todoN : 0]), thp.tab, 'data-th-tab', '', side) : ''}
+      ${tabs.length > 1 ? thpTabsRow(tabs.map(t => [t[0], t[1], t[0] === 'todo' ? todoN : 0]), thp.tab, 'data-th-tab', side ? '' : 'th-nav-grid', true) : ''}
       ${side ? `<div class="th-side-foot"><div class="mx-seg" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</div>
         <button type="button" class="back-btn" id="therapy-home2">→ מסך ראשי</button></div>` : ''}
       </aside>
