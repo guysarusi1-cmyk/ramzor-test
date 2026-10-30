@@ -2462,6 +2462,19 @@ body:has(#view-therapy.active .therapy-shell[data-ptheme=light]){ background:#FA
 .therapy-shell[data-ptheme] .tp-sp-st.now.goal{ color:var(--color-on-primary); }
 .therapy-shell[data-ptheme] .tp-fb button, .mx-sheet .tp-fb button{ color:var(--color-text); border-color:var(--color-border-strong); }
 .therapy-shell[data-ptheme] .cr-mk-row .pchoice button.on, .mx-sheet .cr-mk-row .pchoice button.on{ background:var(--color-primary-soft); color:var(--color-text); border-color:var(--color-primary); }
+/* a phone: the portal opens on the menu of areas only; an area fills the screen, with "→ כל האזורים" back to the menu (Guy 2026-10-30) */
+.therapy-shell[data-ptheme] .th-page-title{ font-size:22px; margin:0 0 var(--space-4); }
+@media (max-width:1023px){
+  .therapy-shell[data-ptheme][data-thmenu="1"] #therapy-body{ display:none; }
+  .therapy-shell[data-ptheme][data-thmenu="0"] .th-nav-grid{ display:none; }
+  .therapy-shell[data-ptheme][data-thmenu="0"] .portal-hello{ display:none; }
+  .therapy-shell[data-ptheme] .th-to-menu{ margin:0 0 var(--space-3); }
+  .therapy-shell[data-ptheme][data-thmenu="1"] .th-nav-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:var(--space-3); }
+  .therapy-shell[data-ptheme][data-thmenu="1"] .th-nav-grid button{ min-height:96px; font-size:16px; }
+  .therapy-shell[data-ptheme][data-thmenu="1"] .th-nav-grid .th-nav-ico{ width:28px; height:28px; }
+}
+@media (min-width:1024px){ .therapy-shell[data-ptheme] .th-to-menu{ display:none; } }
+@media (max-width:1023px){ .therapy-shell[data-ptheme][data-thmenu="1"] .th-nav-grid button.active{ background:var(--color-surface); border-color:var(--color-border); } .therapy-shell[data-ptheme][data-thmenu="1"] .th-nav-grid button.active .th-nav-ico{ color:var(--color-text-secondary); } }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -11395,7 +11408,7 @@ async function showTherapyPortal(){
   thp.mode = canTherapistPortal() ? 'therapist' : 'staff';
   portalActivateView('view-therapy');
   const view = document.getElementById('view-therapy');
-  thp.tab = null; thp.editing = null; thp.wtab = null; thp.q = ''; thp.planChild = null;          // (every entry starts on the first tab of this portal)
+  thp.tab = null; thp.editing = null; thp.wtab = null; thp.q = ''; thp.planChild = null; thp.navMenu = true;          // (every entry starts on the first tab of this portal; on a phone, on the menu of areas: Guy 2026-10-30)
   view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${portalLoad().settings.theme || 'dark'}"><div class="pnote">טוען...</div></div>`;
   if(typeof roster !== 'undefined' && !roster.length && typeof initRoster === 'function'){ try { await initRoster(); } catch(e){} }          // (a therapist who came in by a refresh: the children were not loaded yet)
   await thpLoad();
@@ -11505,7 +11518,7 @@ function thpRender(){
   }
   const todoN = ther && thp.v32 ? thpTodo().length : 0;
   const side = thpWide(), look = portalLoad().settings.theme === 'light' ? 'light' : 'dark';          // (no leopard in this portal: Guy 2026-10-30)
-  view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${look}" data-thmode="${thp.mode}"><div class="th-frame">
+  view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${look}" data-thmode="${thp.mode}" data-thmenu="${thp.navMenu && !thp.planChild && !thp.editing ? 1 : 0}"><div class="th-frame">
       <aside class="th-side" aria-label="פורטל הטיפול">
       <div class="portal-top"><button type="button" class="back-btn portal-back" id="therapy-home">→ מסך ראשי</button><h1 class="portal-title">פורטל הטיפול</h1>${side ? '<span></span>' : `<div class="mx-seg th-look-sm" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</div>`}</div>
       <div class="portal-hello">שלום ${pEsc(me.first || '')}</div>
@@ -11513,7 +11526,7 @@ function thpRender(){
       ${side ? `<div class="th-side-foot"><div class="mx-seg" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</div>
         <button type="button" class="back-btn" id="therapy-home2">→ מסך ראשי</button></div>` : ''}
       </aside>
-      <div id="therapy-body">${side && !thp.planChild && (tabs.find(t => t[0] === thp.tab) || [])[1] ? `<h2 class="th-page-title">${pEsc(tabs.find(t => t[0] === thp.tab)[1])}</h2>` : ''}${inner}</div>
+      <div id="therapy-body">${!side && tabs.length > 1 ? '<button type="button" class="btn ghost small th-to-menu" id="th-to-menu">→ כל האזורים</button>' : ''}${!thp.planChild && (tabs.find(t => t[0] === thp.tab) || [])[1] ? `<h2 class="th-page-title">${pEsc(tabs.find(t => t[0] === thp.tab)[1])}</h2>` : ''}${inner}</div>
     </div></div>`;          // (on a computer the tabs row is gone, so every screen says its name: the simplicity checker)
   view.querySelectorAll('#therapy-home, #therapy-home2').forEach(b => b.addEventListener('click', () => { if(typeof personalRamzorKind === 'function' && !personalRamzorKind()) srvOpenPortal(); else showAppHome(); }));
   view.querySelectorAll('[data-th-look]').forEach(b => b.addEventListener('click', () => {          // (kept on this device; the other portals' own choice, the leopard included, is not touched)
@@ -11521,7 +11534,8 @@ function thpRender(){
     const sh = view.querySelector('.therapy-shell'); sh.dataset.ptheme = b.dataset.thLook;          // (only the colours change: an open builder or sheet stays where it is — the simplicity checker)
     view.querySelectorAll('[data-th-look]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); document.querySelectorAll('.mx-sheet').forEach(s => { s.dataset.ptheme = b.dataset.thLook; }); }));
   if(!thp.mqOn){ thp.mqOn = true; try { matchMedia('(min-width:1024px)').addEventListener('change', () => { if(document.querySelector('#view-therapy.active')) thpRender(); }); } catch(e){} }          // (a window made wider or narrower: the menu follows)
-  view.querySelectorAll('[data-th-tab]').forEach(b => b.addEventListener('click', () => { thp.tab = b.dataset.thTab; thp.editing = null; thp.wtab = null; thp.planChild = null; thpRender(); }));
+  view.querySelectorAll('[data-th-tab]').forEach(b => b.addEventListener('click', () => { thp.tab = b.dataset.thTab; thp.editing = null; thp.wtab = null; thp.planChild = null; thp.navMenu = false; thpRender(); window.scrollTo(0, 0); }));
+  { const tm = view.querySelector('#th-to-menu'); if(tm) tm.addEventListener('click', () => { thp.navMenu = true; thp.planChild = null; thp.editing = null; thpRender(); window.scrollTo(0, 0); }); }          // (a phone: back to the menu of areas)
   const body = view.querySelector('#therapy-body');
   const wireKids = box => box.querySelectorAll('[data-th-kid]').forEach(b => b.addEventListener('click', () => { if(ther && thp.tab !== 'kids' && thp.v32 && planCanEdit(b.dataset.thKid)) planOpenEditor(b.dataset.thKid, 'plan'); else thpOpenChild(b.dataset.thKid); }));          // (in "כל הילדים": the staff's view of the child)
   wireKids(body);
@@ -13754,7 +13768,7 @@ const SIMPLE_GOAL = { id:'demo-goal', kind:'goal', scope:'mercury', active:true,
         { id:'i1', name:'קופסת הרגעה', what:'מכינים יחד קופסה עם 3–4 כלים, ומתרגלים בזמן רגוע', why:'כלי שבחר/ה עובד טוב יותר', freq:'פעמיים בשבוע', approach:'ויסות חושי', targets:['t1'], sentences:['איזה כלי יעזור לך עכשיו?', 'הקופסה שלך פה'] },
         { id:'i2', name:'מד הרגשות', what:'מד מ-1 עד 5, ומה עושים בכל מדרגה', why:'מדידה הופכת רגש למשהו שאפשר לטפל בו', freq:'פעמיים ביום', approach:'ARC', targets:['t2', 't3'], sentences:['כמה חזק זה עכשיו?', 'במדרגה 3 לוקחים הפסקה'] },
         { id:'i3', name:'נשימת בלון', what:'שואפים כמו מנפחים בלון, ונושפים לאט', why:'נשימה איטית מורידה עוררות', freq:'פעם ביום', approach:'TF-CBT', targets:['t1'], sentences:['בוא/י ננפח את הבלון', 'עוד נשימה אחת'] }] } } } };
-const SIMPLE_SCREENS = [['tasks', 'משימות'], ['list', 'תוכניות טיפוליות: הרשימה'], ['plan', 'דף תוכנית'], ['b-start', 'בנייה: התחלה'], ['b-pick', 'בנייה: תמה'], ['b-goal', 'בנייה: מטרה'], ['b-targets', 'בנייה: יעדים'],
+const SIMPLE_SCREENS = [['menu', 'תפריט (טלפון)'], ['tasks', 'משימות'], ['list', 'תוכניות טיפוליות: הרשימה'], ['plan', 'דף תוכנית'], ['b-start', 'בנייה: התחלה'], ['b-pick', 'בנייה: תמה'], ['b-goal', 'בנייה: מטרה'], ['b-targets', 'בנייה: יעדים'],
   ['b-ints', 'בנייה: התערבות'], ['b-sents', 'בנייה: משפטים'], ['b-journey', 'בנייה: מסע ומקדש'], ['b-sum', 'בנייה: סיכום'], ['b-preview', 'בנייה: לצוות'], ['child', 'הילד: התוכנית'], ['spiral', 'הספירלה'], ['staff', 'כרטיס הילד אצל המדריך']];
 function simplicityOn(){ return typeof APP_ENV !== 'undefined' && APP_ENV === 'test' && location.hash.indexOf('#simplicity') === 0; }
 // the made-up therapy portal (also the phone of the overview video, 14zh-learn.js)
@@ -13777,11 +13791,12 @@ async function simplicityStart(){
   window.addEventListener('hashchange', () => { if(simplicityOn()) simplicityShow(location.hash.split(':')[1] || 'tasks'); });
 }
 function simplicityShow(screen){
-  thp.planChild = null; thp.editing = null; thp.wtab = null; thp.mode = screen === 'staff' ? 'staff' : 'therapist';
+  thp.planChild = null; thp.editing = null; thp.wtab = null; thp.mode = screen === 'staff' ? 'staff' : 'therapist'; thp.navMenu = screen === 'menu';          // (the phone's menu of areas is a screen of its own here)
   const b = (step, extra) => { thp.tab = 'plans'; thpRender(); tpBuilder('d1', Object.assign({ step, entry:'theme', theme:'ויסות רגשי', age:'5-8', targets:[], ints:[], strengths:[], planet:'' }, extra || {})); };
   const T = SIMPLE_GOAL.content.ages['5-8'], t2 = T.targets.slice(0, 2).map(t => Object.assign({}, t, { now:2, target:4 })), i2 = T.interventions.slice(0, 2).map(i => Object.assign({}, i, { sentencesAll:i.sentences, sentences:[i.sentences[0]] }));
   const withGoal = { libId:SIMPLE_GOAL.id, title:SIMPLE_GOAL.title, why:SIMPLE_GOAL.description };
-  if(screen === 'tasks'){ thp.tab = 'todo'; thpRender(); }
+  if(screen === 'menu'){ thp.tab = 'todo'; thpRender(); }
+  else if(screen === 'tasks'){ thp.tab = 'todo'; thpRender(); }
   else if(screen === 'list'){ thp.tab = 'plans'; thpRender(); }
   else if(screen === 'plan'){ thp.tab = 'plans'; thp.planChild = 'd1'; thpRender(); }
   else if(screen === 'b-start') b('start');
