@@ -2733,8 +2733,8 @@ body:has(:is(#view-portal, #view-therapy, #view-learn, #view-apphome).active [da
   .portal-shell.wide .cs-layout .cs-side{ display:none; }
   .portal-shell.wide .mcal-wrows .mcal-cell.editable{ min-height:44px; cursor:pointer; }
 }
-/* the coordinator's tabs on a phone (one more: "כוננית"): two rows rather than a tab cut at the edge */
-@media (max-width:700px){ .portal-shell[data-ptheme].wide .portal-tabs{ flex-wrap:wrap; overflow-x:visible; } .portal-shell[data-ptheme].wide .portal-tabs button{ padding:var(--space-2) var(--space-3); } }
+/* many tabs on a phone (the coordinator's, the manager's): two rows rather than a tab cut at the edge */
+@media (max-width:700px){ .portal-shell[data-ptheme] .portal-tabs{ flex-wrap:wrap; overflow-x:visible; } .portal-shell[data-ptheme] .portal-tabs button{ padding:var(--space-2) var(--space-3); } }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -8184,7 +8184,7 @@ async function srvSubmit(mk, note, goal){
 // ---- the screens in server mode
 function srvTabs(me){
   if(srvEditingFor()) return me.role === 'service' ? [['avail', 'זמינות']] : [['prefs', 'העדפות']];          // (filling for somebody: only that tab — a service girl's availability, an instructor's preferences)
-  if(portalAsCoord(me)) return [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['oncall', 'כוננית'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);          // (the admin: one more tab, 14s-portal-admin.js)
+  if(portalAsCoord(me)) return [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['oncall', 'כוננית'], ['chats', 'שיחות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);          // (the admin: one more tab, 14s-portal-admin.js)
   if(me.role === 'manager') return MGR_TABS;          // (the manager of the framework: 14zn)
   if(me.role === 'instructor' && srv.profile && srv.profile.manual_only) return [['schedule', 'הסידור'], ['open', 'משמרות חסרות'], ['swaps', 'החלפות וחופשות'], ['inbox', 'הודעות']];          // (not scheduled automatically: she places herself where somebody is missing)
   if(me.role === 'instructor') return [['schedule', 'הסידור'], ['prefs', 'העדפות'], ['swaps', 'החלפות וחופשות'], ['inbox', 'הודעות']];          // (swaps and the vacation in one tab: Guy 2026-11-03)
@@ -8210,6 +8210,7 @@ function srvRenderTab(me, body, t){
     if(t === 'swaps') return srvRenderCoordSwaps(body);
     if(t === 'vacations') return srvRenderCoordVacations(body);
     if(t === 'oncall') return renderOncall(body);          // (the weekend on-call panel, shared with the social workers: 14zl)
+    if(t === 'chats') return mgrChats(body);          // (the conversations with the manager and the social workers: 14zn)
     if(t === 'settings') return srvRenderCoordSettings(body);
     return srvRenderCoordSchedule(body);
   }
@@ -11633,7 +11634,7 @@ const AR = {
   'יציאה':'خروج', '→ מסך ראשי':'→ الشاشة الرئيسية', 'בית':'الرئيسية', 'חזור':'رجوع', 'נכנסת בחלון אחר עם משתמש אחר. הדף מתרענן כדי להמשיך עם המשתמש החדש':'دخلت في نافذة أخرى بمستخدم آخر. الصفحة تتحدّث للمتابعة مع المستخدم الجديد', 'יצאת מהמערכת בחלון אחר. הדף מתרענן':'خرجت من النظام في نافذة أخرى. الصفحة تتحدّث', 'העדפות מערכת':'إعدادات النظام', 'סיום':'إنهاء',
   'המשמרות שלי':'مناوباتي', 'הצוות כולו':'الطاقم كله', 'איך הלכו הבקשות שלך':'كيف سارت طلباتك', 'משמרות פתוחות':'مناوبات مفتوحة', 'הודעות חדשות':'رسائل جديدة',
   'המשמרת הבאה שלך':'مناوبتك القادمة', 'בקשת החלפה':'طلب استبدال', 'הבנתי, תודה':'فهمت، شكرًا', 'סימון של כולן כנקראו':'تعليم الكل كمقروء',
-  'העדכונים שלך':'تحديثاتك', 'הודעות מהרכזת':'رسائل من المركّزة', 'הבקשות שלי':'طلباتي', 'בקשות החלפה פתוחות':'طلبات استبدال مفتوحة',
+  'שיחות':'محادثات', 'קראתי ✓':'قرأت ✓', 'העדכונים שלך':'تحديثاتك', 'הודעות מהרכזת':'رسائل من المركّزة', 'הבקשות שלי':'طلباتي', 'בקשות החלפה פתוחות':'طلبات استبدال مفتوحة',
   'טוען…':'جارٍ التحميل…', 'רק רגע...':'لحظة...', 'רק רגע':'لحظة', 'נשמר ✓':'تم الحفظ ✓', 'עוד לא נשמר, ננסה שוב':'لم يُحفظ بعد، سنحاول مرة أخرى',
   // the colour key and the levels
   'כן':'نعم', 'יכול':'ممكن', 'לא':'لا', '❓ שאלה למטפל/ת':'❓ سؤال للمعالج/ة', 'יש שינויים בתוכנית שעוד לא פורסמו':'توجد تغييرات في الخطة لم تُنشر بعد', 'יש טיוטה שעוד לא פורסמה':'توجد مسودة لم تُنشر بعد', 'תצפית חדשה מהצוות':'ملاحظة جديدة من الطاقم', 'שאלה מהצוות שמחכה לתשובה':'سؤال من الطاقم ينتظر الإجابة', 'דחוף':'عاجل', 'לידיעה':'للعلم', 'משימות':'مهام', 'תוכניות טיפוליות':'خطط علاجية', 'מטרה נראית מושגת: לסמן?':'يبدو أن الهدف تحقق: نسجّل؟', '⚠️ אירוע':'⚠️ حادث', '✔ סימון סוף משמרת':'✔ تسجيل نهاية الوردية', 'בימים הראשונים':'في الأيام الأولى', 'ממה להימנע:':'ممّا نمتنع:', 'מה מרגיע:':'ما يهدّئ:',
@@ -11934,7 +11935,7 @@ function thpTabs(){
   const t = [];
   if(thp.mode === 'therapist'){
     t.push(['todo', 'משימות']);
-    if(isTherapistMe() || (srv.profile && srv.profile.admin)) t.push(['oncall', 'כוננית סוף שבוע'], ['diary', 'יומן הילדים']);          // (the social workers' urgent areas: Guy 2026-11-03; 14zl, 14zm)
+    if(isTherapistMe() || (srv.profile && srv.profile.admin)) t.push(['oncall', 'כוננית סוף שבוע'], ['diary', 'יומן הילדים'], ['chats', 'שיחות']);          // (the social workers' urgent areas: Guy 2026-11-03; 14zl, 14zm)
     t.push(['mine', 'הילדים שלי']);
     if(thp.v32) t.push(['plans', 'תוכניות טיפוליות']);          // (the plans, one goal at a time: 14zf)
     t.push(['kids', 'כל הילדים']);          // (every child as the staff sees it, read only: Mercury decision 87)
@@ -11956,8 +11957,8 @@ function thpTabs(){
 // a row of tabs: 4 visible, the rest under "עוד" (Guy, after the simplicity checker: tabs must fit a phone). tabs = [[key, word, badge]]
 // the side menu on a computer (Guy 2026-10-30): every area shown, an icon by each word, the daily work first and the rest after a quiet line
 const thpWide = () => { try { return matchMedia('(min-width:1024px)').matches; } catch(e){ return false; } };
-const THP_DAILY = ['todo', 'oncall', 'diary', 'mine', 'plans', 'kids', 'myobs'];
-const THP_ICO = { diary:'<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2.5v3M16 2.5v3M4 9h16M8 13h3M8 17h6"/>', oncall:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/>', todo:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>', mine:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5"/>',
+const THP_DAILY = ['todo', 'oncall', 'diary', 'chats', 'mine', 'plans', 'kids', 'myobs'];
+const THP_ICO = { chats:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>', diary:'<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2.5v3M16 2.5v3M4 9h16M8 13h3M8 17h6"/>', oncall:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/>', todo:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>', mine:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5"/>',
   plans:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6v2.5H9zM8.5 11h7M8.5 15h5"/>', kids:'<circle cx="9" cy="8.5" r="3"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3.5 19.5c.9-3.1 3-4.8 5.5-4.8s4.6 1.7 5.5 4.8M15 14.8c2.6-.3 4.6 1.2 5.4 4"/>',
   myobs:'<path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>', library:'<path d="M5 4.5h5.5a2 2 0 0 1 2 2V20a1.6 1.6 0 0 0-1.6-1.6H5zM19 4.5h-5.5a2 2 0 0 0-1 .3"/><path d="M19 4.5v13.9h-5.4a1.6 1.6 0 0 0-1.1.5"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>', assign:'<path d="M10 14a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.5 6.8"/><path d="M14 10a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 0 0 5.7 5.7l1.3-1.3"/>',
@@ -12079,6 +12080,7 @@ function thpRender(){
   else if(thp.tab === 'archive') inner = '<div id="cr-archive"><div class="pnote">טוען...</div></div>';
   else if(thp.tab === 'oncall') inner = '<div id="th-oncall"><div class="pnote">טוען...</div></div>';
   else if(thp.tab === 'diary') inner = '<div id="th-diary"><div class="pnote">טוען...</div></div>';
+  else if(thp.tab === 'chats') inner = '<div id="th-chats"><div class="pnote">טוען...</div></div>';
   else if(thp.tab === 'assign'){
     const opts = sel => `<option value="">ללא</option>${thp.therapists.map(t => `<option value="${t.id}"${sel === t.id ? ' selected' : ''}>${pEsc(t.display_name)}</option>`).join('')}`;
     inner = `<div class="pnote">לכל ילד איש/אשת טיפול אחראי/ת אחד/ת. רק הוא/היא רואה את המידע הטיפולי של הילד ובונה את התוכנית שלו. כל שינוי נרשם.</div>
@@ -12126,6 +12128,7 @@ function thpRender(){
   if(thp.tab === 'archive') careArchiveHtml(body.querySelector('#cr-archive'));
   if(thp.tab === 'oncall') renderOncall(body.querySelector('#th-oncall'));
   if(thp.tab === 'diary') renderDiary(body.querySelector('#th-diary'));
+  if(thp.tab === 'chats') mgrChats(body.querySelector('#th-chats'));
   if(thp.tab === 'overview'){ const rv = body.querySelector('#bk-review'); if(rv) rv.addEventListener('click', () => { const s = bankReview(0); const close = s.close; s.close = () => { close(); thpRender(); }; }); }
   if(thp.tab === 'settings') obsWireNotify(body);
   if(thp.editing && ther && thp.v32 && planCanEdit(thp.editing)) planOpenEditor(thp.editing);
@@ -15438,7 +15441,7 @@ const dgKids = () => (typeof thpScope === 'function' ? thpScope() : []);
 const dgName = id => { const c = (typeof roster !== 'undefined' ? roster : []).find(x => x.id === id); return c ? displayName(c) : '?'; };
 function dgLineHtml(o){
   const e = o.e, k = DG_KIND[e.kind] || ['', ''], time = e.start_time ? `${dgT(e.start_time)}${e.end_time ? '–' + dgT(e.end_time) : ''}` : 'בלי שעה';
-  const rep = e.every_weeks ? (e.every_weeks === 1 ? 'כל שבוע' : `כל ${e.every_weeks} שבועות`) : e.monthly_nth ? `כל חודש, ה${DG_NTH[e.monthly_nth]}` : '';
+  const rep = e.every_weeks ? (e.every_weeks === 1 ? 'כל שבוע' : `כל ${e.every_weeks} שבועות`) : e.monthly_nth ? `כל חודש, ${DG_NTH[e.monthly_nth]}` : '';
   return `<button type="button" class="dg-ev dg-${e.kind}" data-dg-ev="${e.id}|${o.day}"><span class="dg-time"><bdi dir="ltr">${time}</bdi></span><span class="dg-what"><b class="ar-keep">${pEsc(dgName(e.child_id))}</b> · ${k[1]} ${k[0]}${e.with_whom ? ` עם ${pEsc(e.with_whom)}` : ''}${e.place ? ` · ${pEsc(e.place)}` : ''}${e.kind === 'outing' && e.return_day ? ` · חזרה ${dgShort(e.return_day)}${e.return_time ? ' ' + dgT(e.return_time) : ''}` : ''}${e.note ? `<small>${pEsc(e.note)}</small>` : ''}${rep ? `<small class="dg-rep">↻ ${rep}</small>` : ''}</span></button>`;
 }
 async function renderDiary(box){
@@ -15487,7 +15490,7 @@ function dgEdit(e, occDay, done){
     <div class="confirm-actions">${e ? '<button type="button" class="btn danger" id="dg-del">מחיקה</button>' : ''}<button type="button" class="btn ghost" data-close>ביטול</button><button type="button" class="btn" id="dg-save">שמירה</button></div>`);
   const $ = id => sh.querySelector('#' + id);
   let kind = v.kind;
-  const monthWord = () => { const d = $('dg-day').value || v.day; $('dg-rep-m').textContent = `כל חודש, ${DOW_NAMES[dowOf(d)]} ה${dgNthOf(d) >= 5 ? DG_NTH[-1] : DG_NTH[dgNthOf(d)]} בחודש`; };
+  const monthWord = () => { const d = $('dg-day').value || v.day; $('dg-rep-m').textContent = `כל חודש, ${DOW_NAMES[dowOf(d)]} ${dgNthOf(d) >= 5 ? DG_NTH[-1] : DG_NTH[dgNthOf(d)]} בחודש`; };
   monthWord(); $('dg-day').addEventListener('change', monthWord);
   sh.querySelectorAll('[data-dg-kind]').forEach(b => b.addEventListener('click', () => { kind = b.dataset.dgKind; sh.querySelectorAll('[data-dg-kind]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); sh.querySelector('.dg-return').hidden = kind !== 'outing'; }));
   const fields = () => {
@@ -15499,7 +15502,7 @@ function dgEdit(e, occDay, done){
   const scope = async verb => !series ? 'all' : await new Promise(res => {          // a series: only this time, or from this day on
     const q = portalSheet(`<h2>${verb}</h2><div class="pnote">זה אירוע חוזר. מה ${verb === 'מחיקה' ? 'למחוק' : 'לשנות'}?</div><div class="confirm-actions dg-scope"><button type="button" class="btn ghost" data-sc="one">רק הפעם (${dgShort(occDay)})</button><button type="button" class="btn" data-sc="on">מהיום והלאה</button></div>`);
     q.querySelectorAll('[data-sc]').forEach(b => b.addEventListener('click', () => { q.close(); res(b.dataset.sc); }));
-    const c = q.close; q.close = () => { c(); res(null); };
+    q.addEventListener('click', e => { if(e.target === q) res(null); });          // (a tap outside: nothing changes)
   });
   const fail = r => { if(r && r.error){ toast('לא נשמר. אפשר לנסות שוב.'); return true; } return false; };
   $('dg-save').addEventListener('click', async () => {
@@ -15543,7 +15546,7 @@ const mgrShort = iso => { const t = parseIso(iso); return t.getDate() + '/' + (t
 const mgrWeekStart = () => { const t = isoDate(new Date()); return mgr.week || addDays(t, -dowOf(t)); };
 async function mgrKids(){          // the children's names: the manager reads the roster with her own sign-in
   if(typeof roster !== 'undefined' && roster.length) return roster;
-  try { const r = await sbPersonal.from('roster').select('*'); if(!r.error && typeof roster !== 'undefined'){ roster = r.data || []; } } catch(e){}
+  try { const list = await getRoster(); if(list.length && typeof roster !== 'undefined') roster = list; } catch(e){}          // (getRoster: the same shape as everywhere — firstName, lastInitial)
   return typeof roster !== 'undefined' ? roster : [];
 }
 async function mgrRender(t, body){
@@ -15611,7 +15614,9 @@ async function mgrKidsTab(body){
     const id = b.dataset.mkPlan, p = plan(id);
     await sbPersonal.from('therapy_access').insert({ child_id:id, what:'פירוט תוכנית (מנהלת)' });          // (logged before it opens)
     const goals = (p.published && p.published.goals) || [];
-    portalSheet(`<h2>התוכנית של ${pEsc(dgName(id))}</h2><div class="pnote">קריאה בלבד.</div>${goals.map(g => `<div class="card"><b>${pEsc(g.title || '')}</b>${g.why ? `<div class="pnote">${pEsc(g.why)}</div>` : ''}${(g.targets || []).length ? `<ul>${g.targets.map(x => `<li>${pEsc(x.text || x.title || '')}</li>`).join('')}</ul>` : ''}${(g.interventions || []).length ? `<div class="pnote">${g.interventions.map(x => pEsc(x.name || x.what || '')).join(' · ')}</div>` : ''}</div>`).join('') || '<div class="pnote">אין מטרות.</div>'}
+    portalSheet(`<h2>התוכנית של ${pEsc(dgName(id))}</h2><div class="pnote">קריאה בלבד.</div>${goals.map(g => { const lines = v => (Array.isArray(v) ? v.map(x => (x && (x.text || x.title)) || x) : String(v || '').split('\n')).map(x => String(x || '').trim()).filter(Boolean);          // (a goal's fields, as the plan keeps them: 14zf)
+        const tg = lines(g.targets);
+        return `<div class="card"><b>${pEsc(g.title || '')}</b>${g.theme ? ` <small>${pEsc(g.theme)}</small>` : ''}${g.why_staff ? `<div class="pnote">למה: ${pEsc(g.why_staff)}</div>` : ''}${tg.length ? `<ul>${tg.map(x => `<li>${pEsc(x)}</li>`).join('')}</ul>` : ''}${g.avoid_line ? `<div class="pnote">להימנע: ${pEsc(g.avoid_line)}</div>` : ''}</div>`; }).join('') || '<div class="pnote">אין מטרות.</div>'}
       <div class="confirm-actions"><button type="button" class="btn" data-close>סגירה</button></div>`);
   }));
   body.querySelectorAll('[data-mk-diary]').forEach(b => b.addEventListener('click', async () => {
