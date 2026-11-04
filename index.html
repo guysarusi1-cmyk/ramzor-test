@@ -3185,6 +3185,8 @@ body[data-rlook] .bottom-nav-btn.active{ background:var(--color-primary-soft); c
 .kq-yellow-reminder-body{ padding:0 14px 12px; }
 /* during a protocol the bar stays on a phone: it carries "הבא" now (Guy 2026-11-03) */
 @media (max-width:700px){ #protected-app.guided-focus:has(#view-staff.active) > .bottom-nav{ display:grid; } }
+/* the light look: gold and yellow words on a pale card could not be read (the same hue, darker; the colour of the light itself stays) */
+body[data-rlook=light] .kq-word{ color:#7A5A00 !important; }
 </style>
 </head>
 <body>
@@ -3315,7 +3317,7 @@ body[data-rlook] .bottom-nav-btn.active{ background:var(--color-primary-soft); c
 
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
           <div class="bulb gold" style="width:40px; height:40px; margin:0; flex-shrink:0;"></div>
-          <div style="font-family:'Rubik'; font-weight:800; font-size:16px; color:var(--gold);">זהב</div>
+          <div class="kq-word" style="font-family:'Rubik'; font-weight:800; font-size:16px; color:var(--gold);">זהב</div>
         </div>
         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px; padding-inline-start:50px;">
           <button class="btn ghost project-choice proj-star" id="kq-give-star-btn"><span class="pc-title">⭐ הענקת כוכב</span><span class="pc-sub">כל הכבוד על מה שעשית.</span></button>
@@ -3327,7 +3329,7 @@ body[data-rlook] .bottom-nav-btn.active{ background:var(--color-primary-soft); c
 
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
           <div class="bulb yellow" style="width:40px; height:40px; margin:0; flex-shrink:0;"></div>
-          <div style="font-family:'Rubik'; font-weight:800; font-size:16px; color:var(--yellow);">רמזור צהוב</div>
+          <div class="kq-word" style="font-family:'Rubik'; font-weight:800; font-size:16px; color:var(--yellow);">רמזור צהוב</div>
         </div>
         <div style="display:flex; flex-direction:column; gap:8px; padding-inline-start:50px;">
           <button class="btn ghost" id="kq-revoke-bonus-btn">🍬 גריעת בונוס</button>
