@@ -2993,7 +2993,7 @@ html[data-contrast=high] body[data-rlook=light] .toast{
 /* on-call: the schedule on a computer */
 @media (min-width:701px){ .oc-wk{ gap:4px; } .oc-wk-cell .mcal-name{ font-size:14px; padding:2px; } .oc-wk-day{ font-size:13px; } .oc-wk-day b{ font-size:16px; } }
 /* the light look: "לא" is told from what was not marked */
-:is(.portal-shell, .mx-sheet)[data-ptheme=light]{ --p-no-bg:#F0C2BA; --p-no:#8E2F27; }
+:is(.portal-shell, .mx-sheet)[data-ptheme=light]{ --p-no-bg:#EFAFA4; --p-no:#7E2018; --p-none-bg:#E4E2DD; --p-none:#55514A; }          /* (a clear red for "לא", a plain grey for what was not marked) */
 /* the service girls' calendar: five days and a narrow weekend; a tool chosen is filled with its own colour */
 .svcal{ grid-template-columns:repeat(5, minmax(0, 1fr)) 38px; }
 .svcal-we{ align-items:center; justify-content:center; min-height:0; } .svcal-we .svcal-num{ font-size:11px; }
@@ -3014,6 +3014,15 @@ html[data-contrast=high] body[data-rlook=light] .toast{
   .portal-shell[data-ptheme].wide .cs-side .cs-issues-panel .btn{ min-height:24px; padding:0 7px; font-size:12px; line-height:1.2; }
   .portal-shell.wide .cs-side .pnote{ font-size:12px; margin:4px 0; }
 }
+/* the coordinator's tabs on a computer: spread over the line */
+@media (min-width:701px){ .portal-shell[data-ptheme].wide .portal-tabs button{ flex:1 1 auto; justify-content:center; text-align:center; } }
+/* the pictures of the timetable: the whole picture, made smaller when the room is small, never cut */
+.mgr-ttv-icon{ position:relative; }
+.mgr-ttv-icon > svg, .mgr-ttv-icon > img{ position:absolute; inset:0; width:100%; height:100%; max-width:none; max-height:none; object-fit:contain; }
+.ps-topbar .ps-link{ white-space:nowrap; }
+/* (the pictures are letters of the emoji font: their size follows the room they have) */
+.mgr-ttv-icon{ container-type:size; display:flex; align-items:center; justify-content:center; }
+.mgr-ttv-icon .tvt2-emoji, .mgr-ttv-fit .mgr-ttv-icon .tvt2-emoji{ font-size:min(30px, 85cqh); line-height:1; width:auto; height:auto; max-height:none; }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -3232,6 +3241,10 @@ body[data-rlook] .bottom-nav-btn.active{ background:var(--color-primary-soft); c
 @media (max-width:700px){ #protected-app.guided-focus:has(#view-staff.active) > .bottom-nav{ display:grid; } }
 /* the light look: gold and yellow words on a pale card could not be read (the same hue, darker; the colour of the light itself stays) */
 body[data-rlook=light] .kq-word{ color:#7A5A00 !important; }
+/* the way back to the first screen on a computer, at the top right as in the portals */
+.home-main-row{ display:flex; justify-content:flex-start; min-height:0; margin-bottom:10px; }
+.home-main-back{ min-height:40px; padding:0 16px; border-radius:var(--radius-sm); border:1px solid var(--color-border-strong, var(--line)); background:transparent; color:var(--color-text, var(--text)); font:inherit; font-weight:600; font-size:15px; cursor:pointer; }
+.home-main-back:hover{ background:var(--color-surface-alt, var(--panel-2)); }
 /* the coordinator's leopard look as it is on the live site (Guy 2026-11-04): she keeps it; the light and dark looks are there to choose in the gear. After 20-mercury.css, so it wins. */
 .portal-shell[data-ptheme=leopard]{ --color-surface:rgba(24,14,6,.96); --color-surface-alt:rgba(44,27,13,.97); --color-surface-raised:rgba(24,14,6,.96); --color-border:rgba(226,182,92,.5); --color-border-strong:rgba(226,182,92,.6); --color-text:#fffaf0; --color-text-secondary:#f0dcb8; --color-heading:#e2b65c; --color-primary:#e2b65c; --color-on-primary:#2a1606; }
 
@@ -3255,6 +3268,12 @@ body[data-rlook=light] .kq-word{ color:#7A5A00 !important; }
   .portal-shell[data-ptheme=leopard] .cs-tab{ background:rgba(38,24,13,.92); border-color:rgba(226,182,92,.45); }
   .portal-shell[data-ptheme=leopard] .pnote, .portal-shell[data-ptheme=leopard] small{ color:#f0dcb8; }          /* (stronger contrast: the text reads clearly over the pattern) */
   .portal-shell[data-ptheme=leopard] .portal-hello, .portal-shell[data-ptheme=leopard] .pmonth b{ color:#fffaf0; text-shadow:0 1px 2px rgba(0,0,0,.6); }
+
+/* what the new frame changed under the look: the tabs in their rounded box, and the bright colours of the wishes as on the live site */
+.portal-shell[data-ptheme=leopard]{ --p-yes:#7be0a0; --p-yes-bg:#123322; --p-no:#ff8a80; --p-no-bg:#3a1a18; --p-can:#8ec0ff; --p-can-bg:#14263f; }
+.portal-shell[data-ptheme=leopard] .portal-tabs{ border-radius:14px; padding:6px; gap:6px; }
+.portal-shell[data-ptheme=leopard] .portal-tabs button{ border-radius:10px; }
+.portal-shell[data-ptheme=leopard] .portal-tabs button.active::after{ display:none; }
 </style>
 </head>
 <body>
@@ -3325,6 +3344,7 @@ body[data-rlook=light] .kq-word{ color:#7A5A00 !important; }
   <!-- ============ HUB (post-login landing page) ============ -->
   <section class="view active" id="view-hub">
     <div class="home-top">
+      <div class="home-main-row"><button type="button" class="home-main-back" id="hub-main-back" hidden>→ מסך ראשי</button></div>
       <div class="home-bar">
         <div class="home-bar-icons">
       <button type="button" class="home-icon-btn home-gear" id="hub-manage-gear" aria-label="הגדרות וניהול">
@@ -6613,7 +6633,8 @@ function showHub(){
   { const gear = document.getElementById('hub-manage-gear'), kids = document.getElementById('hub-kids-btn'); if(gear) gear.hidden = rzLookOnly(); if(kids) kids.hidden = rzLookOnly(); }
   stopCarousel();
   { const pl = document.getElementById('hub-portal-link'), rp = typeof ramzorPersonal !== 'undefined' && ramzorPersonal, plain = rp && hubPlainBack();
-    if(pl){ pl.hidden = !rp || (plain && matchMedia('(max-width:700px)').matches); pl.textContent = plain ? '→ חזרה' : '👥 לפורטל'; } }          // (a phone has its own way back)
+    if(pl) pl.hidden = !rp || plain;
+    const mb = document.getElementById('hub-main-back'); if(mb) mb.hidden = !rp || matchMedia('(max-width:700px)').matches; }          // (a computer: "מסך ראשי" at the top right, as in the portals; a phone has its own way back: Guy 2026-11-04)
   const cb = document.getElementById('hub-control-btn'); if(cb) cb.hidden = !(typeof canControl === 'function' && canControl());          // (the ahmash control: ahmash, coordinator, admin)
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-hub').classList.add('active');
@@ -6625,7 +6646,8 @@ document.getElementById('hub-daily-btn').addEventListener('click', ()=>{
   selectedStaffChild = null;
   showStaffScreen('pick');
 });
-document.getElementById('hub-portal-link').addEventListener('click', () => { if(hubPlainBack()) showAppHome(); else if(typeof srvOpenPortal === 'function') srvOpenPortal(); });
+document.getElementById('hub-portal-link').addEventListener('click', () => { if(typeof srvOpenPortal === 'function') srvOpenPortal(); });
+document.getElementById('hub-main-back').addEventListener('click', () => showAppHome());
 document.getElementById('hub-control-btn').addEventListener('click', () => { if(typeof showControl === 'function') showControl(); });
 document.getElementById('hub-learn-btn').addEventListener('click', ()=>{
   toast('לומדת הרמזור בקרוב! 🎓');
