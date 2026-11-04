@@ -2848,6 +2848,31 @@ body:has(:is(#view-portal, #view-therapy, #view-learn, #view-apphome).active [da
 .ctl-dg-row{ display:grid; grid-template-columns:96px minmax(0, 1fr); gap:10px; padding:8px 0; border-top:1px solid var(--line); }
 .ctl-dg-time{ font-weight:700; } .ctl-dg-what small{ display:block; opacity:.8; }
 .ctl-dg-note{ margin-top:8px; }
+/* the marker of the steps of the preferences: numbered, a tiny egg that hatches on the way (drawn in 14zj-simple-prefs.js) */
+.pweek-steps{ flex-wrap:wrap; gap:3px; }
+.pweek-steps i{ position:relative; display:inline-grid; place-items:center; width:26px; height:32px; border-radius:8px; background:transparent; font-style:normal; opacity:.55; }
+.pweek-steps i.done{ opacity:.85; }
+.pweek-steps i.on{ opacity:1; background:var(--color-primary-soft, var(--p-panel2)); box-shadow:0 0 0 1.5px var(--color-primary, var(--gold)); }
+.pweek-steps b{ font-size:10px; line-height:1; font-weight:700; color:var(--color-text, var(--p-text)); font-variant-numeric:tabular-nums; }
+.pw-egg{ width:20px; height:20px; display:block; }
+.pw-egg .s{ fill:#FFF4DC; stroke:#B89358; stroke-width:1.1; stroke-linejoin:round; }
+.pw-egg .k{ fill:none; stroke:#7A5A2B; stroke-width:1.1; stroke-linecap:round; stroke-linejoin:round; }
+.pw-egg .h{ fill:#4A3418; stroke:#7A5A2B; stroke-width:.8; stroke-linejoin:round; }
+.pw-egg .c{ fill:#FFD84A; stroke:#C99A1E; stroke-width:.8; }
+.pw-egg .e{ fill:#2D2A24; }
+.pw-egg .b{ fill:#F08A24; }
+/* the day itself, in the process: a tap on it marks the whole day */
+.pwday-all{ display:block; width:100%; padding:4px 6px; margin:-4px -6px 2px; border:0; border-radius:8px; background:transparent; color:inherit; font:inherit; font-size:16px; text-align:start; cursor:pointer; }
+.pwday-all:hover, .pwday-all:focus-visible{ background:var(--color-primary-soft, var(--p-panel2)); }
+/* "שבוע-שבוע": the week with its arrows, above the calendar */
+.pweek-weeknav{ display:flex; justify-content:center; margin:6px 0 8px; }
+.pweek-weeknav .mcal-wk:disabled{ opacity:.35; cursor:default; }
+/* the bar at the bottom of the month opened from the process: one button */
+.pflow-bar .lvbtn{ flex:1; font-weight:700; }
+/* the two small questions: four answers, two by two on a phone */
+@media (max-width:520px){ .pconsent .pchoice{ flex-wrap:wrap; } .pconsent .pchoice button{ flex:1 1 40%; } }
+.pview-seg button{ white-space:nowrap; }
+.pweek-nav .btn{ white-space:nowrap; padding-inline:8px; }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -7286,7 +7311,7 @@ function mcalWeekLabel(mk, w){
   const f = x => { const t = parseIso(x); return t.getDate() + '/' + (t.getMonth() + 1); };
   return inMonth.length === 1 ? f(inMonth[0]) : f(inMonth[0]) + '–' + f(inMonth[inMonth.length - 1]);
 }
-const mcalWeekNavHtml = (mk, week) => `<div class="mcal-weeknav"><button type="button" class="mcal-wk" data-mwk="-1" aria-label="השבוע הקודם"><bdi dir="ltr">›</bdi></button><b>שבוע ${pEsc(mcalWeekLabel(mk, week))}</b><button type="button" class="mcal-wk" data-mwk="1" aria-label="השבוע הבא"><bdi dir="ltr">‹</bdi></button></div>`;
+const mcalWeekNavHtml = (mk, week) => `<div class="mcal-weeknav"><button type="button" class="mcal-wk" data-mwk="-1" aria-label="השבוע הקודם"><bdi dir="ltr">›</bdi></button><b>שבוע <bdi dir="ltr">${pEsc(mcalWeekLabel(mk, week))}</bdi></b><button type="button" class="mcal-wk" data-mwk="1" aria-label="השבוע הבא"><bdi dir="ltr">‹</bdi></button></div>`;
 function mcalViewBarHtml(mk, week, id){          // "חודש | שבוע" and, in the weekly view, the week with ‹ ›
   const isW = Number.isInteger(week);
   return `<div class="mcal-viewbar" id="${id}"><div class="mx-seg mcal-seg" role="group" aria-label="תצוגה"><button type="button" data-mview="week" aria-pressed="${isW}">שבוע</button><button type="button" data-mview="month" aria-pressed="${!isW}">חודש</button></div>${isW ? mcalWeekNavHtml(mk, week) : ''}</div>`;
@@ -7514,6 +7539,7 @@ function renderInstructorPrefs(body){
   if(portalServerOn && me.role === 'instructor' && !locked && !submitted && prefStartFill(mk, me.id, prefs, days))
     toast(srv.prefStart === 'yes' ? 'כל המשמרות סומנו "כן", לפי ההגדרות שלך. משנים רק את מה שצריך' : 'כל המשמרות סומנו "לא", לפי ההגדרות שלך. משנים רק את מה שצריך');
   if(portalServerOn && me.role === 'instructor' && !locked && !submitted) prefFixedDaysFill(mk, prefs, days);          // (the weekdays she never comes: her settings, Guy 2026-10-30)
+  if(portalServerOn && me.role === 'instructor' && !locked && !prefOther() && !portalUi.prefsPast) prefConsentAuto(mk, prefs, submitted);          // ("לא רלוונטי" follows the marks: 14zj)
   if(prefWeekOn(me, locked, submitted)) return renderWeekPrefs(body, mk, m, prefs);          // ("שבוע אחרי שבוע": 14zj)
   const dl = m.deadline ? parseIso(m.deadline) : null;
   const fixedOn = date => portalServerOn ? prefs.fixed.find(f => f.day === date) : null;
@@ -7526,10 +7552,14 @@ function renderInstructorPrefs(body){
     return `<div class="plong-row">${srv.showLong ? `<button type="button" class="plong lv-${lv}" data-plong="${fri}" aria-label="${pEsc(SRV_LONG.label)} של ${dayLabel(fri)} והשבת שאחריו: ${pEsc(SRV_LONG.sub)}">${SRV_LONG.letter} ${pEsc(SRV_LONG.label)}</button>` : ''}${srv.pickOne ? `<button type="button" class="ppick${picked ? ' on' : ''}" data-ppick="${fri}" aria-pressed="${picked}" title="רק אחד מאלה">רק אחד</button>` : ''}</div>`;
   };
   let cells = '', neutral = 0;
-  for(let i = 0; i < lead; i++) cells += '<div class="pday blank"></div>';
+  // "שבוע-שבוע": the same calendar, one week of the month at a time (the whole month stays for looking, and for who is not filling for herself)
+  const oneWeek = portalServerOn && !srv.prefWeekly && me.role === 'instructor' && !prefOther() && !locked && !portalUi.prefsPast && !portalUi.prefsWholeMonth;
+  const allWeeks = oneWeek ? prefWeeksOf(mk) : null, wkIdx = oneWeek ? Math.max(0, Math.min(portalUi.prefWk || 0, allWeeks.length - 1)) : 0, wkShown = oneWeek ? allWeeks[wkIdx] : null;
+  for(let i = 0; i < (oneWeek ? wkShown.filter(d => d < days[0]).length : lead); i++) cells += '<div class="pday blank"></div>';
   days.forEach(date => {
     const fx = fixedOn(date), absent = !!fx || prefs.absent.includes(date), hrs = portalServerOn && prefs.hours[date];
     if(portalServerOn && !absent) neutral += prefShiftsFor(date).filter(s => !prefs.slots[`${date}|${s.id}`] && !prefNoNight(`${date}|${s.id}`) && !prefInsideLong(prefs, `${date}|${s.id}`)).length;
+    if(oneWeek && !wkShown.includes(date)) return;
     cells += `<div class="pday${absent ? ' absent' : ''}${fx ? ' fixed' : ''}${hrs ? ' has-hours' : ''}${[5, 6].includes(dowOf(date)) ? ' weekend' : ''}${barOn && [5, 6].includes(dowOf(date)) && days.includes(dowOf(date) === 5 ? date : addDays(date, -1)) ? ' linked' : ''}"${fx ? ` title="${pEsc(FIXED_REASON[fx.reason] || 'היעדרות')}"` : ''}>
       <button type="button" class="pday-num" data-pday="${date}" aria-label="${dayLabel(date)}">${parseIso(date).getDate()}</button>
       ${fx ? `<span class="pday-fixed">${pEsc(FIXED_REASON[fx.reason] || 'היעדרות')}</span>` : ''}
@@ -7542,7 +7572,7 @@ function renderInstructorPrefs(body){
   });
   const marked = Object.keys(prefs.slots).length + prefs.absent.length + (portalServerOn ? Object.keys(prefs.hours).length : 0);
   const cons = prefs.consent || { extend:null, pull:null };
-  const choice = (name, v) => `<div class="pchoice" role="group"><button type="button" class="${cons[name] === true ? 'on' : ''}" data-consent="${name}:1"${locked ? ' disabled' : ''}>כן</button><button type="button" class="${cons[name] === false ? 'on' : ''}" data-consent="${name}:0"${locked ? ' disabled' : ''}>לא</button><button type="button" class="${cons[name] === 'ask' ? 'on' : ''}" data-consent="${name}:ask"${locked ? ' disabled' : ''}>תבדקו איתי</button></div>`;          // ("תבדקו איתי": the engine takes it as "no", the coordinator sees it and asks: Guy 2026-10-26)
+  const choice = (name, v) => `<div class="pchoice" role="group"><button type="button" class="${cons[name] === true ? 'on' : ''}" data-consent="${name}:1"${locked ? ' disabled' : ''}>כן</button><button type="button" class="${cons[name] === false ? 'on' : ''}" data-consent="${name}:0"${locked ? ' disabled' : ''}>לא</button><button type="button" class="${cons[name] === 'ask' ? 'on' : ''}" data-consent="${name}:ask"${locked ? ' disabled' : ''}>תבדקו איתי</button>${portalServerOn ? `<button type="button" class="${cons[name] === 'na' ? 'on' : ''}" data-consent="${name}:na"${locked ? ' disabled' : ''}>לא רלוונטי</button>` : ''}</div>`;          // ("תבדקו איתי": the engine takes it as "no", the coordinator sees it and asks: Guy 2026-10-26; "לא רלוונטי": 14zj)
   const levels = portalServerOn ? SRV_LEVEL_BUTTONS : LEVEL_BUTTONS;
   const goal = portalServerOn ? ((m.goals || {})[me.id] || null) : null, minInfo = portalServerOn ? fbMinimum(prefOther() ? (portalLoad().priv || {})[prefOther()] || {} : srv.profile, mk) : null;
   const goalBtn = (v, label, sub) => `<button type="button" class="pgoal-opt${(goal || '') === (v || '') ? ' on' : ''}" data-goal="${v || ''}"${locked ? ' disabled' : ''}><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</button>`;
@@ -7556,6 +7586,7 @@ function renderInstructorPrefs(body){
       : `<div class="pstatus ${submitted ? 'ok' : 'bad'}">${submitted ? tx('st_sub') : tx('st_unsub')}${dl ? ` · אפשר להגיש עד ${dl.getDate()}/${dl.getMonth() + 1}${m.deadlineTime ? ' בשעה ' + m.deadlineTime : ''}` : ''}${portalServerOn ? ' · <span id="srv-save-state">נשמר ✓</span>' : ''}</div>`}
     ${portalServerOn && !locked && me.role === 'instructor' && !prefOther() ? prefFixedLineHtml() : portalServerOn && prefFixedKinds().size && !locked ? `<div class="pnote pnote-soft" id="nonight-note">${prefFixedNote()}</div>` : ''}
     <div class="pshift-key" aria-label="שעות המשמרות">${portalLoad().shiftTypes.map(s => `<span><b>${pEsc(s.label)}</b> <bdi dir="ltr">${pEsc(s.start)}–${pEsc(s.end)}</bdi></span>`).join('')}</div>          
+    ${oneWeek ? `<div class="pweek-weeknav">${mcalWeekNavHtml(mk, wkIdx)}</div>` : ''}
     <div class="pcal">${DOW_SHORT.map(d => `<div class="pcal-head">${d}</div>`).join('')}${cells}</div>
     ${portalServerOn ? `
     <div class="pgoal">
@@ -7578,6 +7609,7 @@ function renderInstructorPrefs(body){
     ${locked ? '' : `<div class="pprefs-actions"><button type="button" class="btn" id="prefs-submit">${submitted ? 'עדכון והגשה מחדש' : 'הגשת ההעדפות'}</button><span class="pnote">${portalServerOn ? (neutral > 0 ? 'עוד ' + neutral + ' משמרות לסימון' : 'כל המשמרות מסומנות') : (marked ? marked + ' סימונים שאינם "כן"' : 'הכל "כן"')}</span></div>
     <div class="plevelbar" role="group" aria-label="בחירת רמה">${levels.map(b => `<button type="button" class="lvbtn lv-${b[0]}${portalUi.level === b[0] ? ' active' : ''}" data-plevel="${b[0]}">${b[1]}</button>`).join('')}<button type="button" class="lvbtn lv-clear" id="prefs-clear-all">נקה הכל</button></div>`}`;
   wireMonthNav(body, 'pmonth'); wireFolds(body);
+  if(oneWeek) body.querySelectorAll('[data-mwk]').forEach(b => { const to = wkIdx + parseInt(b.dataset.mwk, 10); if(to < 0 || to >= allWeeks.length) b.disabled = true; b.addEventListener('click', () => { portalUi.prefWk = to; renderInstructorPrefs(body); }); });
   { const fe = body.querySelector('#prefs-fixed-edit'); if(fe) fe.addEventListener('click', () => { portalUi.gearFold = Object.assign(portalUi.gearFold || {}, { prefs:true }); openPortalSettings(); }); }
   { const pp = body.querySelector('#prefs-past'), pe = body.querySelector('#prefs-past-end');
     if(pp) pp.addEventListener('click', () => { portalUi.prefsPast = true; renderInstructorPrefs(body); });
@@ -7589,7 +7621,7 @@ function renderInstructorPrefs(body){
   }));
   body.querySelectorAll('[data-consent]').forEach(b => b.addEventListener('click', () => {
     if(locked) return;
-    const [name, v] = b.dataset.consent.split(':'); prefs.consent[name] = v === 'ask' ? 'ask' : v === '1'; portalSave(); renderInstructorPrefs(body);
+    const [name, v] = b.dataset.consent.split(':'); prefConsentSet(mk, prefs, name, v); portalSave(); renderInstructorPrefs(body);
   }));
   body.querySelectorAll('[data-pslot]').forEach(b => b.addEventListener('click', () => {
     if(locked || prefPlainOn()) return;          // (without colours the taps are 14zj's)
@@ -8119,7 +8151,8 @@ async function srvLoad(){
     srvAll(() => sbPersonal.from('schedule').select('month,status').gte('month', from).lte('month', to)),
     sbPersonal.from('notices').select('id,text,kind,seen,created_at').eq('to_staff', meId).order('created_at', { ascending:false }).limit(40).then(r => { if(r.error) throw r.error; return r.data || []; }),          // (only her own: the coordinator may read everybody's notices; and only the last 40)
     srvAll(() => sbPersonal.from('prefs_hours').select('staff_id,day,from_time,to_time').gte('day', from).lte('day', to)),
-    srvAll(() => sbPersonal.from('prefs_consent').select('staff_id,month,extend_morning,pull_to_sunday,extend_ask,pull_ask').gte('month', from).lte('month', to))
+    srvAll(() => sbPersonal.from('prefs_consent').select('staff_id,month,extend_morning,pull_to_sunday,extend_ask,pull_ask,extend_na,pull_na').gte('month', from).lte('month', to))
+      .catch(() => srvAll(() => sbPersonal.from('prefs_consent').select('staff_id,month,extend_morning,pull_to_sunday,extend_ask,pull_ask').gte('month', from).lte('month', to)))          // (a project without scheduling-v58.sql)
       .catch(() => srvAll(() => sbPersonal.from('prefs_consent').select('staff_id,month,extend_morning,pull_to_sunday').gte('month', from).lte('month', to)))          // (a project without scheduling-v39.sql: no "תבדקו איתי")
   ]);
   const st = {
@@ -8142,7 +8175,7 @@ async function srvLoad(){
   });
   abs.forEach(r => { const m = st.months[monthOf(r.day)]; if(!m) return; const pr = srvPrefsOf(m, r.staff_id); if(r.reason === 'self') pr.absent.push(r.day); else pr.fixed.push({ day:r.day, reason:r.reason, note:r.note }); });      // (a vacation, sick leave... that the coordinator entered cannot be changed here)
   hrs.forEach(r => { const m = st.months[monthOf(r.day)]; if(!m) return; const pr = srvPrefsOf(m, r.staff_id); (pr.hours[r.day] = pr.hours[r.day] || []).push([parseInt(r.from_time, 10), parseInt(r.to_time, 10) || 24]); });
-  cons.forEach(r => { const m = st.months[monthOf(r.month)]; if(m) srvPrefsOf(m, r.staff_id).consent = { extend:r.extend_ask ? 'ask' : r.extend_morning, pull:r.pull_ask ? 'ask' : r.pull_to_sunday }; });
+  cons.forEach(r => { const m = st.months[monthOf(r.month)]; if(m) srvPrefsOf(m, r.staff_id).consent = { extend:r.extend_na ? 'na' : r.extend_ask ? 'ask' : r.extend_morning, pull:r.pull_na ? 'na' : r.pull_ask ? 'ask' : r.pull_to_sunday }; });
   subs.forEach(r => { const m = st.months[monthOf(r.month)]; if(m){ m.submitted[r.staff_id] = true; if(r.note) m.notes[r.staff_id] = r.note; } });
   let goalRows = []; try { goalRows = await srvAll(() => sbPersonal.from('prefs_submission').select('staff_id,month,goal').gte('month', from).lte('month', to)); } catch(e){ goalRows = []; }          // (the goal column comes with scheduling-v5.sql; until then there is none)
   goalRows.forEach(r => { const m = st.months[monthOf(r.month)]; if(m && r.goal) m.goals[r.staff_id] = r.goal; });
@@ -8249,7 +8282,8 @@ async function srvSyncPrefs(mk){
   }
   if(p.consent.extend !== null && p.consent.pull !== null){          // the two consents are asked again every month; saved once both are answered
     const ce = p.consent.extend, cp = p.consent.pull, row = { staff_id:srvWho(), month:firstOf(mk), extend_morning:ce === true, pull_to_sunday:cp === true, answered_at:new Date().toISOString() };
-    r = await sbPersonal.from('prefs_consent').upsert(Object.assign({}, row, { extend_ask:ce === 'ask', pull_ask:cp === 'ask' }));          // ("תבדקו איתי" = no for the engine: scheduling-v39.sql)
+    r = await sbPersonal.from('prefs_consent').upsert(Object.assign({}, row, { extend_ask:ce === 'ask', pull_ask:cp === 'ask', extend_na:ce === 'na', pull_na:cp === 'na' }));          // ("לא רלוונטי" = no for the engine too: scheduling-v58.sql)
+    if(r.error && /extend_na|pull_na/i.test(r.error.message || '')) r = await sbPersonal.from('prefs_consent').upsert(Object.assign({}, row, { extend_ask:ce === 'ask', pull_ask:cp === 'ask' }));          // ("תבדקו איתי" = no for the engine: scheduling-v39.sql)
     if(r.error && /extend_ask|pull_ask|column/i.test(r.error.message || '')) r = await sbPersonal.from('prefs_consent').upsert(row);
     if(r.error) throw r.error;
   }
@@ -9762,8 +9796,8 @@ function srvPersonRequestsHtml(p, mk){
     ${Object.keys(pr.hours || {}).length ? `<div class="cs-req"><b>שעות אחרות</b><span>${Object.keys(pr.hours).sort().map(d => `${shortDate(d)} ${pr.hours[d].map(([a, b]) => a + '–' + b).join(', ')}`).join(' · ')}</span></div>` : ''}
     ${longs.length ? `<div class="cs-req cs-long"><b>סופ"ש ארוך</b><div class="cs-req-days">${longs.map(([d, lv]) => `<div class="cs-req-day"><span class="cs-req-date">${pEsc(dayLabel(d))}</span><span class="mcal-name wish-${lv === 'avoid' ? 'can' : lv}">${lv === 'yes' ? 'כן' : lv === 'avoid' ? 'יכול' : 'לא'}</span></div>`).join('')}</div></div>` : ''}
     ${(pr.pick || []).length ? `<div class="cs-req cs-long"><b>רק אחד מסופי השבוע</b><span>${pr.pick.slice().sort().map(f => pEsc(dayLabel(f))).join(' · ')}</span></div>` : ''}
-    <div class="cs-req"><b>הארכה עד 16:00</b><span>${cons.extend === true ? 'מסכים/ה' : cons.extend === 'ask' ? '<b class="cs-ask">תבדקו איתי</b>' : cons.extend === false ? 'לא' : 'לא ענה/תה'}</span></div>
-    <div class="cs-req"><b>משיכה משבת לילה עד 11:00</b><span>${cons.pull === true ? 'מסכים/ה' : cons.pull === 'ask' ? '<b class="cs-ask">תבדקו איתי</b>' : cons.pull === false ? 'לא' : 'לא ענה/תה'}</span></div>
+    <div class="cs-req"><b>הארכה עד 16:00</b><span>${cons.extend === true ? 'מסכים/ה' : cons.extend === 'ask' ? '<b class="cs-ask">תבדקו איתי</b>' : cons.extend === 'na' ? 'לא רלוונטי' : cons.extend === false ? 'לא' : 'לא ענה/תה'}</span></div>
+    <div class="cs-req"><b>משיכה משבת לילה עד 11:00</b><span>${cons.pull === true ? 'מסכים/ה' : cons.pull === 'ask' ? '<b class="cs-ask">תבדקו איתי</b>' : cons.pull === 'na' ? 'לא רלוונטי' : cons.pull === false ? 'לא' : 'לא ענה/תה'}</span></div>
     ${goal ? `<div class="cs-req"><b>יעד</b><span>${GOAL[goal] || goal}</span></div>` : ''}
     ${note ? `<div class="cs-req"><b>הערה</b><span>${pEsc(note)}</span></div>` : ''}
   </div>`;
@@ -11857,7 +11891,7 @@ const AR = {
   'יציאה':'خروج', '→ מסך ראשי':'→ الشاشة الرئيسية', 'בית':'الرئيسية', 'חזור':'رجوع', 'נכנסת בחלון אחר עם משתמש אחר. הדף מתרענן כדי להמשיך עם המשתמש החדש':'دخلت في نافذة أخرى بمستخدم آخر. الصفحة تتحدّث للمتابعة مع المستخدم الجديد', 'יצאת מהמערכת בחלון אחר. הדף מתרענן':'خرجت من النظام في نافذة أخرى. الصفحة تتحدّث', 'העדפות מערכת':'إعدادات النظام', 'סיום':'إنهاء',
   'המשמרות שלי':'مناوباتي', 'הצוות כולו':'الطاقم كله', 'איך הלכו הבקשות שלך':'كيف سارت طلباتك', 'משמרות פתוחות':'مناوبات مفتوحة', 'הודעות חדשות':'رسائل جديدة',
   'המשמרת הבאה שלך':'مناوبتك القادمة', 'בקשת החלפה':'طلب استبدال', 'הבנתי, תודה':'فهمت، شكرًا', 'סימון של כולן כנקראו':'تعليم الكل كمقروء',
-  'שבועי, בלי צבעים':'أسبوعي، بلا ألوان', 'חודשי, עם צבעים':'شهري، بالألوان', 'אפשר לבחור יותר מאחת. הן יסומנו "לא" בכל החודש.':'يمكن اختيار أكثر من واحدة. ستُعلَّم "لا" طوال الشهر.', 'אפשר לבחור יותר מיום אחד. כל המשמרות בימים האלה יסומנו "לא".':'يمكن اختيار أكثر من يوم. كل المناوبات في هذه الأيام ستُعلَّم "لا".', 'יש משמרות שאת לא עושה החודש?':'هل هناك مناوبات لا تعملين فيها هذا الشهر؟', 'יש משמרות שאתה לא עושה החודש?':'هل هناك مناوبات لا تعمل فيها هذا الشهر؟', 'יש יום בשבוע שאת לא באה בו החודש?':'هل هناك يوم في الأسبوع لا تأتين فيه هذا الشهر؟', 'יש יום בשבוע שאתה לא בא בו החודש?':'هل هناك يوم في الأسبوع لا تأتي فيه هذا الشهر؟', 'דלג':'تخطٍّ', 'המשך ←':'متابعة ←', '→ הקודם':'→ السابق', 'השבוע הבא ←':'الأسبوع القادم ←', 'לסיום ←':'للإنهاء ←', 'כמעט סיימנו':'أوشكنا على الانتهاء', 'הגשת ההעדפות':'تقديم التفضيلات', 'לראות את כל החודש':'رؤية الشهر كله', 'חזרה לשבוע אחרי שבוע':'العودة إلى أسبوع بعد أسبوع', 'אם נצטרך, האם יהיה לך נוח להישאר עד 16:00 במשמרת בוקר?':'إذا احتجنا، هل يناسبك البقاء حتى 16:00 في مناوبة الصباح؟', 'אם נצטרך, האם יהיה לך נוח להמשיך משבת בלילה עד יום ראשון ב-11:00?':'إذا احتجنا، هل يناسبك الاستمرار من ليلة السبت حتى يوم الأحد الساعة 11:00؟', 'תבדקו איתי':'تحقّقوا معي', 'באיזה יום?':'في أي يوم؟', 'משמרת אמצע':'مناوبة وسط', 'קבוע בהגדרות':'ثابت في الإعدادات', 'איך מסמנים':'كيف نعلّم', 'לחיצה אחת = כן':'ضغطة واحدة = نعم', 'עוד לחיצה = לא':'ضغطة أخرى = لا', 'נקודה = עוד לא סימנת':'نقطة = لم تعلّم/ي بعد', 'לחיצה ארוכה = חוזרים לנקודה':'ضغطة طويلة = العودة إلى النقطة', 'הבנתי':'فهمت', 
+  'שלב שלב, בלי יכול':'خطوة خطوة، بدون «ممكن»', 'שבוע-שבוע':'أسبوعًا بأسبوع', 'לא רלוונטי':'غير ذي صلة', 'חזרה לתהליך':'العودة إلى المسار', 'האם יש יום קבוע בשבוע שבו לא תגיעי החודש?':'هل هناك يوم ثابت في الأسبوع لن تأتي فيه هذا الشهر؟', 'האם יש יום קבוע בשבוע שבו לא תגיע החודש?':'هل هناك يوم ثابت في الأسبوع لن تأتي فيه هذا الشهر؟', 'כל המופעים של הימים שבחרת יסומנו מראש כ׳לא׳.':'كل مرات الأيام التي اخترتها ستُعلَّم مسبقًا «لا».', 'אפשר לבחור יותר מאחת. הן יסומנו "לא" בכל החודש.':'يمكن اختيار أكثر من واحدة. ستُعلَّم "لا" طوال الشهر.', 'אפשר לבחור יותר מיום אחד. כל המשמרות בימים האלה יסומנו "לא".':'يمكن اختيار أكثر من يوم. كل المناوبات في هذه الأيام ستُعلَّم "لا".', 'יש משמרות שאת לא עושה החודש?':'هل هناك مناوبات لا تعملين فيها هذا الشهر؟', 'יש משמרות שאתה לא עושה החודש?':'هل هناك مناوبات لا تعمل فيها هذا الشهر؟', 'יש יום בשבוע שאת לא באה בו החודש?':'هل هناك يوم في الأسبوع لا تأتين فيه هذا الشهر؟', 'יש יום בשבוע שאתה לא בא בו החודש?':'هل هناك يوم في الأسبوع لا تأتي فيه هذا الشهر؟', 'דלג':'تخطٍّ', 'המשך ←':'متابعة ←', '→ הקודם':'→ السابق', 'השבוע הבא ←':'الأسبوع القادم ←', 'לסיום ←':'للإنهاء ←', 'כמעט סיימנו':'أوشكنا على الانتهاء', 'הגשת ההעדפות':'تقديم التفضيلات', 'לראות את כל החודש':'رؤية الشهر كله', 'חזרה לשבוע אחרי שבוע':'العودة إلى أسبوع بعد أسبوع', 'אם נצטרך, האם יהיה לך נוח להישאר עד 16:00 במשמרת בוקר?':'إذا احتجنا، هل يناسبك البقاء حتى 16:00 في مناوبة الصباح؟', 'אם נצטרך, האם יהיה לך נוח להמשיך משבת בלילה עד יום ראשון ב-11:00?':'إذا احتجنا، هل يناسبك الاستمرار من ليلة السبت حتى يوم الأحد الساعة 11:00؟', 'תבדקו איתי':'تحقّقوا معي', 'באיזה יום?':'في أي يوم؟', 'משמרת אמצע':'مناوبة وسط', 'קבוע בהגדרות':'ثابت في الإعدادات', 'איך מסמנים':'كيف نعلّم', 'לחיצה אחת = כן':'ضغطة واحدة = نعم', 'עוד לחיצה = לא':'ضغطة أخرى = لا', 'נקודה = עוד לא סימנת':'نقطة = لم تعلّم/ي بعد', 'לחיצה ארוכה = חוזרים לנקודה':'ضغطة طويلة = العودة إلى النقطة', 'הבנתי':'فهمت', 
   'שיחות':'محادثات', 'השבוע':'هذا الأسبوع', 'אין כרגע.':'لا يوجد حاليًا.', 'קראתי ✓':'قرأت ✓', 'העדכונים שלך':'تحديثاتك', 'הודעות מהרכזת':'رسائل من المركّزة', 'הבקשות שלי':'طلباتي', 'בקשות החלפה פתוחות':'طلبات استبدال مفتوحة',
   'טוען…':'جارٍ التحميل…', 'רק רגע...':'لحظة...', 'רק רגע':'لحظة', 'נשמר ✓':'تم الحفظ ✓', 'עוד לא נשמר, ננסה שוב':'لم يُحفظ بعد، سنحاول مرة أخرى',
   // the colour key and the levels
@@ -15169,6 +15203,19 @@ const prefWeekOn = (me, locked, submitted) => portalServerOn && !!srv.prefWeekly
 const prefFem = () => !(srv.profile && srv.profile.female === false);
 const prefG = (f, m) => prefFem() ? f : m;
 const PW_KINDS = [['m', 'בוקר'], ['e', 'צהריים'], ['n', 'לילה']];
+// the marker of the steps: a tiny egg that hatches, step by step (drawn here: no files to load). Eight stages, spread over the steps of the month.
+const PW_EGG = [
+  '',
+  '<path class="k" d="M9 8l1.5 2-1.2 1.6"/>',
+  '<path class="k" d="M6.6 12l2-1.4 1.6 2 2-1.8 1.4 1.6"/>',
+  '<path class="k" d="M5.4 12.6l2.2-1.8 2 2 2.4-2 2 2 2.2-1.8 2.4 1.6"/>',
+  '<path class="h" d="M8 12.2l2-1.8 2 1.8 2-1.8 2 1.8-1 3.4h-6z"/><path class="k" d="M5.4 12.6l2.6-.4M16 12.2l2.6.4"/>',
+  '<path class="h" d="M8 12.2l2-1.8 2 1.8 2-1.8 2 1.8-1 3.4h-6z"/><path class="b" d="M10.6 13.4l1.4 2 1.4-2z"/>',
+  '<circle class="c" cx="12" cy="11" r="4.6"/><circle class="e" cx="10.4" cy="10.2" r=".8"/><circle class="e" cx="13.6" cy="10.2" r=".8"/><path class="b" d="M10.8 11.6l1.2 1.5 1.2-1.5z"/><path class="s" d="M6 12.5l2.4 1.6 1.8-1.4 1.8 1.4 1.8-1.4 1.8 1.4 2.4-1.6c.4 5-2.4 9-6 9s-6.4-4-6-9z"/>',
+  '<circle class="c" cx="12" cy="9" r="5.2"/><circle class="e" cx="10.2" cy="8.2" r=".9"/><circle class="e" cx="13.8" cy="8.2" r=".9"/><path class="b" d="M10.6 9.8l1.4 1.8 1.4-1.8z"/><path class="s" d="M5.4 13.6l2.6 1.8 2-1.6 2 1.6 2-1.6 2 1.6 2.6-1.8c.3 4.4-2.6 8-6.6 8s-6.9-3.6-6.6-8z"/>'
+];
+const pwEggHtml = stage => `<svg class="pw-egg" viewBox="0 0 24 24" aria-hidden="true">${stage < 6 ? '<path class="s" d="M12 2.4c3.9 0 7 6 7 11.2a7 7 0 0 1-14 0C5 8.4 8.1 2.4 12 2.4z"/>' : ''}${PW_EGG[stage]}</svg>`;
+const pwStage = (i, n) => n < 2 ? 0 : Math.round(i * 7 / (n - 1));
 const pwPosKey = mk => `ramzor-weekpos-${srv.me}-${mk}`;
 const pwGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } };
 const pwSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
@@ -15265,38 +15312,43 @@ function renderWeekPrefs(body, mk, m, prefs){
   const me = portalMe(), weeks = prefWeeksOf(mk), inMonth = new Set(daysOfMonth(mk)), plain = prefPlainOn();
   let pos = pwGet(pwPosKey(mk), 'kinds'); if(typeof pos === 'number' && (pos < 0 || pos >= weeks.length)) pos = 0;
   if((pos === 'end' || (typeof pos === 'number' && pos > 0)) && !Object.keys(prefs.slots || {}).length && !(prefs.absent || []).length && !Object.keys(prefs.hours || {}).length){ pos = 'kinds'; pwSet(pwPosKey(mk), pos); }          // (nothing is marked for this month any more, e.g. cleared on TEST: start again from the first question)
-  const go = p => { pwSet(pwPosKey(mk), p); renderInstructorPrefs(body); };
-  const head = `${prefViewBtnHtml()}<div class="pweek-head"><b>ההעדפות ל${pEsc(monthLabel(mk))}</b><span class="pweek-steps" aria-hidden="true">${['kinds', 'days'].concat(weeks.map((_, i) => i)).concat(['end']).map(p => `<i class="${p === pos ? 'on' : ''}"></i>`).join('')}</span></div>`;
+  const go = p => { pwSet(pwPosKey(mk), p); renderInstructorPrefs(body); window.scrollTo(0, 0); if(window.navRefresh) window.navRefresh(); };
+  const steps = ['kinds', 'days'].concat(weeks.map((_, i) => i)).concat(['end']), at = steps.indexOf(pos);
+  const head = `${prefViewBtnHtml()}<div class="pweek-head"><b>ההעדפות ל${pEsc(monthLabel(mk))}</b><span class="pweek-steps" role="img" aria-label="שלב ${at + 1} מתוך ${steps.length}">${steps.map((p, i) => `<i class="${i === at ? 'on' : i < at ? 'done' : ''}">${pwEggHtml(pwStage(i, steps.length))}<b>${i + 1}</b></i>`).join('')}</span></div>`;
   // the opening questions: the kinds of shifts and the weekdays she does not do this month (both may be skipped)
   if(pos === 'kinds' || pos === 'days'){
     const isK = pos === 'kinds', chosenKey = `ramzor-week${isK ? 'kinds' : 'days'}-${srv.me}-${mk}`;
     const fixedK = isK ? prefFixedKinds() : new Set();
-    let chosen = new Set(pwGet(chosenKey, isK ? [] : (srv.fixedDays || [])));
+    const chosen = new Set(pwGet(chosenKey, isK ? [] : (srv.fixedDays || [])));
+    const other = new Set(pwGet(`ramzor-week${isK ? 'days' : 'kinds'}-${srv.me}-${mk}`, isK ? (srv.fixedDays || []) : []));          // (what the other question keeps "לא")
     const opts = isK ? PW_KINDS : DOW_NAMES.map((d, i) => [i, d]);
-    body.innerHTML = `${head}<div class="pweek-q"><h2>${isK ? `יש משמרות ש${prefG('את', 'אתה')} לא ${prefG('עושה', 'עושה')} החודש?` : `יש יום בשבוע ש${prefG('את', 'אתה')} לא ${prefG('באה', 'בא')} בו החודש?`}</h2>
-      <div class="pnote">${isK ? 'אפשר לבחור יותר מאחת. הן יסומנו "לא" בכל החודש.' : 'אפשר לבחור יותר מיום אחד. כל המשמרות בימים האלה יסומנו "לא".'}</div>
+    body.innerHTML = `${head}<div class="pweek-q"><h2>${isK ? `יש משמרות ש${prefG('את', 'אתה')} לא ${prefG('עושה', 'עושה')} החודש?` : `האם יש יום קבוע בשבוע שבו לא ${prefG('תגיעי', 'תגיע')} החודש?`}</h2>
+      <div class="pnote">${isK ? 'אפשר לבחור יותר מאחת. הן יסומנו "לא" בכל החודש.' : 'כל המופעים של הימים שבחרת יסומנו מראש כ׳לא׳.'}</div>
       <div class="pweek-opts">${opts.map(([k, w]) => { const fx = isK && fixedK.has(k); return `<button type="button" class="pweek-opt${fx || chosen.has(k) ? ' on' : ''}" data-pwopt="${k}"${fx ? ' disabled' : ''}>${pEsc(w)}${fx ? '<small>קבוע בהגדרות</small>' : ''}</button>`; }).join('')}</div>
-      <div class="pweek-nav"><button type="button" class="btn ghost" id="pw-skip">דלג</button><button type="button" class="btn" id="pw-next">המשך ←</button></div></div>`;
-    body.querySelectorAll('[data-pwopt]').forEach(b => b.addEventListener('click', () => { const k = isK ? b.dataset.pwopt : Number(b.dataset.pwopt); if(chosen.has(k)) chosen.delete(k); else chosen.add(k); b.classList.toggle('on', chosen.has(k)); }));
-    const next = isK ? 'days' : 0;
-    body.querySelector('#pw-skip').addEventListener('click', () => go(next));
-    body.querySelector('#pw-next').addEventListener('click', () => {
-      const was = new Set(pwGet(chosenKey, isK ? [] : (srv.fixedDays || []))), match = (date, sid, k) => isK ? sid === k : dowOf(date) === k;
+      <div class="pweek-nav">${isK ? '' : '<button type="button" class="btn ghost" id="pw-prev">→ הקודם</button>'}<button type="button" class="btn ghost" id="pw-skip">דלג</button><button type="button" class="btn" id="pw-next">המשך ←</button></div></div>`;
+    // a choice is applied at once, so nothing is lost going back and forth; a shift the other question keeps "לא" stays so
+    const match = (date, sid, k, kinds) => kinds ? sid === k : dowOf(date) === k, covered = (set, date, sid, kinds) => [...set].some(k => match(date, sid, k, kinds));
+    const apply = was => {
       daysOfMonth(mk).forEach(date => {
         if(prefs.absent.includes(date) || (prefs.fixed || []).some(f => f.day === date)) return;
         prefShiftsFor(date).forEach(s => { const key = `${date}|${s.id}`;
-          if([...chosen].some(k => match(date, s.id, k))){ if(!prefs.slots[key] || prefs.slots[key] !== 'no') prefs.slots[key] = 'no'; }
-          else if([...was].some(k => match(date, s.id, k)) && prefs.slots[key] === 'no') delete prefs.slots[key]; });          // (taken back from the list: those shifts wait for a mark again)
+          if(covered(chosen, date, s.id, isK)) prefs.slots[key] = 'no';
+          else if(covered(was, date, s.id, isK) && !covered(other, date, s.id, !isK) && prefs.slots[key] === 'no') delete prefs.slots[key]; });          // (taken back from the list: those shifts wait for a mark again)
       });
-      pwSet(chosenKey, [...chosen]); portalSave(); go(next);
-    });
+      pwSet(chosenKey, [...chosen]); portalSave();
+    };
+    body.querySelectorAll('[data-pwopt]').forEach(b => b.addEventListener('click', () => { const k = isK ? b.dataset.pwopt : Number(b.dataset.pwopt), was = new Set(chosen); if(chosen.has(k)) chosen.delete(k); else chosen.add(k); b.classList.toggle('on', chosen.has(k)); apply(was); }));
+    const next = isK ? 'days' : 0;
+    body.querySelector('#pw-skip').addEventListener('click', () => go(next));
+    body.querySelector('#pw-next').addEventListener('click', () => go(next));
+    { const pv = body.querySelector('#pw-prev'); if(pv) pv.addEventListener('click', () => go('kinds')); }
     prefViewWire(body);          // (the small switch, on every screen of the weekly view)
     return;
   }
   // the end: the two small questions every instructor answers, and handing in
   if(pos === 'end'){
     const cons = prefs.consent || { extend:null, pull:null };
-    const choice = name => `<div class="pchoice" role="group"><button type="button" class="${cons[name] === true ? 'on' : ''}" data-consent="${name}:1">כן</button><button type="button" class="${cons[name] === false ? 'on' : ''}" data-consent="${name}:0">לא</button><button type="button" class="${cons[name] === 'ask' ? 'on' : ''}" data-consent="${name}:ask">תבדקו איתי</button></div>`;
+    const choice = name => `<div class="pchoice" role="group"><button type="button" class="${cons[name] === true ? 'on' : ''}" data-consent="${name}:1">כן</button><button type="button" class="${cons[name] === false ? 'on' : ''}" data-consent="${name}:0">לא</button><button type="button" class="${cons[name] === 'ask' ? 'on' : ''}" data-consent="${name}:ask">תבדקו איתי</button><button type="button" class="${cons[name] === 'na' ? 'on' : ''}" data-consent="${name}:na">לא רלוונטי</button></div>`;
     const left = prefDotsOf(mk, prefs, daysOfMonth(mk)).length;
     body.innerHTML = `${head}<div class="pweek-q"><h2>כמעט סיימנו</h2>
       <div class="pconsents"><div class="pconsent"><span>אם נצטרך, האם יהיה לך נוח להישאר עד 16:00 במשמרת בוקר?</span>${choice('extend')}</div>
@@ -15304,7 +15356,7 @@ function renderWeekPrefs(body, mk, m, prefs){
       ${left ? `<div class="pnote pnote-soft">עוד ${left} משמרות עם נקודה</div>` : ''}
       ${prefPickLineHtml(mk, prefs)}
       <div class="pweek-nav"><button type="button" class="btn ghost" id="pw-prev">→ הקודם</button><button type="button" class="btn" id="pw-submit">הגשת ההעדפות</button></div></div>`;
-    body.querySelectorAll('[data-consent]').forEach(b => b.addEventListener('click', () => { const [n, v] = b.dataset.consent.split(':'); prefs.consent[n] = v === 'ask' ? 'ask' : v === '1'; portalSave(); renderInstructorPrefs(body); }));
+    body.querySelectorAll('[data-consent]').forEach(b => b.addEventListener('click', () => { const [n, v] = b.dataset.consent.split(':'); prefConsentSet(mk, prefs, n, v); portalSave(); renderInstructorPrefs(body); }));
     body.querySelector('#pw-prev').addEventListener('click', () => go(weeks.length - 1));
     body.querySelector('#pw-submit').addEventListener('click', async () => {
       const c = prefs.consent || {}; if(c.extend === null || c.extend === undefined || c.pull === null || c.pull === undefined){ toast(tx('consent_needed')); return; }
@@ -15321,7 +15373,7 @@ function renderWeekPrefs(body, mk, m, prefs){
   const lvOf = key => prefInsideLong(prefs, key) ? prefs.slots[`${prefLongFri(key)}|l`] : prefLevelOf(prefs, key);
   const rows = wk.map(date => {
     const out = !inMonth.has(date), fx = !out && fixedOn(date), away = !out && (fx || prefs.absent.includes(date)), hrs = !out && prefs.hours[date];
-    return `<div class="pwday${out ? ' out' : ''}${away ? ' away' : ''}"><div class="pwday-name"><b>${pEsc(DOW_NAMES[dowOf(date)])}</b> <small>${parseIso(date).getDate()}/${parseIso(date).getMonth() + 1}</small>${hrs ? ` <small class="pday-hrs"><bdi dir="ltr">${hrs.map(([a, b]) => a + '–' + b).join(', ')}</bdi></small>` : ''}</div>
+    return `<div class="pwday${out ? ' out' : ''}${away ? ' away' : ''}">${out || away ? '<div class="pwday-name">' : `<button type="button" class="pwday-name pwday-all" data-pwday="${date}" aria-label="כל ${pEsc(dayLabel(date))}">`}<b>${pEsc(DOW_NAMES[dowOf(date)])}</b> <small>${parseIso(date).getDate()}/${parseIso(date).getMonth() + 1}</small>${hrs ? ` <small class="pday-hrs"><bdi dir="ltr">${hrs.map(([a, b]) => a + '–' + b).join(', ')}</bdi></small>` : ''}${out || away ? '</div>' : '</button>'}
       ${out ? '' : away ? `<span class="pwday-away">${pEsc(fx ? FIXED_REASON[fx.reason] || 'היעדרות' : 'לא באה')}</span>` : `<div class="pwday-shifts">${prefShiftsFor(date).map(s => { const key = `${date}|${s.id}`, inLong = prefInsideLong(prefs, key);
         return `<button type="button" class="pshift pwshift lv-${lvOf(key) || 'neutral'}${inLong ? ' in-long' : ''}" data-pslot="${key}">${inLong ? '🕯️ ' : ''}${pEsc(s.label)}</button>`; }).join('')}</div>`}</div>`;
   }).join('');
@@ -15345,6 +15397,13 @@ function renderWeekPrefs(body, mk, m, prefs){
       if(prefs.slots[key] === lv) delete prefs.slots[key]; else prefs.slots[key] = lv; portalSave(); redraw();
     }));
   }
+  // the day itself: its shifts all at once, as in the month with colours (here: dots / mixed -> כן, כן -> לא, לא -> כן); a shift still changes by itself
+  body.querySelectorAll('[data-pwday]').forEach(b => b.addEventListener('click', () => {
+    const date = b.dataset.pwday, keys = prefShiftsFor(date).map(s => `${date}|${s.id}`).filter(k => !prefFixedNo(k) && !prefInsideLong(prefs, k)); if(!keys.length) return;
+    if(plain){ const to = keys.every(k => ['yes', 'avoid'].includes(prefs.slots[k])) ? 'no' : 'yes'; keys.forEach(k => { prefs.slots[k] = to; }); }
+    else { const lv = portalUi.level || 'yes'; if(keys.every(k => prefs.slots[k] === lv)) keys.forEach(k => delete prefs.slots[k]); else keys.forEach(k => { prefs.slots[k] = lv; }); }
+    portalSave(); if(plain) prefPlainHelp(false); redraw();
+  }));
   prefWeekendWire(body, prefs, plain, redraw);
   body.querySelector('#pplain-hours').addEventListener('click', () => prefHoursGuided(wk.filter(d => inMonth.has(d) && !fixedOn(d) && !prefs.absent.includes(d)), prefs, redraw));
   { const q = body.querySelector('#pplain-q'); if(q) q.addEventListener('click', () => prefPlainHelp(true)); }
@@ -15368,15 +15427,16 @@ function prefPlainMonth(body, mk, prefs){
 function prefMonthExtras(body, mk, prefs, locked, submitted){
   if(prefPlainOn() && !locked) prefPlainMonth(body, mk, prefs);
   if(portalServerOn && !locked && !prefOther() && !portalUi.prefsPast && portalMe().role === 'instructor'){ const t = body.querySelector('.pmonth, .pstatus'); if(t){ t.insertAdjacentHTML('beforebegin', prefViewBtnHtml()); prefViewWire(body); } }
-  if(portalServerOn && srv.prefWeekly && portalUi.prefsWholeMonth && !locked && !submitted && !portalUi.prefsPast && !prefOther()){
-    const s = body.querySelector('.pstatus'); if(s) s.insertAdjacentHTML('afterend', '<button type="button" class="btn ghost small" id="pw-back-week">חזרה לשבוע אחרי שבוע</button>');
-    const bw = body.querySelector('#pw-back-week'); if(bw) bw.addEventListener('click', () => { portalUi.prefsWholeMonth = false; renderInstructorPrefs(body); });
+  // the month opened from the process: one button in the bar at the bottom, back to the very step it was opened from (the marks stay)
+  if(portalServerOn && srv.prefWeekly && portalUi.prefsWholeMonth && !locked && !portalUi.prefsPast && !prefOther()){
+    const bar = body.querySelector('.plevelbar'); if(bar) bar.outerHTML = '<div class="plevelbar pflow-bar"><button type="button" class="lvbtn" id="pw-back-flow">חזרה לתהליך</button></div>';
+    const bw = body.querySelector('#pw-back-flow'); if(bw) bw.addEventListener('click', () => { portalUi.prefsWholeMonth = false; renderInstructorPrefs(body); if(window.navRefresh) window.navRefresh(); });
   }
 }
 
-// ---- the small switch of the preferences (Guy 2026-11-03): "שבועי, בלי צבעים" or "חודשי, עם צבעים" ("יכול" comes back with the colours).
+// ---- the small switch of the preferences: "שלב שלב, בלי יכול" (the staged process) or "שבוע-שבוע" (with the colours and "יכול", one week of the calendar at a time).
 // Only the instructor's screen changes: the marks are stored as always, and the coordinator sees them in her colours.
-const prefViewBtnHtml = () => portalServerOn ? `<div class="pview-row"><div class="mx-seg pview-seg" role="group" aria-label="תצוגת ההעדפות"><button type="button" data-pview="week" aria-pressed="${!!srv.prefWeekly}">שבועי, בלי צבעים</button><button type="button" data-pview="month" aria-pressed="${!srv.prefWeekly}">חודשי, עם צבעים</button></div></div>` : '';
+const prefViewBtnHtml = () => portalServerOn ? `<div class="pview-row"><div class="mx-seg pview-seg" role="group" aria-label="תצוגת ההעדפות"><button type="button" data-pview="week" aria-pressed="${!!srv.prefWeekly}">שלב שלב, בלי יכול</button><button type="button" data-pview="month" aria-pressed="${!srv.prefWeekly}">שבוע-שבוע</button></div></div>` : '';
 function prefViewWire(body){
   body.querySelectorAll('[data-pview]').forEach(b => b.addEventListener('click', async () => {
     const week = b.dataset.pview === 'week';
@@ -15415,6 +15475,42 @@ function prefPickLineHtml(mk, prefs){          // the end screen: what "רק א�
   if(!picks.length) return '';
   return picks.length >= 2 ? `<div class="pnote pnote-soft">⭐ סימנת ${picks.length} סופי שבוע ב"רק אחד מאלה" (${picks.map(d).join(', ')}): נשבץ אותך רק באחד מהם.</div>`
     : `<div class="pnote pnote-soft">⭐ ב"רק אחד מאלה" צריך לפחות שני סופי שבוע. סימנת אחד (${d(picks[0])}).</div>`;
+}
+
+// ---- "חזור" in the process: always one step back (15b-history.js asks here first). From the month opened in the process: back to the step it came from.
+function prefFlowState(){
+  if(typeof portalUi === 'undefined' || !portalServerOn || !srv.prefWeekly || portalUi.tab !== 'prefs' || portalUi.prefsPast || prefOther()) return null;
+  if(!document.querySelector('#view-portal.active') || (portalMe() || {}).role !== 'instructor') return null;
+  const mk = prefsMonthNow(); if(!srvPrefsOpen(mk)) return null;
+  const weeks = prefWeeksOf(mk), steps = ['kinds', 'days'].concat(weeks.map((_, i) => i)).concat(['end']);
+  return { mk, steps, at:Math.max(0, steps.indexOf(pwGet(pwPosKey(mk), 'kinds'))) };
+}
+function prefFlowCanBack(){ const f = prefFlowState(); return !!f && (!!portalUi.prefsWholeMonth || f.at > 0); }
+function prefFlowBack(){
+  const f = prefFlowState(), body = document.getElementById('portal-body'); if(!f || !body) return false;
+  if(portalUi.prefsWholeMonth){ portalUi.prefsWholeMonth = false; renderInstructorPrefs(body); return true; }
+  if(f.at === 0) return false;
+  pwSet(pwPosKey(f.mk), f.steps[f.at - 1]); renderInstructorPrefs(body); window.scrollTo(0, 0); return true;
+}
+// ---- "לא רלוונטי" of the two small questions: marked by itself for who chose no morning at all / no Saturday night at all, and taken off (the question
+// is open again) when such a shift is chosen. One pressed by hand stays. Which were marked by themselves is remembered on the device.
+const prefConsentAutoKey = mk => `ramzor-consent-auto-${srv.me}-${mk}`;
+function prefConsentSet(mk, prefs, name, v){
+  prefs.consent[name] = v === 'na' ? 'na' : v === 'ask' ? 'ask' : v === '1';
+  const a = pwGet(prefConsentAutoKey(mk), {}); delete a[name]; pwSet(prefConsentAutoKey(mk), a);
+}
+function prefConsentAuto(mk, prefs, submitted){
+  const days = daysOfMonth(mk), chosen = k => ['yes', 'avoid', 'can'].includes(prefs.slots[k]);
+  const none = {
+    extend:!days.some(d => chosen(`${d}|m`) || (dowOf(d) === 6 && chosen(`${addDays(d, -1)}|l`))),          // (the long weekend holds a Saturday morning)
+    pull:!days.some(d => dowOf(d) === 6 && chosen(`${d}|n`))
+  };
+  const auto = pwGet(prefConsentAutoKey(mk), {}); let changed = false;
+  ['extend', 'pull'].forEach(n => {
+    if(none[n] && prefs.consent[n] !== 'na' && (!submitted || prefs.consent[n] === null || prefs.consent[n] === undefined)){ prefs.consent[n] = 'na'; auto[n] = true; changed = true; }          // (an answer already handed in is not touched by just looking)
+    else if(!none[n] && prefs.consent[n] === 'na' && auto[n]){ prefs.consent[n] = null; delete auto[n]; changed = true; }
+  });
+  if(changed){ pwSet(prefConsentAutoKey(mk), auto); portalSave(); }
 }
 // ---- the Ramzor's staff screens on the new look (Guy 2026-10-30): the main screen, daily work, the kids' screen control, the ahmash control,
 // the management. The kids' TV keeps its own look. With a personal sign-in: the person's own look (light, dark, or the leopard where allowed);
@@ -15726,7 +15822,7 @@ async function renderDiary(box){
       <section><h3 class="psec">בהמשך</h3>${Object.keys(byDay).length ? Object.keys(byDay).map(d => `<div class="dg-day"><div class="dg-day-h">${pEsc(DOW_NAMES[dowOf(d)])} ${dgShort(d)}</div>${byDay[d].map(dgLineHtml).join('')}</div>`).join('') : '<div class="pnote">אין עוד אירועים בשבועות הקרובים.</div>'}</section>`;
   } else {
     const start = dg.week || addDays(today, -dowOf(today)), days = Array.from({ length:7 }, (_, i) => addDays(start, i)), occ = dgOccurrences(dg.data.events, dg.data.skips, start, days[6]);
-    body = `<div class="mcal-weeknav dg-weeknav"><button type="button" class="mcal-wk" data-dg-wk="-7" aria-label="השבוע הקודם"><bdi dir="ltr">›</bdi></button><b>שבוע ${dgShort(days[0])}–${dgShort(days[6])}</b><button type="button" class="mcal-wk" data-dg-wk="7" aria-label="השבוע הבא"><bdi dir="ltr">‹</bdi></button></div>
+    body = `<div class="mcal-weeknav dg-weeknav"><button type="button" class="mcal-wk" data-dg-wk="-7" aria-label="השבוע הקודם"><bdi dir="ltr">›</bdi></button><b>שבוע <bdi dir="ltr">${dgShort(days[0])}–${dgShort(days[6])}</bdi></b><button type="button" class="mcal-wk" data-dg-wk="7" aria-label="השבוע הבא"><bdi dir="ltr">‹</bdi></button></div>
       <div class="dg-week dg-week-x">${days.map(d => { const list = occ.filter(o => o.day === d); return `<div class="dg-wday${d === today ? ' today' : ''}"><div class="dg-day-h">${pEsc(DOW_NAMES[dowOf(d)])} ${dgShort(d)}</div>${list.length ? list.map(dgLineHtml).join('') : '<div class="dg-empty">—</div>'}</div>`; }).join('')}</div>`;
   }
   box.innerHTML = `<div class="dg"><div class="dg-top"><div class="mx-seg mcal-seg" role="group" aria-label="תצוגה"><button type="button" data-dg-view="list" aria-pressed="${dg.view === 'list'}">רשימה</button><button type="button" data-dg-view="week" aria-pressed="${dg.view === 'week'}">שבוע</button></div>
@@ -15839,7 +15935,7 @@ async function mgrHome(body){
   const wk = mcalWeekOfDay(mk, start < mk + '-01' ? mk + '-01' : start);
   const group = String((st.waMsg || {}).group || '').trim();
   body.innerHTML = `
-    <div class="mcal-weeknav mgr-weeknav"><button type="button" class="mcal-wk" data-mw="-7" aria-label="השבוע הקודם"><bdi dir="ltr">›</bdi></button><b>${thisWeek ? 'השבוע הנוכחי' : 'שבוע'} ${mgrShort(days[0])}–${mgrShort(days[6])}</b><button type="button" class="mcal-wk" data-mw="7" aria-label="השבוע הבא"><bdi dir="ltr">‹</bdi></button></div>
+    <div class="mcal-weeknav mgr-weeknav"><button type="button" class="mcal-wk" data-mw="-7" aria-label="השבוע הקודם"><bdi dir="ltr">›</bdi></button><b>${thisWeek ? 'השבוע הנוכחי' : 'שבוע'} <bdi dir="ltr">${mgrShort(days[0])}–${mgrShort(days[6])}</bdi></b><button type="button" class="mcal-wk" data-mw="7" aria-label="השבוע הבא"><bdi dir="ltr">‹</bdi></button></div>
     <div class="mgr-links">
       <button type="button" class="btn ghost" data-mgo="kids">תוכניות הילדים</button>
       ${group ? `<a class="btn ghost wa-group" href="${pEsc(waGroupUrl(group))}"${waTarget()}>${WA_SVG}<span>קבוצת הצוות</span></a>` : ''}
@@ -16292,9 +16388,11 @@ updateBottomNav();
   let ignoreUntil = 0;                // the moment our own history.back() (taking the guard away) lands: not a Back of the person
   let muteScreenWatcher = false;      // while the app answers a Back press, the watcher stays quiet
   history.replaceState({ nav:'base' }, '');
+  const flowBack = () => typeof prefFlowCanBack === 'function' && prefFlowCanBack();          // (a step of the preferences process to go back to: 14zj)
+  const canGoBack = () => stack.length > 1 || flowBack();
   function syncGuard(){
-    if(stack.length > 1 && !guardOn){ history.pushState({ nav:'guard' }, ''); guardOn = true; }
-    else if(stack.length <= 1 && guardOn){ guardOn = false; ignoreUntil = Date.now() + 1200; history.back(); }
+    if(canGoBack() && !guardOn){ history.pushState({ nav:'guard' }, ''); guardOn = true; }
+    else if(!canGoBack() && guardOn){ guardOn = false; ignoreUntil = Date.now() + 1200; history.back(); }
   }
 
   let queued = false;
@@ -16320,6 +16418,7 @@ updateBottomNav();
     if(Date.now() < ignoreUntil){ ignoreUntil = 0; return; }             // our own move (the guard taken away)
     guardOn = false;                                                      // (the person's Back took the guard)
     if(closeOpenSheet()){ syncGuard(); return; }                          // Back only closed a sheet: the page stays
+    if(typeof prefFlowBack === 'function' && prefFlowBack()){ syncGuard(); updateBack(); return; }          // one step back in the preferences process, same page
     if(stack.length <= 1){ syncGuard(); return; }                         // at the first page: the next Back leaves the app
     const top = stack[stack.length - 1], target = stack[stack.length - 2], snap = snaps[stack.length - 2];
     muteScreenWatcher = true;
@@ -16344,15 +16443,16 @@ updateBottomNav();
       nav.insertBefore(b, nav.firstChild); backBtns.push(b);
     }
     // (no floating button on a wide screen any more: it covered things and the browser's back does the same: Guy 2026-10-26)
-    backBtns.forEach(b => b.addEventListener('click', () => { if(stack.length > 1) history.back(); }));
+    backBtns.forEach(b => b.addEventListener('click', () => { if(canGoBack()) history.back(); }));
   }
   function updateBack(){
-    const can = rootSet && stack.length > 1;
+    const can = rootSet && canGoBack();
     backBtns.forEach(b => { b.hidden = !can; });
     const nav = el('bottom-nav'); if(nav) nav.classList.toggle('has-back', can);
   }
   makeBack(); updateBack();
-  window.navCanGoBack = () => rootSet && stack.length > 1;          // (for the checks)
+  window.navCanGoBack = () => rootSet && canGoBack();          // (for the checks)
+  window.navRefresh = () => { syncGuard(); updateBack(); };          // (a step of the preferences process changed: the page is the same, Back has more or less to do)
   window.navTrail = () => stack.slice();
 })();
 // ---------- KIDS QUICK ACCESS (הענקת כוכב / תכנית המסע בחלל / רמזור צהוב) ----------
