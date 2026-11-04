@@ -2241,8 +2241,8 @@
   --p-avoid:var(--color-warning); --p-avoid-bg:var(--color-warning-soft); --p-can:var(--color-info); --p-can-bg:var(--color-info-soft);
   color:var(--color-text); font-family:var(--font-body); font-size:16px; line-height:1.65;
 }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall).active .portal-shell[data-ptheme=dark]){ background:#1C1A17; transition:background-color var(--motion-fast, 200ms) cubic-bezier(.4, 0, .2, 1); }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall).active .portal-shell[data-ptheme=light]){ background:#FAF7F2; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats).active .portal-shell[data-ptheme=dark]){ background:#1C1A17; transition:background-color var(--motion-fast, 200ms) cubic-bezier(.4, 0, .2, 1); }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats).active .portal-shell[data-ptheme=light]){ background:#FAF7F2; }
 .portal-shell[data-ptheme]{ background:transparent; border-radius:0; padding:0 0 90px; margin:0; }
 #view-therapy .portal-shell{ max-width:1200px; }
 
@@ -2376,10 +2376,10 @@ body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall).active .por
 .therapy-shell[data-ptheme] .tm-state.bad{ color:var(--color-warning); }
 
 /* the "עבודה | סקירה" switch, and the review */
-:is(.therapy-shell, #view-oncall .portal-shell, #view-portal .portal-shell)[data-ptheme] .mx-seg{ display:inline-flex; padding:3px; gap:2px; border-radius:var(--radius-pill); background:var(--color-surface-alt); border:1px solid var(--color-border); align-self:flex-start; }
-:is(.therapy-shell, #view-oncall .portal-shell, #view-portal .portal-shell)[data-ptheme] .mx-seg button{ min-height:36px; padding:0 var(--space-4); border:0; border-radius:var(--radius-pill); background:transparent; color:var(--color-text-secondary); font-family:var(--font-body); font-size:15px; font-weight:600; cursor:pointer;
+:is(.therapy-shell, #view-oncall .portal-shell, #view-chats .portal-shell, #view-portal .portal-shell)[data-ptheme] .mx-seg{ display:inline-flex; padding:3px; gap:2px; border-radius:var(--radius-pill); background:var(--color-surface-alt); border:1px solid var(--color-border); align-self:flex-start; }
+:is(.therapy-shell, #view-oncall .portal-shell, #view-chats .portal-shell, #view-portal .portal-shell)[data-ptheme] .mx-seg button{ min-height:36px; padding:0 var(--space-4); border:0; border-radius:var(--radius-pill); background:transparent; color:var(--color-text-secondary); font-family:var(--font-body); font-size:15px; font-weight:600; cursor:pointer;
   transition:background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard); }
-:is(.therapy-shell, #view-oncall .portal-shell, #view-portal .portal-shell)[data-ptheme] .mx-seg button[aria-pressed=true]{ background:var(--color-surface); color:var(--color-text); box-shadow:var(--shadow-card); }
+:is(.therapy-shell, #view-oncall .portal-shell, #view-chats .portal-shell, #view-portal .portal-shell)[data-ptheme] .mx-seg button[aria-pressed=true]{ background:var(--color-surface); color:var(--color-text); box-shadow:var(--shadow-card); }
 .therapy-shell[data-ptheme] .tp-review{ display:flex; flex-direction:column; gap:var(--space-12); max-width:820px; }
 .therapy-shell[data-ptheme] .tp-review section{ display:flex; flex-direction:column; gap:var(--space-4); }
 .therapy-shell[data-ptheme] .tp-review h2{ font-size:22px; margin:0; } .therapy-shell[data-ptheme] .tp-review h3{ font-size:18px; margin:0; }
@@ -2438,7 +2438,7 @@ body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall).active .por
 .therapy-shell[data-ptheme] .tp-rv-print{ align-self:flex-start; }
 @media (min-width:1024px){ .therapy-shell[data-ptheme] .th-todo-list, .therapy-shell[data-ptheme] .tp-list{ max-width:840px; } }
 @media (max-width:767px){
-  :is(.therapy-shell, #view-oncall .portal-shell, #view-portal .portal-shell)[data-ptheme] .mx-seg button, .therapy-shell[data-ptheme] .tp-filter .th-chip, .therapy-shell[data-ptheme] .pfield > .th-tpl-btn, .therapy-shell[data-ptheme] .pfield > #tm-suggest{ min-height:44px; }
+  :is(.therapy-shell, #view-oncall .portal-shell, #view-chats .portal-shell, #view-portal .portal-shell)[data-ptheme] .mx-seg button, .therapy-shell[data-ptheme] .tp-filter .th-chip, .therapy-shell[data-ptheme] .pfield > .th-tpl-btn, .therapy-shell[data-ptheme] .pfield > #tm-suggest{ min-height:44px; }
   .therapy-shell[data-ptheme] .tp-steps li{ min-width:0; flex:1 1 0; font-size:0; padding:8px 0 0; }          /* (a phone: a progress bar, the name only on the step that is open) */
   .therapy-shell[data-ptheme] .tp-steps li.now{ flex:3 1 0; font-size:12px; }
 }
@@ -2588,14 +2588,14 @@ body:has(#view-apphome.active .mx-home[data-ptheme=light]){ background:#FAF7F2; 
 .mx-home .home-card-sub{ font-size:14px; color:var(--color-text-secondary); line-height:1.45; }
 .mx-home .apphome-demo{ color:var(--color-text-secondary); }
 /* the bottom bar ("בית", "חזור") and the floating "חזור" on a computer: the colours of the look that is open (Guy 2026-10-30) */
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme=dark]) :is(.bottom-nav, .nav-back-float){ background:#24211D; border-color:#3A362F; color:#A8A196; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme=light]) :is(.bottom-nav, .nav-back-float){ background:#FFFFFF; border-color:#E7E0D3; color:#6E675C; box-shadow:none; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme=dark]) :is(.bottom-nav, .nav-back-float){ background:#24211D; border-color:#3A362F; color:#A8A196; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme=light]) :is(.bottom-nav, .nav-back-float){ background:#FFFFFF; border-color:#E7E0D3; color:#6E675C; box-shadow:none; }
 body.leopard-bg:has(:is(#view-portal, #view-apphome).active [data-ptheme=leopard]) :is(.bottom-nav, .nav-back-float){ background:#22170E; border-color:#4A3420; color:#D3BD97; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme]) .bottom-nav{ -webkit-backdrop-filter:none; backdrop-filter:none; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme]) :is(.bottom-nav-btn, .nav-back-float){ font-family:'Assistant', Arial, sans-serif; font-weight:600; font-size:13px; color:inherit; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme]) .nav-back-float{ font-size:15px; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme=dark]) .bottom-nav-btn.active{ background:#2D3328; color:#E9E4DA; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme=light]) .bottom-nav-btn.active{ background:#E7ECE2; color:#2D2A24; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme]) .bottom-nav{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme]) :is(.bottom-nav-btn, .nav-back-float){ font-family:'Assistant', Arial, sans-serif; font-weight:600; font-size:13px; color:inherit; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme]) .nav-back-float{ font-size:15px; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme=dark]) .bottom-nav-btn.active{ background:#2D3328; color:#E9E4DA; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme=light]) .bottom-nav-btn.active{ background:#E7ECE2; color:#2D2A24; }
 body.leopard-bg:has(:is(#view-portal, #view-apphome).active [data-ptheme=leopard]) .bottom-nav-btn.active{ background:#352612; color:#F7ECD8; }
 /* the personal sign-in (14h srvLoginHtml): the same calm card, fields and one main button */
 body:has(#view-portal.active .mx-home[data-ptheme=dark]){ background:#1C1A17; }
@@ -2610,7 +2610,7 @@ body:has(#view-portal.active .mx-home[data-ptheme=light]){ background:#FAF7F2; }
 .mx-login .plogin-staff-link{ color:var(--color-link); }
 .mx-login .plogin-error{ color:var(--color-danger); }
 /* the לומדה's list (14zh): its own title row replaces the site's header, like the portals; the chosen buttons on the primary colour */
-#protected-app:has(:is(#view-learn, #view-oncall).active .portal-shell[data-ptheme]) > #shared-header, #protected-app:has(:is(#view-learn, #view-oncall).active .portal-shell[data-ptheme]) > #shared-logout-row{ display:none; }
+#protected-app:has(:is(#view-learn, #view-oncall, #view-chats).active .portal-shell[data-ptheme]) > #shared-header, #protected-app:has(:is(#view-learn, #view-oncall, #view-chats).active .portal-shell[data-ptheme]) > #shared-logout-row{ display:none; }
 .portal-shell[data-ptheme] .ln-ibtn[aria-pressed="true"]{ background:var(--color-primary); color:var(--color-on-primary); border-color:var(--color-primary); }
 .portal-shell[data-ptheme] .ln-card-btn:hover{ border-color:var(--color-border-strong); background:var(--color-surface); }
 /* the question in the middle of the screen (05 confirmSheet) and the short messages at the bottom (toast), in a staff area's look (Guy 2026-10-30: "ההודעות שקופצות עדיין בעיצוב הישן") */
@@ -2618,10 +2618,10 @@ body:has(#view-portal.active .mx-home[data-ptheme=light]){ background:#FAF7F2; }
 .mx-sheet .confirm-actions .btn{ min-height:48px; }
 .mx-sheet .confirm-ok.danger{ background:var(--color-danger); color:var(--color-surface); border-color:var(--color-danger); }
 .mx-sheet .confirm-ok.danger:hover{ background:var(--color-danger); opacity:.92; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme=dark]) .toast{ background:#2C2925; border-color:#4A453C; color:#E9E4DA; font-family:'Assistant', Arial, sans-serif; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme=light]) .toast{ background:#2D2A24; border-color:#2D2A24; color:#FAF7F2; font-family:'Assistant', Arial, sans-serif; box-shadow:0 8px 24px rgba(45, 42, 36, .18); }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme=dark]) .toast{ background:#2C2925; border-color:#4A453C; color:#E9E4DA; font-family:'Assistant', Arial, sans-serif; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme=light]) .toast{ background:#2D2A24; border-color:#2D2A24; color:#FAF7F2; font-family:'Assistant', Arial, sans-serif; box-shadow:0 8px 24px rgba(45, 42, 36, .18); }
 body.leopard-bg:has(:is(#view-portal, #view-apphome).active [data-ptheme=leopard]) .toast{ background:#2A1C10; border-color:#6A4B2C; color:#F7ECD8; font-family:'Assistant', Arial, sans-serif; }
-body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active [data-ptheme]) .toast-undo-btn{ font-family:'Assistant', Arial, sans-serif; font-weight:700; }
+body:has(:is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active [data-ptheme]) .toast-undo-btn{ font-family:'Assistant', Arial, sans-serif; font-weight:700; }
 /* "חודש | שבוע" above a month's calendar, and the week with ‹ › (14e mcalViewBarHtml, Guy 2026-11-03) */
 .mcal-viewbar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; margin:8px 0 12px; }
 .portal-shell[data-ptheme] .mcal-seg{ display:inline-flex; padding:3px; gap:2px; border-radius:var(--radius-pill); background:var(--color-surface-alt); border:1px solid var(--color-border); }
@@ -3339,6 +3339,7 @@ body[data-rlook=light] .kq-word{ color:#7A5A00 !important; }
   <section class="view" id="view-portal"></section>
   <section class="view" id="view-learn"></section>
   <section class="view" id="view-oncall"></section>
+  <section class="view" id="view-chats"></section>
   <section class="view" id="view-control"></section>
   <section class="view" id="view-therapy"></section>
 
@@ -4098,7 +4099,7 @@ function confirmSheet(opts){
     const wrap = document.createElement('div');
     wrap.className = 'sheet confirm-sheet';
     wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
-    { const mx = document.querySelector(':is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active :is(.portal-shell, .mx-home)[data-ptheme]'); if(mx){ wrap.classList.add('mx-sheet'); wrap.dataset.ptheme = mx.dataset.ptheme; } }          // (in a staff area the question wears its look: 20-mercury.css, Guy 2026-10-30)
+    { const mx = document.querySelector(':is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active :is(.portal-shell, .mx-home)[data-ptheme]'); if(mx){ wrap.classList.add('mx-sheet'); wrap.dataset.ptheme = mx.dataset.ptheme; } }          // (in a staff area the question wears its look: 20-mercury.css, Guy 2026-10-30)
     wrap.innerHTML = `<div class="sheet-card">
         <h2></h2><p class="confirm-text"></p>
         ${opts.typeWord ? '<input type="text" class="confirm-input" autocomplete="off" aria-label="אישור בהקלדה">' : ''}
@@ -7252,6 +7253,11 @@ function showAppHome(){
           <span class="home-card-title">כוננית סוף שבוע</span>
           <span class="home-card-sub">עובדי סוף השבוע, מוניות וסידור</span>
         </button>` : ''}
+        ${typeof chatsOwnScreen === 'function' && chatsOwnScreen() ? `<button type="button" class="home-card" id="apphome-chats">
+          <span class="apphome-emoji apphome-ico">${psIco('inbox')}</span>
+          <span class="home-card-title">שיחות</span>
+          <span class="home-card-sub">עם המנהלת, הרכזת והעובדות הסוציאליות</span>
+        </button>` : ''}
         ${portalServerOn && (portalMe() || {}).admin ? `<button type="button" class="home-card" id="apphome-learn">
           <span class="apphome-emoji apphome-ico">${psIco('play')}</span>
           <span class="home-card-title">לומדה</span>
@@ -7274,6 +7280,7 @@ function showAppHome(){
   });
   document.getElementById('apphome-ramzor').addEventListener('click', showHub);
   { const oc1 = document.getElementById('apphome-oncall'); if(oc1) oc1.addEventListener('click', () => showOncallScreen()); }
+  { const ch = document.getElementById('apphome-chats'); if(ch) ch.addEventListener('click', () => showChatsScreen()); }
   { const th = document.getElementById('apphome-therapy'); if(th) th.addEventListener('click', () => showTherapyPortal()); }          // (Mercury: the therapy portal, 14w-therapy-portal.js)
   if(document.getElementById('apphome-portal')) document.getElementById('apphome-portal').addEventListener('click', () => { portalUi.manager = false; if(portalServerOn) srvOpenPortal(); else if(typeof srvShowLogin === 'function' && sbPersonal && !window.__portalDemo) srvShowLogin('email'); else showPortal(); });          // (with the staff password: the personal sign-in, not a demo)
   { const ln = document.getElementById('apphome-learn'); if(ln) ln.addEventListener('click', showLearnHome); }          // (the admin's training videos, 14zh-learn.js)
@@ -7403,7 +7410,7 @@ function portalCtx(mk){
 function portalSheet(html){
   const wrap = document.createElement('div');
   wrap.className = 'sheet psheet'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
-  { const mx = document.querySelector(':is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-apphome).active :is(.portal-shell, .mx-home)[data-ptheme]'); if(mx){ wrap.classList.add('mx-sheet'); wrap.dataset.ptheme = mx.dataset.ptheme || 'dark'; } }          // (a sheet of a staff portal takes its look: 20-mercury.css)
+  { const mx = document.querySelector(':is(#view-portal, #view-therapy, #view-learn, #view-oncall, #view-chats, #view-apphome).active :is(.portal-shell, .mx-home)[data-ptheme]'); if(mx){ wrap.classList.add('mx-sheet'); wrap.dataset.ptheme = mx.dataset.ptheme || 'dark'; } }          // (a sheet of a staff portal takes its look: 20-mercury.css)
   wrap.innerHTML = `<div class="sheet-card">${html}</div>`;
   const close = () => wrap.remove();
   wrap.addEventListener('click', e => { if(e.target === wrap || e.target.closest('[data-close]')) close(); });
@@ -10427,7 +10434,7 @@ function srvRenderCoordSettings(body){
         <input type="email" dir="ltr" placeholder="מייל" value="${pEsc((priv[p.id] || {}).email || '')}" data-mail="${p.id}"><input type="tel" dir="ltr" placeholder="טלפון" value="${pEsc((priv[p.id] || {}).phone || '')}" data-phone="${p.id}">
         ${(priv[p.id] || {}).auth_user_id ? '<em class="pst pst-approved">מחובר/ת</em>' : `<button type="button" class="btn ghost small" data-login="${p.id}">יצירת התחברות</button>`}${p.active ? `<button type="button" class="btn ghost small" data-left="${p.id}">עזב/ה</button>` : `<em class="pst">לא פעיל/ה</em><button type="button" class="btn ghost small" data-back="${p.id}">החזרה</button>`}</div>`).join('')}
       <h3 class="psec">הוספת איש צוות</h3>
-      <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם (כפי שיוצג)"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option>${mercuryOn() && srv.profile && 'therapist' in srv.profile ? '<option value="therapist">איש/אשת טיפול</option>' : ''}${srv.meRow && srv.meRow.admin ? '<option value="manager">מנהלת מסגרת</option>' : ''}</select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
+      <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם (כפי שיוצג)"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option>${srv.profile && 'therapist' in srv.profile ? '<option value="therapist">איש/אשת טיפול</option>' : ''}${srv.meRow && srv.meRow.admin ? '<option value="manager">מנהלת מסגרת</option>' : ''}</select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
       const wire = box => {
         box.querySelectorAll('[data-simple]').forEach(b => b.addEventListener('click', () => simplePrefsSheet(b.dataset.simple, again)));
         box.querySelectorAll('[data-oc-grant]').forEach(b => b.addEventListener('click', () => oncallGrantSheet(b.dataset.ocGrant)));          // (the admin: may this social worker add / remove instructors in the weekend shifts? scheduling-v50.sql)          // (the admin only: "שבוע אחרי שבוע" / "בלי צבעים" for somebody, Guy 2026-10-30)
@@ -12561,7 +12568,8 @@ function thpTabs(){
   const t = [];
   if(thp.mode === 'therapist'){
     t.push(['todo', 'משימות']);
-    if(isTherapistMe() || (srv.profile && srv.profile.admin)) t.push(['diary', 'יומן הילדים'], ['chats', 'שיחות']);          // (the social workers' urgent areas: Guy 2026-11-03; 14zl, 14zm)
+    if(isTherapistMe() || (srv.profile && srv.profile.admin)) t.push(['diary', 'יומן הילדים']);
+    if(!(typeof chatsOwnScreen === 'function' && chatsOwnScreen())) t.push(['chats', 'שיחות']);          // (the social workers have them as a card on the first screen)          // (the social workers' urgent areas: Guy 2026-11-03; 14zl, 14zm)
     t.push(['mine', 'הילדים שלי']);
     if(thp.v32) t.push(['plans', 'תוכניות טיפוליות']);          // (the plans, one goal at a time: 14zf)
     t.push(['kids', 'כל הילדים']);          // (every child as the staff sees it, read only: Mercury decision 87)
@@ -15953,6 +15961,16 @@ const oc = { key:null, week:null, monthView:false, data:null, busy:false, view:'
 const ocAllowed = () => typeof portalServerOn !== 'undefined' && portalServerOn && !portalUi.viewAs && !!((srv.meRow && (['coordinator', 'manager'].includes(srv.meRow.role) || srv.meRow.admin)) || (srv.profile && (srv.profile.admin || srv.profile.therapist || srv.profile.kind === 'therapist')));
 const ocPhone = () => { try { return matchMedia('(max-width:700px)').matches; } catch(e){ return false; } };
 // its own screen, a card of the first screen beside the portals, not inside any of them (Guy 2026-11-04)
+// the social workers' conversations: a card of their own, so that they do not hang on the therapy portal, which is not part of the coming live version (Guy 2026-11-04)
+const chatsOwnScreen = () => typeof portalServerOn !== 'undefined' && portalServerOn && !portalUi.viewAs && !!(srv.profile && (srv.profile.therapist || srv.profile.kind === 'therapist')) && !(srv.meRow && (['coordinator', 'manager'].includes(srv.meRow.role) || srv.meRow.admin));
+function showChatsScreen(){
+  document.body.classList.remove('leopard-bg');
+  portalActivateView('view-chats');
+  let look = 'dark'; try { look = (srv.portalTheme && srv.portalTheme !== 'leopard' ? srv.portalTheme : portalLoad().settings.theme) || 'dark'; } catch(e){}
+  document.getElementById('view-chats').innerHTML = `<div class="portal-shell" data-ptheme="${pEsc(look)}"><div class="portal-top"><button type="button" class="back-btn portal-back" id="chats-home-back">→ מסך ראשי</button><h1 class="portal-title">שיחות</h1><span class="portal-top-actions"></span></div><div id="chats-screen"></div></div>`;
+  document.getElementById('chats-home-back').addEventListener('click', () => { if(personalRamzorKind()) showAppHome(); else srvOpenPortal(); });
+  mgrChats(document.getElementById('chats-screen'));
+}
 function showOncallScreen(as){          // (as: the manager looks at a social worker's screen, nothing can be changed)
   document.body.classList.remove('leopard-bg');
   portalActivateView('view-oncall');
@@ -16782,7 +16800,7 @@ updateBottomNav();
     }
     if(v.id === 'view-portal' && portalOn()) return `portal:${portalUi.tab || ''}|${portalUi.viewAs || ''}${portalUi.actAs ? 'a' : ''}${portalUi.editPrefs ? 'e' : ''}${portalUi.manager ? 'm' : ''}${portalUi.prefsPast ? 'p' : ''}`;
     if(v.id === 'view-therapy' && typeof thp !== 'undefined') return `therapy:${thp.mode}|${thp.tab || ''}|${thp.editing || ''}|${thp.editing ? thp.wtab || '' : ''}`;
-    return ({ 'view-manage':'manage', 'view-display':'display', 'view-apphome':'apphome', 'view-control':'control', 'view-learn':'learn', 'view-oncall':'oncall' })[v.id] || 'hub';
+    return ({ 'view-manage':'manage', 'view-display':'display', 'view-apphome':'apphome', 'view-control':'control', 'view-learn':'learn', 'view-oncall':'oncall', 'view-chats':'chats' })[v.id] || 'hub';
   }
   function snapshot(key){
     if(key.startsWith('portal:')) return { tab:portalUi.tab, viewAs:portalUi.viewAs || null, actAs:!!portalUi.actAs, editPrefs:!!portalUi.editPrefs, manager:!!portalUi.manager, persona:portalUi.persona, prefsPast:!!portalUi.prefsPast };
@@ -16812,6 +16830,7 @@ updateBottomNav();
     if(key === 'control' && typeof showControl === 'function') return showControl();
     if(key === 'learn' && typeof showLearnHome === 'function') return showLearnHome();
     if(key === 'oncall' && typeof showOncallScreen === 'function') return showOncallScreen();
+    if(key === 'chats' && typeof showChatsScreen === 'function') return showChatsScreen();
     if(key.startsWith('portal:') && snap){
       if(portalUi.editPrefs && !snap.editPrefs && typeof srvFlush === 'function'){ clearTimeout(srv.timer); await srvFlush(); }          // (what was filled for somebody is saved before leaving)
       const wasEditing = !!portalUi.editPrefs;
