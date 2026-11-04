@@ -2831,6 +2831,23 @@ body:has(:is(#view-portal, #view-therapy, #view-learn, #view-apphome).active [da
 .oc-d-lbl::after{ content:none !important; }
 .oc-d-more{ margin-inline-start:auto; display:inline-flex; align-items:center; gap:4px; min-height:34px; padding:4px 10px; border-radius:999px; border:1px dashed var(--color-border-strong, var(--p-line)); color:var(--color-text-secondary, var(--p-muted)); font-size:.85em; max-width:100%; }
 .oc-d[open] .oc-d-more i{ display:inline-block; transform:rotate(180deg); }
+/* "בקרת ילדים": today's bonuses, and by each one who lost it today (Guy 2026-11-04) */
+.kq-bonus-today{ margin-top:6px; border:1px solid var(--line); border-radius:12px; padding:6px 10px; }
+.kq-bonus-today summary{ cursor:pointer; font-weight:700; min-height:36px; display:flex; align-items:center; }
+.kq-bt-row{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; padding:6px 0; border-top:1px solid var(--line); }
+.kq-bt-row.now .kq-bt-text{ font-weight:800; }
+.kq-bt-row .bb-icon{ font-size:20px; } .kq-bt-text{ flex:1; }
+.kq-bt-out{ flex-basis:100%; font-size:13px; color:var(--yellow, #e0b000); display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+.kq-bt-note{ display:block; margin-top:4px; opacity:.7; }
+/* the timetable editor: the start and the end of an activity side by side (Guy 2026-11-04) */
+.ctl-tt-times{ display:inline-flex; align-items:center; gap:2px; flex-wrap:wrap; }
+.ctl-tt-dash{ opacity:.6; padding:0 2px; }
+@media (max-width:520px){ .ctl-tt-row{ grid-template-columns:1fr 46px auto; } .ctl-tt-row .ctl-tt-times{ grid-column:1 / -1; } }
+/* the ahmash control: the children's diary of today, to read only */
+.ctl-dg-seg{ margin:4px 0 10px; }
+.ctl-dg-row{ display:grid; grid-template-columns:96px minmax(0, 1fr); gap:10px; padding:8px 0; border-top:1px solid var(--line); }
+.ctl-dg-time{ font-weight:700; } .ctl-dg-what small{ display:block; opacity:.8; }
+.ctl-dg-note{ margin-top:8px; }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -3192,6 +3209,7 @@ body[data-rlook] .bottom-nav-btn.active{ background:var(--color-primary-soft); c
         </div>
         <div style="display:flex; flex-direction:column; gap:8px; padding-inline-start:50px;">
           <button class="btn ghost" id="kq-revoke-bonus-btn">🍬 גריעת בונוס</button>
+          <div id="kq-bonus-today"></div>
         </div>
         <div style="display:flex; flex-direction:column; gap:8px; padding-inline-start:50px; margin-top:24px;">
           <button class="btn ghost" id="kq-observe-btn">📝 תצפית לאיש/אשת הטיפול</button>
@@ -3675,12 +3693,25 @@ function nextBonusesToRevoke(list, revokedIds, now){
   if(later.length){ const first = Math.min(...later.map(b => toMin(b.startTime))); return later.filter(b => toMin(b.startTime) === first); }
   return [left.find(b => !(b.startTime && b.endTime)) || left[left.length - 1]];
 }
-const BONUS_REVOCATION_HOURS = 5;
+// a revocation holds for the bonus of that day only: until 22:00 of the day it was made (Israel time), and one made after 22:00 until 22:00 the next day.
+// The next day the child is entitled again by itself; the history stays (Guy, BONUSES-SPEC and 2026-11-04).
+const BONUS_REVOCATION_END = '22:00';
+function bonusRevocationEnds(at){
+  const il = d => { const o = {}; new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Jerusalem', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' }).formatToParts(d).forEach(p => { o[p.type] = p.value; }); return o; };
+  const t = il(new Date(at)), [eh, em] = BONUS_REVOCATION_END.split(':').map(Number), mins = Number(t.hour) * 60 + Number(t.minute);
+  const day = `${t.year}-${t.month}-${t.day}`;
+  return mins < eh * 60 + em ? day : addDays(day, 1);          // (the Israel day whose 22:00 ends it)
+}
+function bonusRevocationActive(r, now){
+  const t = (now || new Date()), o = {}; new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Jerusalem', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' }).formatToParts(t).forEach(p => { o[p.type] = p.value; });
+  const today = `${o.year}-${o.month}-${o.day}`, end = bonusRevocationEnds(r.revoked_at), [eh, em] = BONUS_REVOCATION_END.split(':').map(Number);
+  return today < end || (today === end && Number(o.hour) * 60 + Number(o.minute) < eh * 60 + em);
+}
 async function getActiveBonusRevocations(){
-  const since = new Date(Date.now() - BONUS_REVOCATION_HOURS*60*60*1000).toISOString();
+  const since = new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString();          // (long enough for any that may still hold)
   const { data, error } = await sb.from('bonus_revocations').select('*').gte('revoked_at', since);
   if(error){ console.error(error); return []; }
-  return data;
+  return (data || []).filter(r => bonusRevocationActive(r));
 }
 // returns the new revocation (so it can be taken back), or null when it was not saved
 async function revokeBonus(childId, bonusId){
@@ -5925,8 +5956,7 @@ function bonusBoardSection(title, list, revocationsByBonus){
     <h3 style="font-family:'Rubik'; font-size:14px; color:var(--gold); margin:0 0 8px;">${title}</h3>
     <div class="bonus-board-grid" style="margin-bottom:18px;">
       ${list.map(b => {
-        const revoked = revocationsByBonus[b.id];
-        const revokedHtml = revoked && revoked.length ? `<span class="bonus-revoked-names">לא היום: ${revoked.join(' ')}</span>` : '';
+        const revokedHtml = '';          // (who lost a bonus is shown on the staff's phones only, never on the kids' screen: BONUSES-SPEC)
         const activeClass = isBonusTimeActive(b) ? ' bonus-active' : '';
         return `<div class="bonus-board-item${activeClass}"><span class="bb-icon">${bonusIcon(b)}</span><span class="bb-body"><span class="bb-text">${b.text}</span>${revokedHtml}</span></div>`;
       }).join('')}
@@ -5938,7 +5968,7 @@ async function renderBonusesSlide(){
   const todayDaily = bonusesForToday(bonusesDaily, false);
   const todayWeekly = bonusesForToday(bonusesWeekly, true);
   if(!todayDaily.length && !todayWeekly.length){ el.innerHTML = '<div class="empty">אין בונוסים מוגדרים להיום</div>'; return; }
-  const revocationsByBonus = groupRevocationsByBonus(await getActiveBonusRevocations());
+  const revocationsByBonus = {};          // (the kids' screen does not even read who lost a bonus: BONUSES-SPEC)
   // few bonuses are shown big in one column; more than 4 switch to two columns so they all fit on the screen
   el.dataset.layout = (todayDaily.length + todayWeekly.length) > 4 ? 'two' : 'one';
   el.innerHTML = bonusBoardSection('יומיים', todayDaily, revocationsByBonus) + bonusBoardSection('שבועיים', todayWeekly, revocationsByBonus);
@@ -6109,13 +6139,8 @@ function startFeedbackListener(){
     else if(!feedbackSince) feedbackSince = new Date(0).toISOString();
   }, () => {});
   clearInterval(feedbackCatchUp); feedbackCatchUp = setInterval(catchUpFeedback, 8000);
-  bonusRevocationChannel = sb.channel('bonus_revocations_live')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bonus_revocations' }, () => {
-      // client decided (2026-10-02) revocation SHOULD interrupt the carousel too, same as the celebratory
-      // star/moon/mercury events — no banner/sound though, just jump to the bonuses board and refresh it
-      interruptToSlide(EVENT_TYPE_SLIDE.bonus, renderBonusesSlide);
-    })
-    .subscribe();
+  // (a revocation no longer reaches the kids' screen at all — no jump to the bonuses board, no data: BONUSES-SPEC, Guy 2026-11-04;
+  //  the jump of 2026-10-02 showed the names, which are now on the staff's phones only)
 }
 function stopFeedbackListener(){
   const c = feedbackClient || sb;          // (the connection it was opened on: this device may have signed in or out since)
@@ -8273,7 +8298,7 @@ async function srvSubmit(mk, note, goal){
 function srvTabs(me){
   if(srvEditingFor()) return me.role === 'service' ? [['avail', 'זמינות']] : [['prefs', 'העדפות']];          // (filling for somebody: only that tab — a service girl's availability, an instructor's preferences)
   if(portalAsCoord(me)){
-    const all = [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['oncall', 'כוננית'], ['chats', 'שיחות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);
+    const all = [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['oncall', 'כוננית'], ['diary', 'יומן הילדים'], ['chats', 'שיחות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);
     const phone = (() => { try { return matchMedia('(max-width:700px)').matches; } catch(e){ return false; } })();
     return phone ? all.filter(t => ['schedule', 'submissions', 'swaps', 'oncall'].includes(t[0])) : all;          // (on a phone: סידור, הגשות, החלפות, כוננית only — the rest on the computer: Guy 2026-11-03)
   }          // (the admin: one more tab, 14s-portal-admin.js)
@@ -8303,6 +8328,7 @@ function srvRenderTab(me, body, t){
     if(t === 'vacations') return srvRenderCoordVacations(body);
     if(t === 'oncall') return renderOncall(body);          // (the weekend on-call panel, shared with the social workers: 14zl)
     if(t === 'chats') return mgrChats(body);          // (the conversations with the manager and the social workers: 14zn)
+    if(t === 'diary') return renderDiary(body);          // (the children's diary: every child, Guy 2026-11-04 — 14zm, scheduling-v57.sql)
     if(t === 'settings') return srvRenderCoordSettings(body);
     return srvRenderCoordSchedule(body);
   }
@@ -10838,6 +10864,7 @@ function renderControl(){
     <div class="ctl-top"><button type="button" class="back-btn" id="ctl-back">→ חזרה</button><h1 class="ctl-title">בקרת אחמ"ש</h1><div class="ctl-date">${dayLabel(today)}</div></div>
     ${fold('shifts', 'מי מוצג היום במסך הילדים', 'רק במסך הילדים, ורק להיום')}
     ${fold('tt', 'הלו"ז של היום')}
+    ${fold('diary', 'יומן הילדים היום', 'יציאות, שיחות ופגישות')}
     ${fold('bonus', 'בונוסים היום')}
     ${fold('duties', 'לוח התורנויות')}
     ${fold('log', 'יומן שינויים')}
@@ -10851,6 +10878,7 @@ async function ctlFill(id){
   try {
     if(id === 'shifts') await ctlShifts(box);
     if(id === 'tt') await ctlTimetable(box);
+    if(id === 'diary') await ctlDiary(box);
     if(id === 'bonus') await ctlBonuses(box);
     if(id === 'duties') await ctlDuties(box);
     if(id === 'log') await ctlLog(box);
@@ -10913,17 +10941,17 @@ async function ctlTimetable(box){
   ctlTimetableDraw(box);
 }
 // the hour of an activity: two short lists, the hours 00–23 and the minutes (a time box would show AM/PM on a phone set that way: Guy 2026-11-03)
-function ttTimeHtml(t, i){
+function ttTimeHtml(t, i, end){          // (end: the hour it ends — Guy 2026-11-04, SCHEDULE-SPEC: every activity has a start and an end)
   const [h, m] = String(t || '').split(':'), mins = Array.from({ length:12 }, (_, k) => String(k * 5).padStart(2, '0'));
   if(m && !mins.includes(m)){ mins.push(m); mins.sort(); }          // (an hour kept before, not on the 5 minutes, stays as it was)
-  return `<span class="ctl-tt-time" data-tt-time="${i}" dir="ltr"><select data-tt-h aria-label="שעה"><option value="">--</option>${Array.from({ length:24 }, (_, k) => String(k).padStart(2, '0')).map(x => `<option${x === h ? ' selected' : ''}>${x}</option>`).join('')}</select>:<select data-tt-m aria-label="דקות">${mins.map(x => `<option${x === (m || '00') ? ' selected' : ''}>${x}</option>`).join('')}</select></span>`;
+  return `<span class="ctl-tt-time" ${end ? 'data-tt-end' : 'data-tt-time'}="${i}" dir="ltr"><select data-tt-h aria-label="${end ? 'שעת סיום' : 'שעת התחלה'}"><option value="">${end ? 'סיום' : '--'}</option>${Array.from({ length:24 }, (_, k) => String(k).padStart(2, '0')).map(x => `<option${x === h ? ' selected' : ''}>${x}</option>`).join('')}</select>:<select data-tt-m aria-label="דקות">${mins.map(x => `<option${x === (m || '00') ? ' selected' : ''}>${x}</option>`).join('')}</select></span>`;
 }
 const ttTimeOf = el => { const h = el.querySelector('[data-tt-h]').value; return h ? h + ':' + el.querySelector('[data-tt-m]').value : ''; };
 function ctlTimetableDraw(box){
   const tt = ctl.tt, coord = ctlIsCoord(), fixedDay = ctl.ttFixedDay;
   const editing = fixedDay != null ? ctl.ttFixed : ctl.ttEdit;
   const rows = editing.items.map((x, i) => `<div class="ctl-tt-row" data-row="${i}">
-      ${ttTimeHtml(x.t, i)}
+      <span class="ctl-tt-times">${ttTimeHtml(x.t, i)}<span class="ctl-tt-dash" aria-hidden="true">–</span>${ttTimeHtml(x.end, i, true)}</span>
       <button type="button" class="ctl-tt-icon" data-tt-icon="${i}" title="${pEsc(ttIcon(x.i)[1])}">${ttIcon(x.i)[2]}</button>
       <input type="text" value="${pEsc(x.n || '')}" data-tt-name="${i}" placeholder="שם הפעילות" maxlength="40">
       <button type="button" class="ctl-x" data-tt-del="${i}" aria-label="מחיקה">✕</button></div>`).join('');
@@ -10936,7 +10964,7 @@ function ctlTimetableDraw(box){
       ? `<button type="button" class="btn" id="tt-save">שמירה להיום</button>${tt.changed ? '<button type="button" class="btn ghost" id="tt-reset">חזרה ללו"ז הקבוע</button>' : ''}${coord ? `<button type="button" class="btn ghost" id="tt-save-fixed">שמירה גם כקבוע של יום ${WEEKDAY_NAMES[tt.weekday]}</button>` : ''}`
       : `<button type="button" class="btn" id="tt-fixed-save">שמירת הלו"ז הקבוע</button><button type="button" class="btn ghost" id="tt-fixed-close">חזרה להיום</button>`}</div>
     ${coord && fixedDay == null ? `<div class="ctl-fixed-pick"><span>עריכת הלו"ז הקבוע של:</span>${WEEKDAY_NAMES.map((n, i) => `<button type="button" class="btn ghost small" data-fixed="${i}">${n}</button>`).join('')}</div>` : ''}`;
-  const sync = () => box.querySelectorAll('[data-row]').forEach(row => { const i = +row.dataset.row; editing.items[i].t = ttTimeOf(row.querySelector('[data-tt-time]')); editing.items[i].n = row.querySelector('[data-tt-name]').value.trim(); });
+  const sync = () => box.querySelectorAll('[data-row]').forEach(row => { const i = +row.dataset.row; editing.items[i].t = ttTimeOf(row.querySelector('[data-tt-time]')); editing.items[i].end = ttTimeOf(row.querySelector('[data-tt-end]')); editing.items[i].n = row.querySelector('[data-tt-name]').value.trim(); });
   // a changed hour: the activity glides to its place in the day, and the others make room (Guy 2026-11-03)
   box.querySelectorAll('[data-tt-time] select').forEach(sel => sel.addEventListener('change', () => {
     sync();
@@ -10952,7 +10980,7 @@ function ctlTimetableDraw(box){
       if(d && r.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) r.animate([{ transform:`translateY(${d}px)` }, { transform:'none' }], { duration:450, easing:'cubic-bezier(.2,.8,.2,1)' });
     });
   }));
-  const clean = () => { sync(); return editing.items.filter(x => x.t && x.n).sort((a, b) => a.t.localeCompare(b.t)).map(x => ({ t:x.t, n:x.n, i:x.i || 'other' })); };
+  const clean = () => { sync(); return editing.items.filter(x => x.t && x.n).sort((a, b) => a.t.localeCompare(b.t)).map(x => Object.assign({ t:x.t, n:x.n, i:x.i || 'other' }, x.end && x.end > x.t ? { end:x.end } : {})); };          // (an end before the start is left out)
   box.querySelectorAll('[data-tt-del]').forEach(b => b.addEventListener('click', () => { sync(); editing.items.splice(+b.dataset.ttDel, 1); ctlTimetableDraw(box); }));
   box.querySelector('#tt-add').addEventListener('click', () => { sync(); editing.items.push({ t:'', n:'', i:'other' }); ctlTimetableDraw(box); const last = box.querySelector('.ctl-tt-row:last-child [data-tt-h]'); if(last) last.focus(); });
   box.querySelectorAll('[data-tt-icon]').forEach(b => b.addEventListener('click', () => {
@@ -10980,6 +11008,29 @@ function ctlTimetableDraw(box){
   on('tt-fixed-close', () => { ctl.ttFixedDay = null; ctlTimetableDraw(box); });
 }
 
+// ---- 2b. the children's diary of today, to read only (Guy 2026-11-04; SCHEDULE-SPEC update of 02.11): the outings, calls and meetings that
+// should happen — straight from the social workers' diary (scheduling-v57.sql: diary_for_control), never its technical note, nothing to change.
+// The whole day, and "רק המשמרת שלי": by the clock's shift (an event with no hour belongs to the morning)
+const CTL_SHIFT_SPAN = { M:['07:00', '15:00'], A:['14:00', '22:00'], N:['22:00', '32:00'] };
+async function ctlDiary(box){
+  const day = ctlToday(), r = await sb.rpc('diary_for_control', { p_day:day });
+  if(r.error){ box.innerHTML = '<div class="pnote">היומן עוד לא זמין כאן (חסר עדכון במסד: scheduling-v57.sql).</div>'; return; }
+  const rows = r.data || [], skips = rows.filter(x => x.skipped).map(x => ({ event_id:x.id, day }));
+  const occ = typeof dgOccurrences === 'function' ? dgOccurrences(rows, skips, day, day) : [];
+  const n = nowMin(), cur = n >= hm('22:00') || n < hm('07:00') ? 'N' : n >= hm('14:00') ? 'A' : 'M', [a, b] = CTL_SHIFT_SPAN[cur].map(hm);
+  const inShift = o => { const e = o.e, t = e.start_time ? hm(String(e.start_time).slice(0, 5)) : null, back = e.kind === 'outing' && e.return_day === day && e.return_time ? hm(String(e.return_time).slice(0, 5)) : null;
+    const fit = x => x !== null && ((x >= a && x < b) || (cur === 'N' && x + 24 * 60 >= a && x + 24 * 60 < b));
+    return t === null ? cur === 'M' : fit(t) || fit(back); };
+  const list = ctl.diaryMine ? occ.filter(inShift) : occ;
+  const nm = id => { const c = (typeof roster !== 'undefined' ? roster : []).find(x => x.id === id); return c ? displayName(c) : '?'; };
+  const T = x => x ? String(x).slice(0, 5) : '';
+  box.innerHTML = `<div class="mx-seg ctl-dg-seg" role="group" aria-label="מה להציג"><button type="button" data-cdg="all" aria-pressed="${!ctl.diaryMine}">כל היום</button><button type="button" data-cdg="mine" aria-pressed="${!!ctl.diaryMine}">רק המשמרת שלי</button></div>
+    ${list.length ? `<div class="ctl-dg">${list.map(o => { const e = o.e, k = (typeof DG_KIND !== 'undefined' && DG_KIND[e.kind]) || ['', ''];
+      return `<div class="ctl-dg-row"><span class="ctl-dg-time"><bdi dir="ltr">${e.start_time ? T(e.start_time) + (e.end_time ? '–' + T(e.end_time) : '') : 'בלי שעה'}</bdi></span><span class="ctl-dg-what"><b class="ar-keep">${escapeHtml(nm(e.child_id))}</b> · ${k[1]} ${escapeHtml(e.kind === 'other' && e.kind_text ? e.kind_text : k[0])}${e.with_whom ? ` עם ${escapeHtml(e.with_whom)}` : ''}${e.place ? ` · ${escapeHtml(e.place)}` : ''}${e.kind === 'outing' && e.return_day ? `<small>חזרה ${e.return_day === day ? 'היום' : dayLabel(e.return_day)}${e.return_time ? ' ב-' + T(e.return_time) : ''}</small>` : ''}</span></div>`; }).join('')}</div>`
+      : `<div class="pnote">${ctl.diaryMine ? 'אין אירועים במשמרת הזו.' : 'אין אירועים היום.'}</div>`}
+    <div class="pnote ctl-dg-note">לקריאה בלבד. העו"סית האחראית מעדכנת את היומן.</div>`;
+  box.querySelectorAll('[data-cdg]').forEach(x => x.addEventListener('click', () => { ctl.diaryMine = x.dataset.cdg === 'mine'; ctlDiary(box); }));
+}
 // ---- 3. today's bonuses: hide one for today, add a special one with hours; the coordinator can make a special one permanent or delete a permanent one
 async function ctlBonuses(box){
   await loadBonusDay();
@@ -11142,11 +11193,14 @@ function renderShiftsLive(){
 function renderTimetableLive(){
   const el = document.getElementById('tv-timetable'), list = (tvTimetable && tvTimetable.items) || [];
   if(!list.length){ el.innerHTML = '<div class="empty">אין לו"ז להיום</div>'; return; }
-  const n = nowMin(); let current = -1; list.forEach((a, i) => { if(hm(a.t) <= n) current = i; });
+  // "now" by the hours (Guy 2026-11-04, SCHEDULE-SPEC): from its start to its end — or, with no end written, to the next activity that starts later;
+  // two activities at the same time (different groups) are both "now"
+  const n = nowMin(), endOf = (a, i) => a.end ? hm(a.end) : (() => { const nx = list.slice(i + 1).find(b => hm(b.t) > hm(a.t)); return nx ? hm(nx.t) : hm(a.t) + 60; })();
+  const phase = (a, i) => n >= hm(a.t) && n < endOf(a, i) ? ' now' : n >= endOf(a, i) ? ' past' : '';
   el.className = 'tv-timetable tvt2';
   el.style.setProperty('--tvt-cols', list.length > 8 ? 6 : list.length > 4 ? 4 : list.length);
-  el.innerHTML = `${tvTimetable.title ? `<div class="tvt2-title">${escapeHtml(tvTimetable.title)}</div>` : ''}<div class="tvt2-grid">${list.map((a, i) => `<div class="tvt2-item${i === current ? ' now' : i < current ? ' past' : ''}">
-      <div class="tvt2-time">${escapeHtml(a.t)}</div><div class="tvt2-icon">${ttArt(a.i)}</div><div class="tvt2-name">${escapeHtml(a.n)}</div></div>`).join('')}</div>`;
+  el.innerHTML = `${tvTimetable.title ? `<div class="tvt2-title">${escapeHtml(tvTimetable.title)}</div>` : ''}<div class="tvt2-grid">${list.map((a, i) => `<div class="tvt2-item${phase(a, i)}">
+      <div class="tvt2-time"><bdi dir="ltr">${escapeHtml(a.t)}${a.end ? '–' + escapeHtml(a.end) : ''}</bdi></div><div class="tvt2-icon">${ttArt(a.i)}</div><div class="tvt2-name">${escapeHtml(a.n)}</div></div>`).join('')}</div>`;
 }
 // the picture of an activity (the drawings of 14p-timetable-art.js when there is one, else the emoji)
 const ttArt = id => (typeof TT_ART !== 'undefined' && TT_ART[id]) || `<span class="tvt2-emoji">${ttIcon(id)[2]}</span>`;
@@ -11160,14 +11214,14 @@ function tvQuietNow(){
   if(n >= hm('19:30') || n < hm('05:30')) return 'night';
   return null;
 }
-// the morning: the whole sequence at once — getting ready (three steps), and only then breakfast, apart (a sandwich; cornflakes on Saturday).
+// the morning: the whole sequence at once — getting ready (washing the face with the teeth first, Guy 2026-11-04; dressing; shoes), and only then breakfast, apart (a sandwich; cornflakes on Saturday).
 // An order to see, without reading: no tracking, no locking, nothing to press.
 const TV_QUIET_HTML = {
   night:() => `<div class="tvq tvq-night"><div class="tvq-stars" aria-hidden="true">${Array.from({ length:40 }, (_, i) => `<i style="left:${(i * 47) % 100}%; top:${(i * 29) % 100}%; animation-delay:${(i % 7) * -0.6}s"></i>`).join('')}</div>
       <div class="tvq-moon" aria-hidden="true">🌙</div><div class="tvq-title">לילה טוב</div><div class="tvq-row" aria-hidden="true">😴 🧸 ⭐ 💤</div></div>`,
   morning:sat => `<div class="tvq tvq-morning"><div class="tvq-sun" aria-hidden="true">🌞</div><div class="tvq-title">בוקר טוב!</div>
       <div class="tvq-flow">
-        <div class="tvq-steps tvq-ready"><div><b>1</b><span>👕</span>מתלבשים</div><div><b>2</b><span>🦷</span>מצחצחים שיניים</div><div><b>3</b><span>👟</span>נועלים נעליים</div></div>
+        <div class="tvq-steps tvq-ready"><div><b>1</b><span>💦🦷</span>שוטפים פנים ומצחצחים שיניים</div><div><b>2</b><span>👕</span>מתלבשים</div><div><b>3</b><span>👟</span>נועלים נעליים</div></div>
         <div class="tvq-then"><span aria-hidden="true">⬅</span>ואז</div>
         <div class="tvq-steps tvq-eat"><div><span>${sat ? '🥣' : '🥪'}</span>ארוחת בוקר<small>${sat ? 'קורנפלקס' : 'סנדוויץ\''}</small></div></div>
       </div></div>`
@@ -15648,7 +15702,7 @@ function dgOccurrences(events, skips, from, to){
   });
   return out.sort((a, b) => (a.day + (dgT(a.e.start_time) || '00:00')).localeCompare(b.day + (dgT(b.e.start_time) || '00:00')));
 }
-const dgKids = () => (typeof thpScope === 'function' ? thpScope() : []);
+const dgKids = () => (document.querySelector('#view-therapy.active') && typeof thpScope === 'function' ? thpScope() : typeof roster !== 'undefined' ? roster : []);          // (the social worker: her children; the coordinator: every child — scheduling-v57.sql)
 const dgName = id => { const c = (typeof roster !== 'undefined' ? roster : []).find(x => x.id === id); return c ? displayName(c) : '?'; };
 function dgLineHtml(o, readOnly){          // (read only: the manager's sheet — no button, no bin)
   const e = o.e, k = DG_KIND[e.kind] || ['', ''], tag = readOnly ? 'div' : 'button', time = e.start_time ? `${dgT(e.start_time)}${e.end_time ? '–' + dgT(e.end_time) : ''}` : 'בלי שעה';
@@ -15658,6 +15712,7 @@ function dgLineHtml(o, readOnly){          // (read only: the manager's sheet �
 async function renderDiary(box){
   if(!box || !box.isConnected) return;
   if(!box.querySelector('.dg')) box.innerHTML = '<div class="pnote">רק רגע...</div>';
+  if(!dgKids().length && typeof mgrKids === 'function') await mgrKids();          // (the coordinator's portal: the children's list read with her own sign-in)
   const [ev, sk] = await Promise.all([sbPersonal.from('child_diary').select('*'), sbPersonal.from('child_diary_skip').select('*')]);
   if(!box.isConnected) return;
   if(ev.error){ box.innerHTML = '<div class="pstatus bad">היומן עוד לא זמין כאן (חסר עדכון במסד: scheduling-v51.sql).</div>'; return; }
@@ -15794,7 +15849,7 @@ async function mgrHome(body){
       ${m.published ? monthCalHtml(portalCtx(mk), m.assignments, { week:wk, rows:true, othersInCells:true }) : '<div class="pnote">הסידור של החודש עוד לא פורסם.</div>'}
     </div></details>
     <details class="pfold" data-fold="m-tt" open><summary><span>הלו"ז השבוע</span></summary><div class="pfold-body mgr-tt">
-      ${days.map(d => `<div class="mcal-wrow${d === isoDate(new Date()) ? ' today' : ''}"><div class="mcal-wrow-day"><b>${DOW_SHORT[dowOf(d)]}</b><span>${mgrShort(d)}</span></div><div class="mgr-tt-day">${ttOf(d).length ? ttOf(d).map(x => `<span class="mgr-tt-item"><bdi dir="ltr">${pEsc(x.t || '')}</bdi> ${pEsc(x.n || '')}</span>`).join('') : '<span class="pnote">—</span>'}</div></div>`).join('')}
+      ${days.map(d => `<div class="mcal-wrow${d === isoDate(new Date()) ? ' today' : ''}"><div class="mcal-wrow-day"><b>${DOW_SHORT[dowOf(d)]}</b><span>${mgrShort(d)}</span></div><div class="mgr-tt-day">${ttOf(d).length ? ttOf(d).map(x => `<span class="mgr-tt-item"><bdi dir="ltr">${pEsc(x.t || '')}${x.end ? '–' + pEsc(x.end) : ''}</bdi> ${pEsc(x.n || '')}</span>`).join('') : '<span class="pnote">—</span>'}</div></div>`).join('')}
     </div></details>`;
   body.querySelectorAll('[data-mw]').forEach(b => b.addEventListener('click', () => { mgr.week = addDays(mgrWeekStart(), +b.dataset.mw); const nm = monthKeyOf(mgr.week); if(nm !== portalUi.month){ portalUi.month = nm; } mgrHome(body); }));
   body.querySelectorAll('[data-mgo]').forEach(b => b.addEventListener('click', () => showPortal(b.dataset.mgo)));
@@ -16314,6 +16369,7 @@ const KIDS_QUICK_TITLES = {
 
 function kidsQuickShowColorPicker(){
   document.getElementById('kids-quick-pick-color').style.display = 'block';
+  kqBonusToday();
   document.getElementById('kids-quick-pick-child').style.display = 'none';
   document.getElementById('kids-quick-moon-panel').style.display = 'none';
   document.getElementById('kids-quick-yellow-intro').style.display = 'none';
@@ -16428,6 +16484,16 @@ document.getElementById('kq-pick-child-for-revoke-btn').addEventListener('click'
 });
 document.getElementById('kids-quick-yellow-list-back').addEventListener('click', ()=> kidsQuickShowChildPicker('yellow'));
 
+// today's bonuses on the staff's phone, and by each one who lost it today (until 22:00): the only place this is shown (Guy, BONUSES-SPEC, 2026-11-04)
+async function kqBonusToday(){
+  const box = document.getElementById('kq-bonus-today'); if(!box) return;
+  try { if(typeof loadBonusDay === 'function') await loadBonusDay(); } catch(e){}
+  const list = bonusesForToday(bonusesDaily, false).concat(bonusesForToday(bonusesWeekly, true));
+  if(!list.length){ box.innerHTML = ''; return; }
+  const by = groupRevocationsByBonus(await getActiveBonusRevocations());
+  const n = Object.values(by).reduce((t, l) => t + l.length, 0);
+  box.innerHTML = `<details class="kq-bonus-today"><summary>🍬 הבונוסים של היום${n ? ` · ${n} נגרעו` : ''}</summary>${list.map(b => `<div class="kq-bt-row${isBonusTimeActive(b) ? ' now' : ''}"><span class="bb-icon">${bonusIcon(b)}</span><span class="kq-bt-text">${b.text}</span>${(by[b.id] || []).length ? `<span class="kq-bt-out">לא היום: ${by[b.id].join(' ')}</span>` : ''}</div>`).join('')}<small class="kq-bt-note">גריעה בתוקף עד 22:00.</small></details>`;
+}
 
 // ---------- "install as an app" help (phones) ----------
 // The site is a PWA, so it can live on the home screen like an app. Android Chrome can install it with
