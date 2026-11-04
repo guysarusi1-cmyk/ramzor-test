@@ -2884,6 +2884,13 @@ body:has(:is(#view-portal, #view-therapy, #view-learn, #view-apphome).active [da
 .pwdays .pwday-shifts{ flex:1 1 0; min-width:0; gap:5px; }
 .pwdays .pwshift{ flex:1 1 0; min-width:0; padding:0 3px; }
 .pwdays .pwday-away{ flex:1 1 0; min-width:0; text-align:center; }
+/* the week of the process: going on and back in the bar at the bottom; the small tools at the end of the screen, side by side (Guy 2026-11-04) */
+.pweek-navbar{ width:100%; }
+.pweek-navbar .btn{ flex:1 1 0; min-width:0; min-height:48px; padding-inline:8px; white-space:nowrap; }
+.pweek-navbar .btn[disabled]{ opacity:.4; }
+.pweek-tools{ display:flex; justify-content:center; gap:8px; margin-top:12px; }
+.pweek-tools .btn{ min-height:44px; padding-inline:10px; white-space:nowrap; }
+.pweek-tools .pweek-q-btn{ flex:0 0 44px; padding-inline:0; }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -15417,10 +15424,11 @@ function renderWeekPrefs(body, mk, m, prefs){
     ${plain ? '' : `<div class="plevelbar pweek-levels">${SRV_LEVEL_BUTTONS.filter(b => b[0] !== 'hours').map(b => `<button type="button" class="lvbtn lv-${b[0]}${(portalUi.level || 'yes') === b[0] ? ' active' : ''}" data-plevel="${b[0]}">${b[1]}</button>`).join('')}</div>`}
     <div class="pwdays">${rows}</div>
     ${prefWeekendBarHtml(wk, inMonth, prefs)}
-    <div class="pweek-bottom">${plain ? prefPlainBarHtml() : '<div class="plevelbar pplain-bar"><button type="button" class="lvbtn" id="pplain-hours">שעות אחרות</button></div>'}</div>
+    ${plain ? '' : '<div class="pweek-bottom"><div class="plevelbar pplain-bar"><button type="button" class="lvbtn" id="pplain-hours">שעות אחרות</button></div></div>'}
     ${dots ? `<div class="pweek-left">עוד ${dots} ${dots === 1 ? 'נקודה' : 'נקודות'}</div>` : ''}
-    <div class="pweek-nav"><button type="button" class="btn ghost" id="pw-prev">→ הקודם</button><button type="button" class="btn" id="pw-next"${blocked ? ' disabled' : ''}>${last ? 'לסיום ←' : 'השבוע הבא ←'}</button></div>
-    <button type="button" class="btn ghost small pweek-month" id="pw-month">לראות את כל החודש</button></div>`;
+    ${plain ? '<div class="pweek-tools"><button type="button" class="btn ghost small" id="pplain-hours">שעות אחרות</button><button type="button" class="btn ghost small" id="pw-month">לראות את כל החודש</button><button type="button" class="btn ghost small pweek-q-btn" id="pplain-q" aria-label="איך מסמנים">?</button></div>' : ''}
+    <div class="${plain ? 'plevelbar pweek-navbar' : 'pweek-nav'}"><button type="button" class="btn ghost" id="pw-prev">→ הקודם</button><button type="button" class="btn" id="pw-next"${blocked ? ' disabled' : ''}>${last ? 'לסיום ←' : 'השבוע הבא ←'}</button></div>
+    ${plain ? '' : '<button type="button" class="btn ghost small pweek-month" id="pw-month">לראות את כל החודש</button>'}</div>`;
   const redraw = () => renderInstructorPrefs(body);
   if(plain) prefWirePlain(body, prefs, redraw);
   else {
