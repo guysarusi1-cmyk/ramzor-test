@@ -2969,6 +2969,51 @@ html[data-contrast=high] body[data-rlook=light] .toast{
 .mgr-ttv-days button[aria-pressed="true"]{ background:var(--color-primary, var(--gold)); color:var(--color-on-primary, #1b1b1b); border-color:transparent; }
 .mgr-ttv-week{ display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:6px; } .mgr-ttv-col{ display:flex; flex-direction:column; gap:6px; min-width:0; } .mgr-ttv-col > b{ text-align:center; font-size:14px; } .mgr-ttv-col.today > b{ color:var(--color-primary, var(--gold)); } .mgr-ttv-col .mgr-ttv-icon{ flex:none; height:34px; }
 .home-card.home-soon{ opacity:.6; cursor:default; }
+/* the round of 2026-11-04, evening */
+/* the manager's timetable: the picture keeps inside its frame, the words under it */
+.mgr-ttv-item{ min-height:92px; }
+.mgr-ttv-icon{ flex:none; height:44px; width:100%; overflow:hidden; font-size:30px; }
+.mgr-ttv-icon > *, .mgr-ttv-icon svg, .mgr-ttv-icon img{ max-width:100%; max-height:100%; width:auto; height:100%; }
+.mgr-ttv-icon .tvt2-emoji{ font-size:30px; line-height:44px; height:auto; }
+.mgr-ttv-name, .mgr-ttv-time{ flex:none; position:relative; }
+@media (max-width:700px){ .mgr-ttv-fit .mgr-ttv-item{ min-height:0; } .mgr-ttv-fit .mgr-ttv-icon{ flex:1 1 0; height:auto; min-height:0; } .mgr-ttv-fit .mgr-ttv-icon .tvt2-emoji{ font-size:24px; line-height:1; } }
+@media (min-width:701px){ .mgr-ttv-fit .mgr-ttv{ height:auto; grid-auto-rows:auto; } .mgr-ttv{ --c:6 !important; } }
+/* the editor: hours from left to right, how often under the row */
+.ctl-tt-times{ direction:ltr; }
+.ctl-tt-rep{ grid-column:1 / -1; display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:14px; }
+.ctl-tt-rep select{ min-height:36px; padding:2px 6px; border-radius:8px; font:inherit; background:var(--color-surface, var(--panel-2)); color:var(--color-text, var(--text)); border:1px solid var(--color-border-strong, var(--line)); }
+.ctl-tt-rep input{ width:52px; min-height:36px; text-align:center; }
+/* the share button of the manager's schedule: beside the view, the same height, not touching */
+.mgr-share{ align-self:stretch; margin-inline-start:16px; min-height:0; display:inline-flex; align-items:center; gap:6px; }
+.portal-shell[data-ptheme] .mcal-viewbar .mgr-share{ min-height:0; }
+#mgr-viewbar{ justify-content:flex-start; }
+/* the top of a page on a computer: the way home on the right, the settings and the look on the left */
+.ps-topbar{ display:none; }
+@media (min-width:1024px){ .ps-topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; } .ps-topbar .ps-link{ width:auto; } .ps-topbar-end{ display:inline-flex; align-items:center; gap:12px; } }
+/* on-call: the schedule on a computer */
+@media (min-width:701px){ .oc-wk{ gap:4px; } .oc-wk-cell .mcal-name{ font-size:14px; padding:2px; } .oc-wk-day{ font-size:13px; } .oc-wk-day b{ font-size:16px; } }
+/* the light look: "לא" is told from what was not marked */
+:is(.portal-shell, .mx-sheet)[data-ptheme=light]{ --p-no-bg:#F0C2BA; --p-no:#8E2F27; }
+/* the service girls' calendar: five days and a narrow weekend; a tool chosen is filled with its own colour */
+.svcal{ grid-template-columns:repeat(5, minmax(0, 1fr)) 38px; }
+.svcal-we{ align-items:center; justify-content:center; min-height:0; } .svcal-we .svcal-num{ font-size:11px; }
+.portal-shell[data-ptheme] .svcal-tools button.on.lv-yes{ background:var(--p-yes); border-color:var(--p-yes); color:#fff; }
+.portal-shell[data-ptheme] .svcal-tools button.on.lv-no{ background:var(--p-no); border-color:var(--p-no); color:#fff; }
+.portal-shell[data-ptheme] .svcal-tools button.on.lv-hours{ background:var(--p-can); border-color:var(--p-can); color:#fff; }
+/* the coordinator's side panel on a computer: all of it at once in the usual text, a scroll that reaches the end in larger text */
+@media (min-width:900px){
+  .portal-shell.wide .cs-side{ max-height:calc((100dvh - 20px) / 1.2); padding:8px 8px 12px; }
+  body.portal-big .portal-shell.wide .cs-side{ max-height:calc((100dvh - 20px) / 1.42); }
+  body.portal-huge .portal-shell.wide .cs-side{ max-height:calc((100dvh - 20px) / 1.7); }
+  .portal-shell.wide .cs-side .cs-names{ gap:3px; margin-bottom:6px; }
+  .portal-shell.wide .cs-side .cs-name{ padding:1px 7px 1px 2px; font-size:13px; gap:3px; min-height:0; }
+  .portal-shell.wide .cs-side .cs-name img{ width:16px; height:16px; }
+  .portal-shell[data-ptheme].wide .cs-side .cs-sort-btn{ min-height:26px; padding:0 8px; font-size:12px; margin-bottom:6px; }
+  .portal-shell.wide .cs-side .cs-others-fold{ margin-top:4px; } .portal-shell.wide .cs-side .cs-others-fold > summary{ min-height:28px; padding:2px 8px; font-size:13px; } .portal-shell.wide .cs-side .cs-others-fold .pfold-body{ padding:4px 6px; }
+  .portal-shell.wide .cs-side .cs-issues-panel{ margin-top:6px; padding-top:6px; }
+  .portal-shell[data-ptheme].wide .cs-side .cs-issues-panel .btn{ min-height:24px; padding:0 7px; font-size:12px; line-height:1.2; }
+  .portal-shell.wide .cs-side .pnote{ font-size:12px; margin:4px 0; }
+}
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -3187,6 +3232,29 @@ body[data-rlook] .bottom-nav-btn.active{ background:var(--color-primary-soft); c
 @media (max-width:700px){ #protected-app.guided-focus:has(#view-staff.active) > .bottom-nav{ display:grid; } }
 /* the light look: gold and yellow words on a pale card could not be read (the same hue, darker; the colour of the light itself stays) */
 body[data-rlook=light] .kq-word{ color:#7A5A00 !important; }
+/* the coordinator's leopard look as it is on the live site (Guy 2026-11-04): she keeps it; the light and dark looks are there to choose in the gear. After 20-mercury.css, so it wins. */
+.portal-shell[data-ptheme=leopard]{ --color-surface:rgba(24,14,6,.96); --color-surface-alt:rgba(44,27,13,.97); --color-surface-raised:rgba(24,14,6,.96); --color-border:rgba(226,182,92,.5); --color-border-strong:rgba(226,182,92,.6); --color-text:#fffaf0; --color-text-secondary:#f0dcb8; --color-heading:#e2b65c; --color-primary:#e2b65c; --color-on-primary:#2a1606; }
+
+/* ---------- the leopard look: the coordinator's third choice in the portal's gear (never in any other portal) ---------- */
+  body.leopard-bg{ background:#2a1a0e url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='220'%20height='220'%20viewBox='0%200%20220%20220'%3E%3Crect%20width='220'%20height='220'%20fill='%23c79552'/%3E%3Cellipse%20cx='40.0'%20cy='40.0'%20rx='12.5'%20ry='10.0'%20fill='%23ad7739'/%3E%3Cellipse%20cx='29.5'%20cy='51.0'%20rx='7.5'%20ry='2.7'%20transform='rotate%28222%2029.5%2051.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='28.4'%20cy='29.9'%20rx='5.6'%20ry='2.7'%20transform='rotate%28313%2028.4%2029.9%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='42.5'%20cy='26.0'%20rx='6.7'%20ry='2.7'%20transform='rotate%28371%2042.5%2026.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='56.3'%20cy='42.7'%20rx='6.9'%20ry='3.4'%20transform='rotate%28443%2056.3%2042.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='45.0'%20cy='53.5'%20rx='5.1'%20ry='2.9'%20transform='rotate%28525%2045.0%2053.5%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='130.0'%20cy='30.0'%20rx='11.7'%20ry='9.4'%20fill='%23ad7739'/%3E%3Cellipse%20cx='130.0'%20cy='250.0'%20rx='11.7'%20ry='9.4'%20fill='%23ad7739'/%3E%3Cellipse%20cx='141.8'%20cy='38.7'%20rx='5.9'%20ry='3.7'%20transform='rotate%28118%20141.8%2038.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='123.6'%20cy='42.1'%20rx='6.9'%20ry='3.1'%20transform='rotate%28206%20123.6%2042.1%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='115.3'%20cy='34.7'%20rx='5.2'%20ry='2.9'%20transform='rotate%28257%20115.3%2034.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='119.9'%20cy='19.8'%20rx='5.9'%20ry='3.4'%20transform='rotate%28318%20119.9%2019.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='119.9'%20cy='239.8'%20rx='5.9'%20ry='3.4'%20transform='rotate%28318%20119.9%20239.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='134.4'%20cy='17.2'%20rx='7.4'%20ry='3.6'%20transform='rotate%28366%20134.4%2017.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='134.4'%20cy='237.2'%20rx='7.4'%20ry='3.6'%20transform='rotate%28366%20134.4%20237.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='145.6'%20cy='28.6'%20rx='6.6'%20ry='3.8'%20transform='rotate%28453%20145.6%2028.6%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-30.0'%20cy='95.0'%20rx='12.3'%20ry='9.9'%20fill='%23ad7739'/%3E%3Cellipse%20cx='190.0'%20cy='95.0'%20rx='12.3'%20ry='9.9'%20fill='%23ad7739'/%3E%3Cellipse%20cx='-17.4'%20cy='104.0'%20rx='7.3'%20ry='2.8'%20transform='rotate%28130%20-17.4%20104.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='202.6'%20cy='104.0'%20rx='7.3'%20ry='2.8'%20transform='rotate%28130%20202.6%20104.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='186.8'%20cy='108.7'%20rx='7.0'%20ry='3.7'%20transform='rotate%28194%20186.8%20108.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='174.3'%20cy='90.9'%20rx='5.9'%20ry='3.6'%20transform='rotate%28291%20174.3%2090.9%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='187.4'%20cy='81.2'%20rx='6.4'%20ry='3.8'%20transform='rotate%28369%20187.4%2081.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-15.8'%20cy='88.0'%20rx='7.0'%20ry='2.7'%20transform='rotate%28428%20-15.8%2088.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='204.2'%20cy='88.0'%20rx='7.0'%20ry='2.7'%20transform='rotate%28428%20204.2%2088.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='85.0'%20cy='110.0'%20rx='13.7'%20ry='10.9'%20fill='%23ad7739'/%3E%3Cellipse%20cx='91.1'%20cy='95.4'%20rx='6.2'%20ry='3.5'%20transform='rotate%28360%2091.1%2095.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='102.7'%20cy='106.3'%20rx='5.5'%20ry='2.8'%20transform='rotate%28418%20102.7%20106.3%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='97.6'%20cy='121.2'%20rx='5.4'%20ry='2.9'%20transform='rotate%28492%2097.6%20121.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='81.6'%20cy='125.2'%20rx='5.2'%20ry='3.2'%20transform='rotate%28553%2081.6%20125.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='68.8'%20cy='117.2'%20rx='7.5'%20ry='3.8'%20transform='rotate%28594%2068.8%20117.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='67.1'%20cy='107.2'%20rx='6.1'%20ry='3.8'%20transform='rotate%28659%2067.1%20107.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='74.4'%20cy='97.4'%20rx='5.5'%20ry='2.9'%20transform='rotate%28674%2074.4%2097.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='25.0'%20cy='170.0'%20rx='13.1'%20ry='10.5'%20fill='%23ad7739'/%3E%3Cellipse%20cx='245.0'%20cy='170.0'%20rx='13.1'%20ry='10.5'%20fill='%23ad7739'/%3E%3Cellipse%20cx='33.9'%20cy='182.7'%20rx='5.4'%20ry='3.3'%20transform='rotate%28154%2033.9%20182.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='18.5'%20cy='183.7'%20rx='5.4'%20ry='3.8'%20transform='rotate%28220%2018.5%20183.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='238.5'%20cy='183.7'%20rx='5.4'%20ry='3.8'%20transform='rotate%28220%20238.5%20183.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='7.7'%20cy='171.8'%20rx='7.2'%20ry='3.2'%20transform='rotate%28278%207.7%20171.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='227.7'%20cy='171.8'%20rx='7.2'%20ry='3.2'%20transform='rotate%28278%20227.7%20171.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='14.5'%20cy='158.2'%20rx='7.0'%20ry='3.4'%20transform='rotate%28319%2014.5%20158.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='234.5'%20cy='158.2'%20rx='7.0'%20ry='3.4'%20transform='rotate%28319%20234.5%20158.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='24.5'%20cy='155.2'%20rx='6.4'%20ry='3.2'%20transform='rotate%28346%2024.5%20155.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='41.0'%20cy='164.1'%20rx='6.3'%20ry='2.8'%20transform='rotate%28431%2041.0%20164.1%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='42.4'%20cy='170.7'%20rx='6.7'%20ry='3.4'%20transform='rotate%28471%2042.4%20170.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='150.0'%20cy='165.0'%20rx='13.6'%20ry='10.8'%20fill='%23ad7739'/%3E%3Cellipse%20cx='163.4'%20cy='154.7'%20rx='5.4'%20ry='3.0'%20transform='rotate%28402%20163.4%20154.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='166.7'%20cy='170.9'%20rx='5.4'%20ry='3.8'%20transform='rotate%28492%20166.7%20170.9%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='147.6'%20cy='180.2'%20rx='6.5'%20ry='2.7'%20transform='rotate%28532%20147.6%20180.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='132.5'%20cy='168.7'%20rx='5.8'%20ry='3.8'%20transform='rotate%28603%20132.5%20168.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='138.1'%20cy='153.4'%20rx='7.9'%20ry='3.3'%20transform='rotate%28665%20138.1%20153.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-15.0'%20cy='-20.0'%20rx='13.3'%20ry='10.6'%20fill='%23ad7739'/%3E%3Cellipse%20cx='-15.0'%20cy='200.0'%20rx='13.3'%20ry='10.6'%20fill='%23ad7739'/%3E%3Cellipse%20cx='205.0'%20cy='-20.0'%20rx='13.3'%20ry='10.6'%20fill='%23ad7739'/%3E%3Cellipse%20cx='205.0'%20cy='200.0'%20rx='13.3'%20ry='10.6'%20fill='%23ad7739'/%3E%3Cellipse%20cx='-15.9'%20cy='185.0'%20rx='6.9'%20ry='2.7'%20transform='rotate%28371%20-15.9%20185.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='204.1'%20cy='185.0'%20rx='6.9'%20ry='2.7'%20transform='rotate%28371%20204.1%20185.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='2.1'%20cy='196.2'%20rx='7.7'%20ry='3.1'%20transform='rotate%28424%202.1%20196.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='222.1'%20cy='196.2'%20rx='7.7'%20ry='3.1'%20transform='rotate%28424%20222.1%20196.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-5.6'%20cy='-7.2'%20rx='6.5'%20ry='3.5'%20transform='rotate%28513%20-5.6%20-7.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-5.6'%20cy='212.8'%20rx='6.5'%20ry='3.5'%20transform='rotate%28513%20-5.6%20212.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='214.4'%20cy='-7.2'%20rx='6.5'%20ry='3.5'%20transform='rotate%28513%20214.4%20-7.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='214.4'%20cy='212.8'%20rx='6.5'%20ry='3.5'%20transform='rotate%28513%20214.4%20212.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='192.0'%20cy='-9.7'%20rx='7.3'%20ry='2.9'%20transform='rotate%28577%20192.0%20-9.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='192.0'%20cy='210.3'%20rx='7.3'%20ry='2.9'%20transform='rotate%28577%20192.0%20210.3%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='188.1'%20cy='195.4'%20rx='7.4'%20ry='2.9'%20transform='rotate%28648%20188.1%20195.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='110.0'%20cy='-15.0'%20rx='14.0'%20ry='11.2'%20fill='%23ad7739'/%3E%3Cellipse%20cx='110.0'%20cy='205.0'%20rx='14.0'%20ry='11.2'%20fill='%23ad7739'/%3E%3Cellipse%20cx='114.4'%20cy='189.6'%20rx='5.6'%20ry='3.4'%20transform='rotate%28367%20114.4%20189.6%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='128.6'%20cy='-13.6'%20rx='7.2'%20ry='3.1'%20transform='rotate%28474%20128.6%20-13.6%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='128.6'%20cy='206.4'%20rx='7.2'%20ry='3.1'%20transform='rotate%28474%20128.6%20206.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='120.4'%20cy='-1.8'%20rx='5.3'%20ry='3.3'%20transform='rotate%28500%20120.4%20-1.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='120.4'%20cy='218.2'%20rx='5.3'%20ry='3.3'%20transform='rotate%28500%20120.4%20218.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='95.8'%20cy='-4.8'%20rx='8.0'%20ry='3.5'%20transform='rotate%28570%2095.8%20-4.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='95.8'%20cy='215.2'%20rx='8.0'%20ry='3.5'%20transform='rotate%28570%2095.8%20215.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='96.6'%20cy='194.0'%20rx='6.0'%20ry='3.5'%20transform='rotate%28687%2096.6%20194.0%29'%20fill='%233b2311'/%3E%3Ccircle%20cx='26.4'%20cy='85.5'%20r='3.5'%20fill='%233b2311'/%3E%3Ccircle%20cx='43.9'%20cy='195.6'%20r='3.0'%20fill='%233b2311'/%3E%3Ccircle%20cx='208.2'%20cy='158.8'%20r='3.0'%20fill='%233b2311'/%3E%3Ccircle%20cx='163.5'%20cy='18.7'%20r='2.5'%20fill='%233b2311'/%3E%3Ccircle%20cx='-1.5'%20cy='6.1'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='-1.5'%20cy='226.1'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='218.5'%20cy='6.1'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='218.5'%20cy='226.1'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='102.4'%20cy='144.3'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='131.1'%20cy='104.4'%20r='3.9'%20fill='%233b2311'/%3E%3Ccircle%20cx='34.3'%20cy='120.6'%20r='2.2'%20fill='%233b2311'/%3E%3Ccircle%20cx='30.6'%20cy='-3.0'%20r='2.6'%20fill='%233b2311'/%3E%3Ccircle%20cx='30.6'%20cy='217.0'%20r='2.6'%20fill='%233b2311'/%3E%3Ccircle%20cx='192.3'%20cy='6.2'%20r='2.6'%20fill='%233b2311'/%3E%3Ccircle%20cx='192.3'%20cy='226.2'%20r='2.6'%20fill='%233b2311'/%3E%3Ccircle%20cx='110.3'%20cy='168.0'%20r='2.8'%20fill='%233b2311'/%3E%3C/svg%3E") repeat; background-size:220px 220px; }
+  body.leopard-bg::before{ content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(28,17,8,.78), rgba(18,10,4,.92)); pointer-events:none; z-index:0; }
+  body.leopard-bg #protected-app{ position:relative; z-index:1; }
+  .portal-shell[data-ptheme=leopard]{ --p-bg:transparent; --p-panel:rgba(24,14,6,.96); --p-panel2:rgba(44,27,13,.97); --p-line:rgba(226,182,92,.5); --p-text:#fffaf0; --p-muted:#f0dcb8;
+    --gold:#e2b65c; color:var(--p-text); }
+  .portal-shell[data-ptheme=leopard] .portal-title{ color:#e2b65c; letter-spacing:.5px; text-shadow:0 2px 0 rgba(0,0,0,.35); }
+  .portal-shell[data-ptheme=leopard] .portal-title::after{ content:''; display:block; height:6px; margin:6px auto 0; width:120px; border-radius:6px; background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='220'%20height='220'%20viewBox='0%200%20220%20220'%3E%3Crect%20width='220'%20height='220'%20fill='%23c79552'/%3E%3Cellipse%20cx='40.0'%20cy='40.0'%20rx='12.5'%20ry='10.0'%20fill='%23ad7739'/%3E%3Cellipse%20cx='29.5'%20cy='51.0'%20rx='7.5'%20ry='2.7'%20transform='rotate%28222%2029.5%2051.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='28.4'%20cy='29.9'%20rx='5.6'%20ry='2.7'%20transform='rotate%28313%2028.4%2029.9%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='42.5'%20cy='26.0'%20rx='6.7'%20ry='2.7'%20transform='rotate%28371%2042.5%2026.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='56.3'%20cy='42.7'%20rx='6.9'%20ry='3.4'%20transform='rotate%28443%2056.3%2042.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='45.0'%20cy='53.5'%20rx='5.1'%20ry='2.9'%20transform='rotate%28525%2045.0%2053.5%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='130.0'%20cy='30.0'%20rx='11.7'%20ry='9.4'%20fill='%23ad7739'/%3E%3Cellipse%20cx='130.0'%20cy='250.0'%20rx='11.7'%20ry='9.4'%20fill='%23ad7739'/%3E%3Cellipse%20cx='141.8'%20cy='38.7'%20rx='5.9'%20ry='3.7'%20transform='rotate%28118%20141.8%2038.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='123.6'%20cy='42.1'%20rx='6.9'%20ry='3.1'%20transform='rotate%28206%20123.6%2042.1%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='115.3'%20cy='34.7'%20rx='5.2'%20ry='2.9'%20transform='rotate%28257%20115.3%2034.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='119.9'%20cy='19.8'%20rx='5.9'%20ry='3.4'%20transform='rotate%28318%20119.9%2019.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='119.9'%20cy='239.8'%20rx='5.9'%20ry='3.4'%20transform='rotate%28318%20119.9%20239.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='134.4'%20cy='17.2'%20rx='7.4'%20ry='3.6'%20transform='rotate%28366%20134.4%2017.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='134.4'%20cy='237.2'%20rx='7.4'%20ry='3.6'%20transform='rotate%28366%20134.4%20237.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='145.6'%20cy='28.6'%20rx='6.6'%20ry='3.8'%20transform='rotate%28453%20145.6%2028.6%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-30.0'%20cy='95.0'%20rx='12.3'%20ry='9.9'%20fill='%23ad7739'/%3E%3Cellipse%20cx='190.0'%20cy='95.0'%20rx='12.3'%20ry='9.9'%20fill='%23ad7739'/%3E%3Cellipse%20cx='-17.4'%20cy='104.0'%20rx='7.3'%20ry='2.8'%20transform='rotate%28130%20-17.4%20104.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='202.6'%20cy='104.0'%20rx='7.3'%20ry='2.8'%20transform='rotate%28130%20202.6%20104.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='186.8'%20cy='108.7'%20rx='7.0'%20ry='3.7'%20transform='rotate%28194%20186.8%20108.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='174.3'%20cy='90.9'%20rx='5.9'%20ry='3.6'%20transform='rotate%28291%20174.3%2090.9%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='187.4'%20cy='81.2'%20rx='6.4'%20ry='3.8'%20transform='rotate%28369%20187.4%2081.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-15.8'%20cy='88.0'%20rx='7.0'%20ry='2.7'%20transform='rotate%28428%20-15.8%2088.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='204.2'%20cy='88.0'%20rx='7.0'%20ry='2.7'%20transform='rotate%28428%20204.2%2088.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='85.0'%20cy='110.0'%20rx='13.7'%20ry='10.9'%20fill='%23ad7739'/%3E%3Cellipse%20cx='91.1'%20cy='95.4'%20rx='6.2'%20ry='3.5'%20transform='rotate%28360%2091.1%2095.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='102.7'%20cy='106.3'%20rx='5.5'%20ry='2.8'%20transform='rotate%28418%20102.7%20106.3%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='97.6'%20cy='121.2'%20rx='5.4'%20ry='2.9'%20transform='rotate%28492%2097.6%20121.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='81.6'%20cy='125.2'%20rx='5.2'%20ry='3.2'%20transform='rotate%28553%2081.6%20125.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='68.8'%20cy='117.2'%20rx='7.5'%20ry='3.8'%20transform='rotate%28594%2068.8%20117.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='67.1'%20cy='107.2'%20rx='6.1'%20ry='3.8'%20transform='rotate%28659%2067.1%20107.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='74.4'%20cy='97.4'%20rx='5.5'%20ry='2.9'%20transform='rotate%28674%2074.4%2097.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='25.0'%20cy='170.0'%20rx='13.1'%20ry='10.5'%20fill='%23ad7739'/%3E%3Cellipse%20cx='245.0'%20cy='170.0'%20rx='13.1'%20ry='10.5'%20fill='%23ad7739'/%3E%3Cellipse%20cx='33.9'%20cy='182.7'%20rx='5.4'%20ry='3.3'%20transform='rotate%28154%2033.9%20182.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='18.5'%20cy='183.7'%20rx='5.4'%20ry='3.8'%20transform='rotate%28220%2018.5%20183.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='238.5'%20cy='183.7'%20rx='5.4'%20ry='3.8'%20transform='rotate%28220%20238.5%20183.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='7.7'%20cy='171.8'%20rx='7.2'%20ry='3.2'%20transform='rotate%28278%207.7%20171.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='227.7'%20cy='171.8'%20rx='7.2'%20ry='3.2'%20transform='rotate%28278%20227.7%20171.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='14.5'%20cy='158.2'%20rx='7.0'%20ry='3.4'%20transform='rotate%28319%2014.5%20158.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='234.5'%20cy='158.2'%20rx='7.0'%20ry='3.4'%20transform='rotate%28319%20234.5%20158.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='24.5'%20cy='155.2'%20rx='6.4'%20ry='3.2'%20transform='rotate%28346%2024.5%20155.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='41.0'%20cy='164.1'%20rx='6.3'%20ry='2.8'%20transform='rotate%28431%2041.0%20164.1%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='42.4'%20cy='170.7'%20rx='6.7'%20ry='3.4'%20transform='rotate%28471%2042.4%20170.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='150.0'%20cy='165.0'%20rx='13.6'%20ry='10.8'%20fill='%23ad7739'/%3E%3Cellipse%20cx='163.4'%20cy='154.7'%20rx='5.4'%20ry='3.0'%20transform='rotate%28402%20163.4%20154.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='166.7'%20cy='170.9'%20rx='5.4'%20ry='3.8'%20transform='rotate%28492%20166.7%20170.9%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='147.6'%20cy='180.2'%20rx='6.5'%20ry='2.7'%20transform='rotate%28532%20147.6%20180.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='132.5'%20cy='168.7'%20rx='5.8'%20ry='3.8'%20transform='rotate%28603%20132.5%20168.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='138.1'%20cy='153.4'%20rx='7.9'%20ry='3.3'%20transform='rotate%28665%20138.1%20153.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-15.0'%20cy='-20.0'%20rx='13.3'%20ry='10.6'%20fill='%23ad7739'/%3E%3Cellipse%20cx='-15.0'%20cy='200.0'%20rx='13.3'%20ry='10.6'%20fill='%23ad7739'/%3E%3Cellipse%20cx='205.0'%20cy='-20.0'%20rx='13.3'%20ry='10.6'%20fill='%23ad7739'/%3E%3Cellipse%20cx='205.0'%20cy='200.0'%20rx='13.3'%20ry='10.6'%20fill='%23ad7739'/%3E%3Cellipse%20cx='-15.9'%20cy='185.0'%20rx='6.9'%20ry='2.7'%20transform='rotate%28371%20-15.9%20185.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='204.1'%20cy='185.0'%20rx='6.9'%20ry='2.7'%20transform='rotate%28371%20204.1%20185.0%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='2.1'%20cy='196.2'%20rx='7.7'%20ry='3.1'%20transform='rotate%28424%202.1%20196.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='222.1'%20cy='196.2'%20rx='7.7'%20ry='3.1'%20transform='rotate%28424%20222.1%20196.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-5.6'%20cy='-7.2'%20rx='6.5'%20ry='3.5'%20transform='rotate%28513%20-5.6%20-7.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='-5.6'%20cy='212.8'%20rx='6.5'%20ry='3.5'%20transform='rotate%28513%20-5.6%20212.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='214.4'%20cy='-7.2'%20rx='6.5'%20ry='3.5'%20transform='rotate%28513%20214.4%20-7.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='214.4'%20cy='212.8'%20rx='6.5'%20ry='3.5'%20transform='rotate%28513%20214.4%20212.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='192.0'%20cy='-9.7'%20rx='7.3'%20ry='2.9'%20transform='rotate%28577%20192.0%20-9.7%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='192.0'%20cy='210.3'%20rx='7.3'%20ry='2.9'%20transform='rotate%28577%20192.0%20210.3%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='188.1'%20cy='195.4'%20rx='7.4'%20ry='2.9'%20transform='rotate%28648%20188.1%20195.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='110.0'%20cy='-15.0'%20rx='14.0'%20ry='11.2'%20fill='%23ad7739'/%3E%3Cellipse%20cx='110.0'%20cy='205.0'%20rx='14.0'%20ry='11.2'%20fill='%23ad7739'/%3E%3Cellipse%20cx='114.4'%20cy='189.6'%20rx='5.6'%20ry='3.4'%20transform='rotate%28367%20114.4%20189.6%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='128.6'%20cy='-13.6'%20rx='7.2'%20ry='3.1'%20transform='rotate%28474%20128.6%20-13.6%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='128.6'%20cy='206.4'%20rx='7.2'%20ry='3.1'%20transform='rotate%28474%20128.6%20206.4%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='120.4'%20cy='-1.8'%20rx='5.3'%20ry='3.3'%20transform='rotate%28500%20120.4%20-1.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='120.4'%20cy='218.2'%20rx='5.3'%20ry='3.3'%20transform='rotate%28500%20120.4%20218.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='95.8'%20cy='-4.8'%20rx='8.0'%20ry='3.5'%20transform='rotate%28570%2095.8%20-4.8%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='95.8'%20cy='215.2'%20rx='8.0'%20ry='3.5'%20transform='rotate%28570%2095.8%20215.2%29'%20fill='%233b2311'/%3E%3Cellipse%20cx='96.6'%20cy='194.0'%20rx='6.0'%20ry='3.5'%20transform='rotate%28687%2096.6%20194.0%29'%20fill='%233b2311'/%3E%3Ccircle%20cx='26.4'%20cy='85.5'%20r='3.5'%20fill='%233b2311'/%3E%3Ccircle%20cx='43.9'%20cy='195.6'%20r='3.0'%20fill='%233b2311'/%3E%3Ccircle%20cx='208.2'%20cy='158.8'%20r='3.0'%20fill='%233b2311'/%3E%3Ccircle%20cx='163.5'%20cy='18.7'%20r='2.5'%20fill='%233b2311'/%3E%3Ccircle%20cx='-1.5'%20cy='6.1'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='-1.5'%20cy='226.1'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='218.5'%20cy='6.1'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='218.5'%20cy='226.1'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='102.4'%20cy='144.3'%20r='3.3'%20fill='%233b2311'/%3E%3Ccircle%20cx='131.1'%20cy='104.4'%20r='3.9'%20fill='%233b2311'/%3E%3Ccircle%20cx='34.3'%20cy='120.6'%20r='2.2'%20fill='%233b2311'/%3E%3Ccircle%20cx='30.6'%20cy='-3.0'%20r='2.6'%20fill='%233b2311'/%3E%3Ccircle%20cx='30.6'%20cy='217.0'%20r='2.6'%20fill='%233b2311'/%3E%3Ccircle%20cx='192.3'%20cy='6.2'%20r='2.6'%20fill='%233b2311'/%3E%3Ccircle%20cx='192.3'%20cy='226.2'%20r='2.6'%20fill='%233b2311'/%3E%3Ccircle%20cx='110.3'%20cy='168.0'%20r='2.8'%20fill='%233b2311'/%3E%3C/svg%3E") center/90px 90px; opacity:.9; }
+  .portal-shell[data-ptheme=leopard] .portal-tabs{ background:rgba(38,24,13,.85); border:1px solid rgba(226,182,92,.4); }
+  .portal-shell[data-ptheme=leopard] .portal-tabs button.active{ background:linear-gradient(180deg, #e9c06a, #c99135); color:#2a1606; }
+  .portal-shell[data-ptheme=leopard] .pfold, .portal-shell[data-ptheme=leopard] .card, .portal-shell[data-ptheme=leopard] .cs-side, .portal-shell[data-ptheme=leopard] .preq, .portal-shell[data-ptheme=leopard] .pmine-row{ background:var(--p-panel); border-color:var(--p-line); }
+  .portal-shell[data-ptheme=leopard] .pfold > summary{ color:#f0d49a; }
+  .portal-shell[data-ptheme=leopard] .psec, .portal-shell[data-ptheme=leopard] h2, .portal-shell[data-ptheme=leopard] h3{ color:#e2b65c; }
+  .portal-shell[data-ptheme=leopard] .btn:not(.ghost){ background:linear-gradient(180deg, #e9c06a, #c99135); color:#2a1606; border-color:#c99135; }
+  .portal-shell[data-ptheme=leopard] .btn.ghost, .portal-shell[data-ptheme=leopard] .back-btn{ background:rgba(58,37,20,.9); color:var(--p-text); border-color:var(--p-line); }
+  .portal-shell[data-ptheme=leopard] select, .portal-shell[data-ptheme=leopard] input, .portal-shell[data-ptheme=leopard] textarea{ background:rgba(28,17,9,.9); color:var(--p-text); border-color:var(--p-line); }
+  .portal-shell[data-ptheme=leopard] .mcal{ background:rgba(16,9,3,.88); border-radius:12px; }          /* (behind the calendar; the shifts keep their own backgrounds) */
+  .portal-shell[data-ptheme=leopard] .cs-tab{ background:rgba(38,24,13,.92); border-color:rgba(226,182,92,.45); }
+  .portal-shell[data-ptheme=leopard] .pnote, .portal-shell[data-ptheme=leopard] small{ color:#f0dcb8; }          /* (stronger contrast: the text reads clearly over the pattern) */
+  .portal-shell[data-ptheme=leopard] .portal-hello, .portal-shell[data-ptheme=leopard] .pmonth b{ color:#fffaf0; text-shadow:0 1px 2px rgba(0,0,0,.6); }
 </style>
 </head>
 <body>
@@ -6537,13 +6605,15 @@ function rzReadOnlyClient(real){
     if(k === 'from') return n => { const q = t.from(n); return new Proxy(q, { get(o, m){ if(['insert', 'update', 'upsert', 'delete'].includes(m)) return no; const v = o[m]; return typeof v === 'function' ? v.bind(o) : v; } }); };
     const v = t[k]; return typeof v === 'function' ? v.bind(t) : v; } });
 }
+const hubPlainBack = () => { try { return ['therapist', 'manager'].includes((portalMe() || {}).role) || !!(srv.profile && srv.profile.kind === 'therapist'); } catch(e){ return false; } };          // (no instructor portal to go to: just back, Guy 2026-11-04)
 const rzLookOnly = () => typeof srv !== 'undefined' && !!srv.me && portalServerOn && !!srv.meRow && srv.meRow.role === 'manager';
 function showHub(){
   document.body.classList.remove('portal-mode', 'leopard-bg');
   if(rzLookOnly()) sb = rzReadOnlyClient(sbPersonal);
   { const gear = document.getElementById('hub-manage-gear'), kids = document.getElementById('hub-kids-btn'); if(gear) gear.hidden = rzLookOnly(); if(kids) kids.hidden = rzLookOnly(); }
   stopCarousel();
-  const pl = document.getElementById('hub-portal-link'); if(pl) pl.hidden = !(typeof ramzorPersonal !== 'undefined' && ramzorPersonal);
+  { const pl = document.getElementById('hub-portal-link'), rp = typeof ramzorPersonal !== 'undefined' && ramzorPersonal, plain = rp && hubPlainBack();
+    if(pl){ pl.hidden = !rp || (plain && matchMedia('(max-width:700px)').matches); pl.textContent = plain ? '→ חזרה' : '👥 לפורטל'; } }          // (a phone has its own way back)
   const cb = document.getElementById('hub-control-btn'); if(cb) cb.hidden = !(typeof canControl === 'function' && canControl());          // (the ahmash control: ahmash, coordinator, admin)
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-hub').classList.add('active');
@@ -6555,7 +6625,7 @@ document.getElementById('hub-daily-btn').addEventListener('click', ()=>{
   selectedStaffChild = null;
   showStaffScreen('pick');
 });
-document.getElementById('hub-portal-link').addEventListener('click', () => { if(typeof srvOpenPortal === 'function') srvOpenPortal(); });
+document.getElementById('hub-portal-link').addEventListener('click', () => { if(hubPlainBack()) showAppHome(); else if(typeof srvOpenPortal === 'function') srvOpenPortal(); });
 document.getElementById('hub-control-btn').addEventListener('click', () => { if(typeof showControl === 'function') showControl(); });
 document.getElementById('hub-learn-btn').addEventListener('click', ()=>{
   toast('לומדת הרמזור בקרוב! 🎓');
@@ -7149,11 +7219,6 @@ function showAppHome(){
           <span class="home-card-title">${portalServerOn && (portalMe() || {}).role === 'manager' ? 'ניהול' : portalServerOn && (portalMe() || {}).role === 'coordinator' ? ((portalMe() || {}).admin ? 'פורטל ניהול' : 'פורטל הרכזת') : 'פורטל המדריך'}</span>
           <span class="home-card-sub">${portalServerOn && (portalMe() || {}).role === 'manager' ? 'סידור, לו"ז, שיחות ומשתמשים' : 'משמרות, העדפות והודעות'}</span>
         </button>`}
-        ${portalServerOn && liveCut() && (['therapist', 'manager'].includes((portalMe() || {}).role) || (srv.profile && srv.profile.therapist)) ? `<button type="button" class="home-card home-soon" id="apphome-therapy-soon" disabled>
-          <span class="apphome-emoji apphome-ico">${psIco('leaf')}</span>
-          <span class="home-card-title">פורטל הטיפול</span>
-          <span class="home-card-sub">בקרוב</span>
-        </button>` : ''}
         ${!liveCut() && typeof therapyAvailable === 'function' && therapyAvailable() ? `<button type="button" class="home-card" id="apphome-therapy">
           <span class="apphome-emoji apphome-ico">${psIco('leaf')}</span>
           <span class="home-card-title">פורטל הטיפול</span>
@@ -7214,17 +7279,17 @@ const PS_ICON = { schedule:'M4 6.5h16v13H4zM8 3.5v4M16 3.5v4M4 10.5h16', prefs:'
 const psIco = k => `<svg class="ps-ico" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${PS_ICON[k] || PS_ICON.schedule}"></path></svg>`;
 function portalSideHtml(me, tabs, title, theme, leopardOk){
   const count = k => portalServerOn && typeof srvTabCount === 'function' ? srvTabCount(me, k) : 0;
-  const look = (v, w) => `<button type="button" data-plook="${v}" aria-pressed="${theme === v}">${w}</button>`;
+  const look = (v, w) => `<button type="button" data-plook="${v}" aria-pressed="${theme === v}">${w}</button>`, top = portalServerOn && me.role === 'manager';          // (the manager: the settings, the look and the way home at the top of the page, not at the bottom of a long side: Guy 2026-11-04)
   return `<aside class="ps-side" aria-label="אזורי הפורטל">
       <div class="ps-side-head"><b>${title}</b>${portalServerOn ? `<span>שלום ${pEsc(me.first)}</span>` : ''}</div>
       <nav class="ps-side-nav">${tabs.map(t => `<button type="button" data-pstab="${t[0]}" class="${t[0] === portalUi.tab ? 'active' : ''}"${t[0] === portalUi.tab ? ' aria-current="page"' : ''}>${psIco(t[0])}<span class="ps-word">${t[1]}</span>${count(t[0]) ? `<span class="ptab-count">${count(t[0])}</span>` : ''}</button>`).join('')}</nav>
       <div class="ps-side-foot">
-        ${portalServerOn && ['service', 'teacher'].includes(me.role) && typeof therapyAvailable === 'function' && therapyAvailable() ? `<button type="button" class="ps-link" data-ps-go="therapy">${psIco('leaf')}<span>פורטל הטיפול</span></button>` : ''}
-        ${portalServerOn ? `<button type="button" class="ps-link" data-ps-go="gear">${psIco('gear')}<span>העדפות מערכת</span></button>` : ''}
+        ${portalServerOn && me.role === 'teacher' && typeof therapyAvailable === 'function' && therapyAvailable() ? `<button type="button" class="ps-link" data-ps-go="therapy">${psIco('leaf')}<span>פורטל הטיפול</span></button>` : ''}
+        ${top ? '' : `${portalServerOn ? `<button type="button" class="ps-link" data-ps-go="gear">${psIco('gear')}<span>העדפות מערכת</span></button>` : ''}
         <button type="button" class="ps-link" data-ps-go="home">${psIco('home')}<span>${portalServerOn && !ramzorPersonal ? 'יציאה' : 'מסך ראשי'}</span></button>
-        <div class="mx-seg ps-look" role="group" aria-label="מראה">${look('light', 'בהיר')}${look('dark', 'כהה')}${leopardOk ? look('leopard', 'נמר') : ''}</div>
+        <div class="mx-seg ps-look" role="group" aria-label="מראה">${look('light', 'בהיר')}${look('dark', 'כהה')}${leopardOk ? look('leopard', 'נמר') : ''}</div>`}
       </div>
-    </aside>`;
+    </aside>${top ? `<div class="ps-topbar"><button type="button" class="ps-link" data-ps-go="home">${psIco('home')}<span>מסך ראשי</span></button><span class="ps-topbar-end"><button type="button" class="ps-link" data-ps-go="gear">${psIco('gear')}<span>העדפות מערכת</span></button><span class="mx-seg ps-look" role="group" aria-label="מראה">${look('light', 'בהיר')}${look('dark', 'כהה')}</span></span></div>` : ''}`;
 }
 function showPortal(tab){
   const st = portalLoad(), me = portalMe();
@@ -7245,7 +7310,7 @@ function showPortal(tab){
       <div class="portal-top">
         <button type="button" class="back-btn portal-back${portalServerOn && !ramzorPersonal ? '' : ' is-home'}" id="portal-home">${portalServerOn && !ramzorPersonal ? 'יציאה' : '→ מסך ראשי'}</button>
         <h1 class="portal-title">${pTitle}</h1>
-        <span class="portal-top-actions">${portalServerOn && ['service', 'teacher'].includes(me.role) && typeof ocAllowed === 'function' && ocAllowed() ? '<button type="button" class="portal-theme" id="portal-oncall" aria-label="כוננית סוף שבוע" title="כוננית סוף שבוע">📋</button>' : ''}${portalServerOn && ['service', 'teacher'].includes(me.role) && typeof therapyAvailable === 'function' && therapyAvailable() ? '<button type="button" class="portal-theme" id="portal-therapy" aria-label="פורטל הטיפול" title="פורטל הטיפול">🌱</button>' : ''}${portalServerOn ? '<button type="button" class="portal-theme" id="portal-gear" aria-label="העדפות מערכת" title="העדפות מערכת">⚙️</button>' : ''}<button type="button" class="portal-theme" id="portal-theme" aria-label="החלפה בין מצב כהה לבהיר">${leopard ? '🐆' : st.settings.theme === 'dark' ? '☀️' : '🌙'}</button></span>
+        <span class="portal-top-actions">${portalServerOn && ['service', 'teacher'].includes(me.role) && typeof ocAllowed === 'function' && ocAllowed() ? '<button type="button" class="portal-theme" id="portal-oncall" aria-label="כוננית סוף שבוע" title="כוננית סוף שבוע">📋</button>' : ''}${portalServerOn && me.role === 'teacher' && typeof therapyAvailable === 'function' && therapyAvailable() ? '<button type="button" class="portal-theme" id="portal-therapy" aria-label="פורטל הטיפול" title="פורטל הטיפול">🌱</button>' : ''}${portalServerOn ? '<button type="button" class="portal-theme" id="portal-gear" aria-label="העדפות מערכת" title="העדפות מערכת">⚙️</button>' : ''}<button type="button" class="portal-theme" id="portal-theme" aria-label="החלפה בין מצב כהה לבהיר">${leopard ? '🐆' : st.settings.theme === 'dark' ? '☀️' : '🌙'}</button></span>
       </div>
       ${portalServerOn ? `<div class="portal-hello">שלום ${pEsc(me.first)}</div>` : `<label class="portal-as">צפייה כ:
         <select id="portal-persona">${st.instructors.filter(p => p.active).map(p => `<option value="${p.id}"${p.id === me.id ? ' selected' : ''}>${pEsc(instrName(p, st.instructors))}${p.role === 'coordinator' ? ' (רכזת)' : ''}</option>`).join('')}</select>
@@ -8458,7 +8523,8 @@ function srvTabs(me){
   if(portalAsCoord(me)){
     const all = [['schedule', 'סידור'], ['submissions', 'הגשות'], ['swaps', 'החלפות'], ['vacations', 'חופשות'], ['diary', 'יומן הילדים'], ['chats', 'שיחות'], ['settings', 'הגדרות']].concat(me.admin ? [['admin', 'ניהול']] : []);
     const phone = (() => { try { return matchMedia('(max-width:700px)').matches; } catch(e){ return false; } })();
-    return phone ? all.filter(t => ['schedule', 'submissions', 'swaps'].includes(t[0])) : all;          // (on a phone: סידור, הגשות, החלפות only; the on-call screen is a card of the first screen — the rest on the computer: Guy 2026-11-03)
+    const kept = all.filter(t => t[0] !== 'diary' || !liveCut());          // (the children's diary is not part of the coming live version)
+    return phone && !me.admin ? kept.filter(t => ['schedule', 'submissions', 'swaps'].includes(t[0])) : kept;          // (on a phone: סידור, הגשות, החלפות only; the on-call screen is a card of the first screen — the rest on the computer: Guy 2026-11-03)
   }          // (the admin: one more tab, 14s-portal-admin.js)
   if(me.role === 'manager') return MGR_TABS.filter(t => t[0] !== 'kids' || !liveCut());          // (the manager of the framework: 14zn)
   if(me.role === 'instructor' && srv.profile && srv.profile.manual_only) return [['schedule', 'הסידור'], ['open', 'משמרות חסרות'], ['swaps', 'החלפות וחופשות'], ['inbox', 'הודעות']];          // (not scheduled automatically: she places herself where somebody is missing)
@@ -8870,7 +8936,7 @@ const svcYesOf = (d, opt) => { const s = SVC_SLOTS(d).map(x => x[0]); if(!opt ||
 const svcOptOf = (d, yes) => { const s = SVC_SLOTS(d).map(x => x[0]); if(!yes.length) return 'none'; if(yes.length === s.length) return s.length === 2 ? 'both' : s[0]; return yes[0]; };
 async function srvRenderAvailability(body){          // (also the admin or the coordinator filling it for a service girl: srvWho())
   const mk = (portalUi.pmonth = prefsMonthNow()), m = portalMonth(mk), locked = !srvPrefsOpen(mk);          // (next month only)
-  body.innerHTML = '<div class="pnote">רק רגע...</div>';
+  if(!body.querySelector('.svcal')) body.innerHTML = '<div class="pnote">רק רגע...</div>';          // (a choice: the calendar stays until the new one is ready, nothing jumps)
   const all = daysOfMonth(mk), days = all.filter(d => dowOf(d) <= 4);
   const [r, rh] = await Promise.all([sbPersonal.from('prefs_service').select('day,opt').eq('staff_id', srvWho()).gte('day', days[0]).lte('day', days[days.length - 1]),
     sbPersonal.from('prefs_hours').select('day,from_time,to_time').eq('staff_id', srvWho()).gte('day', days[0]).lte('day', days[days.length - 1])]);
@@ -8887,13 +8953,16 @@ async function srvRenderAvailability(body){          // (also the admin or the c
     return `<div class="svcal-day"><span class="svcal-num">${num}</span>${SVC_SLOTS(d).map(([k, w, h]) => `<button type="button" class="svcal-slot ${yes.includes(k) ? 'lv-yes' : 'lv-no'}" data-svslot="${d}|${k}"${locked ? ' disabled' : ''}>${w}<small>${h}</small></button>`).join('')}</div>`;
   };
   const lead = dowOf(all[0]), flat = Array(lead).fill(null).concat(all); while(flat.length % 7) flat.push(null);
+  // Friday and Saturday are one narrow column: the room goes to the days that count (Guy 2026-11-04)
+  const weekRows = []; for(let w = 0; w < flat.length; w += 7){ const wk = flat.slice(w, w + 7), end = wk.slice(5).filter(Boolean).map(d => parseIso(d).getDate());
+    weekRows.push(wk.slice(0, 5).map(d => d ? cell(d) : '<div class="svcal-day blank"></div>').join('') + (end.length ? `<div class="svcal-day off svcal-we"><span class="svcal-num">${end.join('–')}</span></div>` : '<div class="svcal-day blank"></div>')); }
   body.innerHTML = `
     ${monthFixedHtml(mk)}
     <div class="pstatus ${submitted ? 'ok' : 'bad'}">${submitted ? 'הזמינות שלכן אצלנו, תודה! אפשר לעדכן עד סגירת ההגשה.' : 'נשמח לדעת מתי אתן זמינות. הכל מסומן "כן", ומשנים רק את מה שלא מתאים.'}</div>
     ${locked ? '<div class="pnote">ההגשה לחודש הזה סגורה כרגע. לשינוי אפשר לפנות לרכזת, והיא תשמח לעזור.</div>' : ''}
     <div class="pchoice svcal-tools" role="group" aria-label="מה לסמן">${[['yes', 'כן'], ['no', 'לא'], ['hours', 'שעות אחרות']].map(([k, w]) => `<button type="button" class="${tool === k ? 'on' : ''} lv-${k}" data-svtool="${k}">${w}</button>`).join('')}</div>
     <div class="pnote">בוחרים למעלה מה לסמן, ולוחצים על המשמרת ביומן. "שעות אחרות" חל על כל היום. שישי ושבת לא רלוונטיים.</div>
-    <div class="svcal">${DOW_SHORT.map(x => `<div class="svcal-head">${x}</div>`).join('')}${flat.map(d => d ? cell(d) : '<div class="svcal-day blank"></div>').join('')}</div>
+    <div class="svcal">${DOW_SHORT.slice(0, 5).map(x => `<div class="svcal-head">${x}</div>`).join('')}<div class="svcal-head">סופ"ש</div>${weekRows.join('')}</div>
     <div class="pprefs-actions"><button type="button" class="btn" id="svc-submit"${locked ? ' disabled' : ''}>${submitted ? 'עדכון והגשה מחדש' : 'הגשה'}</button></div>`;
   wireMonthNav(body, 'pmonth');
   body.querySelectorAll('[data-svtool]').forEach(b => b.addEventListener('click', () => { portalUi.svcTool = b.dataset.svtool; srvRenderAvailability(body); }));
@@ -9502,7 +9571,7 @@ function srvRenderCoordSchedule(body){
     c.addEventListener('drop', e => { e.preventDefault(); srvDropClear(c); const who = e.dataTransfer.getData('text/plain') || (srvDragRow ? 'row:' + srvDragRow : srvDragWho); if(!who) return;
       if(who.startsWith('row:')) srvMoveToSlot(mk, c.dataset.key, who.slice(4), body); else if(who.startsWith('other:')) srvAddOtherToSlot(mk, c.dataset.key, who.slice(6), body); else srvAddToSlot(mk, c.dataset.key, who, body); });
   });
-  srvDragScrollWire();
+  srvDragScrollWire(); csSideFit();
   if(csPhone) csTouchDragWire(body, mk);
   body.querySelectorAll('[data-other-rm]').forEach(b => b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); srvRemoveOther(b.dataset.otherRm, b.dataset.sid, body); }));
   body.querySelectorAll('[data-other-rm]').forEach(b => b.addEventListener('keydown', e => e.stopPropagation()));
@@ -9938,6 +10007,14 @@ function csCellAt(x, y){
   if(!sh){ const row = el.closest('.mcal-wrow'); if(row && !el.closest('.mcal-wrow-day')){ let best = 1e9; row.querySelectorAll('.mcal-wrow-shift').forEach(s => { const r = s.getBoundingClientRect(), d = Math.hypot(Math.max(r.left - x, 0, x - r.right), Math.max(r.top - y, 0, y - r.bottom)); if(d < best){ best = d; sh = s; } }); } }
   return sh ? sh.querySelector('.mcal-cell.editable') : el.closest('.mcal-cell.editable');
 }
+// the side panel on a computer: what fits has no scroll of its own; what does not, scrolls inside the part of it that is on the screen, so its end can be reached from anywhere on the page
+function csSideFit(){
+  const sd = document.querySelector('.view.active .cs-side'); if(!sd || !sd.getClientRects().length || matchMedia('(max-width:760px)').matches) return;
+  const z = parseFloat(getComputedStyle(sd.closest('.portal-shell')).zoom) || 1, cap = (innerHeight - 20) / z; sd.style.maxHeight = cap + 'px';
+  if(sd.scrollHeight <= sd.clientHeight + 1) return;
+  sd.style.maxHeight = Math.max(160, (innerHeight - Math.max(sd.getBoundingClientRect().top, 10) - 10) / z) + 'px';
+}
+window.addEventListener('scroll', csSideFit, { passive:true }); window.addEventListener('resize', csSideFit);
 function csTouchDragWire(body, mk){
   const touchy = navigator.maxTouchPoints > 0 || 'ontouchstart' in window, ids = portalLoad().assignmentIds || {};
   body.querySelectorAll('.mcal-cell.editable .mcal-name[data-iid]').forEach(n => {
@@ -10030,7 +10107,7 @@ function srvSidePanelHtml(mk, issues){
   const others = st.instructors.filter(p => p.active && ['service', 'teacher'].includes(p.role)).sort((a, b) => (a.role === b.role ? 0 : a.role === 'teacher' ? -1 : 1) || String(instrName(a, st.instructors)).localeCompare(String(instrName(b, st.instructors)), 'he'));          // (dragged into the calendar: Guy 2026-10-25)
   return `<aside class="cs-side" aria-label="בקשות המדריכים">
     <div class="cs-side-top"><h3 class="cs-side-title">בקשות המדריכים</h3>${sel ? '' : mcalKeyHtml(true)}<button type="button" class="cs-close" id="cs-close" aria-label="קיפול">✕</button></div>
-    <button type="button" class="btn ghost small cs-sort-btn${byCount ? ' on' : ''}" data-cs-sort="${byCount ? 'name' : 'count'}" aria-pressed="${byCount}">${byCount ? 'הסתר את מספר המשמרות' : 'הצג את מספר המשמרות'}</button>
+    <button type="button" class="btn ghost small cs-sort-btn${byCount ? ' on' : ''}" data-cs-sort="${byCount ? 'name' : 'count'}" aria-pressed="${byCount}">${byCount ? 'לפי שם' : 'לפי מספר משמרות'}</button>
     <div class="cs-names">${list.map(p => `<button type="button" class="cs-name${sel && sel.id === p.id ? ' on' : ''}${m.submitted[p.id] ? '' : ' missing'}" data-cs-person="${p.id}" title="${m.submitted[p.id] ? 'הגיש/ה' : 'עוד לא הגיש/ה'} · ${(cnt[p.id] || {}).all || 0} משמרות"><img src="${p.photo}" alt=""><span>${pEsc(instrName(p, st.instructors))}</span>${byCount ? `<b class="cs-name-count">${(cnt[p.id] || {}).all || 0}</b>` : ''}</button>`).join('')}</div>
     ${sel ? srvPersonRequestsHtml(sel, mk) : '<div class="pnote">לחיצה על שם מציגה את הבקשות שלו/ה לחודש שמוצג, ומסמנת את השמות שלו/ה בסידור.</div>'}
     ${others.length ? `<details class="pfold cs-others-fold" id="cs-others-fold"${portalUi.csOthersOpen ? ' open' : ''}><summary><span>בנות שירות ומורות</span></summary><div class="pfold-body">
@@ -11132,7 +11209,7 @@ async function ctlFill(id){
   try {
     if(id === 'shifts') await ctlShifts(box);
     if(id === 'tt') await ctlTimetable(box);
-    if(id === 'diary') await ctlDiary(box);
+    if(id === 'diary'){ if(liveCut()){ box.closest('details') ? box.closest('details').remove() : box.remove(); return; } await ctlDiary(box); }
     if(id === 'bonus') await ctlBonuses(box);
     if(id === 'duties') await ctlDuties(box);
     if(id === 'log') await ctlLog(box);
@@ -11190,10 +11267,20 @@ const ctlFace = p => p.photo ? `<img class="ctl-face" src="${p.photo}" alt="">` 
 // ---- 2. today's timetable (and, for the coordinator, the fixed timetable of each weekday)
 async function ctlTimetable(box){
   const r = await sb.rpc('tv_timetable_today'); if(r.error) throw r.error;
+  r.data.items = (r.data.items || []).filter(x => ttOn(x, r.data.day));          // (what repeats every few weeks or once a month: only on its days)
   ctl.tt = r.data;
   if(!ctl.ttEdit || ctl.ttEdit.day !== r.data.day) ctl.ttEdit = { day:r.data.day, items:(r.data.items || []).map(x => Object.assign({}, x)) };          // (what was kept: its end is never suggested over)
   ctlTimetableDraw(box);
 }
+// how often an activity comes (Guy 2026-11-04): once (today only), every week, every N weeks from a day, or a month's first / second ... weekday. Kept on the activity itself
+const TT_REP = [['once', 'חד-פעמי'], ['week', 'שבועי'], ['nw', 'כל כמה שבועות'], ['month', 'חודשי']];
+function ttOn(x, day){
+  const r = x.rep; if(!r || !day) return true;
+  if(r.k === 'nw'){ const w = Math.round((parseIso(day) - parseIso(r.from)) / (7 * 864e5)); return w >= 0 && w % (r.n || 2) === 0; }
+  if(r.k === 'month') return Math.ceil(parseIso(day).getDate() / 7) === r.nth;
+  return true;
+}
+const ttRepOf = (x, fixed) => (x.rep && x.rep.k) || (x.fresh && !fixed ? 'once' : 'week');
 // the hour of an activity: two short lists, the hours 00–23 and the minutes (a time box would show AM/PM on a phone set that way: Guy 2026-11-03)
 function ttTimeHtml(t, i, end){          // (end: the hour it ends — Guy 2026-11-04, SCHEDULE-SPEC: every activity has a start and an end)
   const [h, m] = String(t || '').split(':'), mins = Array.from({ length:12 }, (_, k) => String(k * 5).padStart(2, '0'));
@@ -11208,7 +11295,8 @@ function ctlTimetableDraw(box){
       <span class="ctl-tt-times">${ttTimeHtml(x.t, i)}<span class="ctl-tt-dash" aria-hidden="true">–</span>${ttTimeHtml(x.end, i, true)}</span>
       <button type="button" class="ctl-tt-icon" data-tt-icon="${i}" title="${pEsc(ttIcon(x.i)[1])}">${ttIcon(x.i)[2]}</button>
       <input type="text" value="${pEsc(x.n || '')}" data-tt-name="${i}" placeholder="שם הפעילות" maxlength="40">
-      <button type="button" class="ctl-x" data-tt-del="${i}" aria-label="מחיקה">✕</button></div>`).join('');
+      <button type="button" class="ctl-x" data-tt-del="${i}" aria-label="מחיקה">✕</button>
+      ${coord ? `<span class="ctl-tt-rep"><select data-tt-rep="${i}" aria-label="תדירות">${TT_REP.filter(r => fixedDay == null || r[0] !== 'once').map(([k, w]) => `<option value="${k}"${ttRepOf(x, fixedDay != null) === k ? ' selected' : ''}>${w}</option>`).join('')}</select>${ttRepOf(x, fixedDay != null) === 'nw' ? `<label>כל <input type="number" min="2" max="12" value="${(x.rep && x.rep.n) || 2}" data-tt-n="${i}" aria-label="כל כמה שבועות"> שבועות</label>` : ''}</span>` : ''}</div>`).join('');
   box.innerHTML = `
     ${fixedDay == null ? `<div class="pnote">${tt.title ? `<b>${pEsc(tt.title)}</b> · ` : ''}${tt.changed ? 'הלו"ז של היום שונה מהלו"ז הקבוע.' : `זה הלו"ז הקבוע של יום ${WEEKDAY_NAMES[tt.weekday]}. שינוי כאן ישנה רק את היום.`}</div>`
                        : `<div class="pnote">עריכת <b>הלו"ז הקבוע של יום ${WEEKDAY_NAMES[fixedDay]}</b>. השינוי יחול מהשבוע הזה והלאה.</div>`}
@@ -11229,6 +11317,7 @@ function ctlTimetableDraw(box){
     const sorted = editing.items.slice().sort((a, b) => (a.t || '99').localeCompare(b.t || '99'));
     { const at = sorted.indexOf(editing.items[+sel.closest('[data-row]').dataset.row]), before = sorted[at - 1]; if(before && !before.end && !before.endSet) before.endAuto = true; }
     if(sorted.every((x, k) => x === editing.items[k])){ suggest(); ctlTimetableDraw(box); return; }
+    const refocus = () => { const m = box.querySelector('.ctl-tt-moved'); if(m) m.scrollIntoView({ block:'center', behavior:'smooth' }); };          // (the screen follows the activity to its new place)
     const tops = new Map([...box.querySelectorAll('[data-row]')].map(r => [editing.items[+r.dataset.row], r.getBoundingClientRect().top]));
     const moved = editing.items[+sel.closest('[data-row]').dataset.row];
     editing.items.splice(0, editing.items.length, ...sorted);
@@ -11238,10 +11327,20 @@ function ctlTimetableDraw(box){
       if(it === moved) r.classList.add('ctl-tt-moved');
       if(d && r.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) r.animate([{ transform:`translateY(${d}px)` }, { transform:'none' }], { duration:450, easing:'cubic-bezier(.2,.8,.2,1)' });
     });
+    refocus();
   }));
-  const clean = () => { sync(); return editing.items.filter(x => x.t && x.n).sort((a, b) => a.t.localeCompare(b.t)).map(x => Object.assign({ t:x.t, n:x.n, i:x.i || 'other' }, x.end && x.end > x.t ? { end:x.end } : {})); };          // (an end before the start is left out)
+  box.querySelectorAll('[data-tt-rep]').forEach(sel => sel.addEventListener('change', () => {
+    sync(); const x = editing.items[+sel.dataset.ttRep], k = sel.value, day = fixedDay != null ? (() => { const t = ctl.tt.day; return addDays(t, (fixedDay - dowOf(t) + 7) % 7); })() : ctl.tt.day;
+    x.rep = k === 'nw' ? { k, n:2, from:day } : k === 'month' ? { k, nth:Math.ceil(parseIso(day).getDate() / 7) } : { k }; ctlTimetableDraw(box);
+  }));
+  box.querySelectorAll('[data-tt-n]').forEach(inp => inp.addEventListener('change', () => { const x = editing.items[+inp.dataset.ttN]; x.rep.n = Math.max(2, Math.min(12, +inp.value || 2)); }));
+  const clean = () => { sync(); return editing.items.filter(x => x.t && x.n).sort((a, b) => a.t.localeCompare(b.t)).map(x => Object.assign({ t:x.t, n:x.n, i:x.i || 'other' }, x.end && x.end > x.t ? { end:x.end } : {}, x.rep ? { rep:x.rep } : x.fresh && fixedDay == null ? { rep:{ k:'once' } } : {})); };
+  // what comes again goes into the fixed timetable of its weekday too; what is not due today stays there
+  const keepRepeats = async items => { if(!coord) return; const wd = ctl.tt.weekday, again = items.filter(x => x.rep && x.rep.k !== 'once'); if(!again.length) return;
+    const f = await sb.from('timetable_fixed').select('items').eq('weekday', wd).maybeSingle(), have = (f.data && f.data.items) || [], rest = have.filter(h => !again.some(x => x.n === h.n && x.t === h.t));
+    await sb.from('timetable_fixed').upsert({ weekday:wd, items:rest.concat(again).sort((a, b) => a.t.localeCompare(b.t)) }); };          // (an end before the start is left out)
   box.querySelectorAll('[data-tt-del]').forEach(b => b.addEventListener('click', () => { sync(); editing.items.splice(+b.dataset.ttDel, 1); ctlTimetableDraw(box); }));
-  box.querySelector('#tt-add').addEventListener('click', () => { sync(); editing.items.push({ t:'', n:'', i:'other', endAuto:true }); ctlTimetableDraw(box); const last = box.querySelector('.ctl-tt-row:last-child [data-tt-h]'); if(last) last.focus(); });
+  box.querySelector('#tt-add').addEventListener('click', () => { sync(); editing.items.push({ t:'', n:'', i:'other', endAuto:true, fresh:true }); ctlTimetableDraw(box); const last = box.querySelector('.ctl-tt-row:last-child [data-tt-h]'); if(last) last.focus(); });
   box.querySelectorAll('[data-tt-icon]').forEach(b => b.addEventListener('click', () => {
     sync(); const i = +b.dataset.ttIcon;
     const sh = portalSheet(`<h2>תמונה לפעילות</h2><div class="ctl-icons">${TT_ICON_LIST.map(([id, word, e]) => `<button type="button" class="ctl-icon-opt${editing.items[i].i === id ? ' on' : ''}" data-icon="${id}"><span>${e}</span><small>${word}</small></button>`).join('')}</div>
@@ -11252,10 +11351,11 @@ function ctlTimetableDraw(box){
   }));
   const saved = (res, msg) => { if(res.error){ toast('השמירה נכשלה. נסו שוב.'); return false; } toast(msg); return true; };
   const on = (id, fn) => { const b = box.querySelector('#' + id); if(b) b.addEventListener('click', fn); };
-  on('tt-save', async () => { const items = clean(); if(saved(await sb.from('timetable_day').upsert({ day:ctl.tt.day, items }), 'נשמר. מסך הילדים יתעדכן תוך רגע.')){ ctl.ttEdit = null; ctlTimetable(box); } });
+  on('tt-save', async () => { const items = clean(); if(saved(await sb.from('timetable_day').upsert({ day:ctl.tt.day, items }), 'נשמר. מסך הילדים יתעדכן תוך רגע.')){ await keepRepeats(items); ctl.ttEdit = null; ctlTimetable(box); } });
   on('tt-reset', async () => { if(saved(await sb.from('timetable_day').delete().eq('day', ctl.tt.day), 'חזרנו ללו"ז הקבוע של היום.')){ ctl.ttEdit = null; ctlTimetable(box); } });
   on('tt-save-fixed', async () => {
-    const items = clean();
+    const f0 = await sb.from('timetable_fixed').select('items').eq('weekday', ctl.tt.weekday).maybeSingle(), notToday = ((f0.data && f0.data.items) || []).filter(x => !ttOn(x, ctl.tt.day));
+    const items = clean().filter(x => !x.rep || x.rep.k !== 'once').concat(notToday).sort((a, b) => a.t.localeCompare(b.t));
     if(!(await confirmSheet({ title:`לשמור כלו"ז הקבוע של יום ${WEEKDAY_NAMES[ctl.tt.weekday]}?`, text:'מעכשיו כל יום כזה יתחיל מהלו"ז הזה.', okLabel:'כן, לשמור', cancelLabel:'חזרה' }))) return;
     if(saved(await sb.from('timetable_fixed').upsert({ weekday:ctl.tt.weekday, items }), 'נשמר כלו"ז הקבוע.')){ await sb.from('timetable_day').delete().eq('day', ctl.tt.day); ctl.ttEdit = null; ctlTimetable(box); }
   });
@@ -11413,7 +11513,7 @@ async function loadTvToday(force){
   if(!force && Date.now() - tvTodayAt < 60 * 1000) return;
   tvTodayAt = Date.now();
   try { const r = await sb.rpc('tv_shifts_today'); if(!r.error) tvShifts = r.data; } catch(e){ /* keep the last one */ }
-  try { const r = await sb.rpc('tv_timetable_today'); if(!r.error) tvTimetable = r.data; } catch(e){ /* keep the last one */ }
+  try { const r = await sb.rpc('tv_timetable_today'); if(!r.error){ if(r.data && typeof ttOn === 'function') r.data.items = (r.data.items || []).filter(x => ttOn(x, r.data.day)); tvTimetable = r.data; } } catch(e){ /* keep the last one */ }
 }
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 const hm = t => { const [h, m] = String(t || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
@@ -12125,7 +12225,7 @@ const AR = {
   'אירועים חדשים מהצוות':'حوادث جديدة من الطاقم', 'מועד התוכנית הראשונה מתקרב':'موعد الخطة الأولى يقترب', 'עבר מועד התוכנית הראשונה':'فات موعد الخطة الأولى', 'משפטים לספר מחכים לאישור':'جمل للكتاب بانتظار الموافقة', 'היציאה מתקרבת: כדאי לעבור על ההכנות':'موعد المغادرة يقترب: يُستحسن مراجعة التحضيرات', '❓ שאלה לאיש/אשת הטיפול':'❓ سؤال لأخصائي/ة العلاج', 'החוזקות':'نقاط القوة', 'אותות מוקדמים':'علامات مبكرة', 'מה עוזר להירגע':'ما يساعد على الهدوء', 'שגרה יומית מיוחדת':'روتين يومي خاص', 'שאלה למטפל/ת על':'سؤال للمعالج/ة عن', 'מה תרצו לשאול? התשובה תגיע אליכם בהודעה.':'ماذا تريدون أن تسألوا؟ سيصلكم الجواب في رسالة.', 'מה ראית? כמה מילים מספיקות.':'ماذا رأيت؟ تكفي بضع كلمات.', 'מגיע רק לאיש/אשת הטיפול האחראי/ת (ולמנהל המערכת).':'يصل فقط إلى أخصائي/ة العلاج المسؤول/ة (ومدير النظام).', 'תצפית על':'ملاحظة عن', 'בוחרים למעלה מה לסמן, ולוחצים על המשמרת ביומן. "שעות אחרות" חל על כל היום. שישי ושבת לא רלוונטיים.':'اختاروا في الأعلى ما تريدون تحديده، ثم اضغطوا على المناوبة في التقويم. "ساعات أخرى" ينطبق على اليوم كله. الجمعة والسبت غير ذوي صلة.', 'נשמח לדעת מתי אתן זמינות. הכל מסומן "כן", ומשנים רק את מה שלא מתאים.':'يسعدنا أن نعرف متى أنتن متاحات. كل شيء محدد "نعم"، وتغيّرن فقط ما لا يناسب.', 'אין בקשות.':'لا توجد طلبات.', 'תבדקו איתי':'تحقّقوا معي', 'לא סומן':'غير محدد', 'שעות אחרות':'ساعات أخرى', 'נקה הכל':'مسح الكل', 'היעדרות':'غياب', 'היעדרויות':'غيابات',
   'שובץ/ה במשמרת שסימן/ה כך':'جُدول/ت في مناوبة اختارها/ا هكذا', 'אחמ"ש':'مسؤول وردية', 'חדש':'جديد',
   // shifts and days
-  'בוקר':'صباح', 'צהריים':'ما بعد الظهر', 'לילה':'ليل', 'ערב':'مساء', 'בוקר קצר':'صباح قصير', 'סופ"ש ארוך':'نهاية أسبوع طويلة', 'כפולה':'مزدوجة',
+  'סופ"ש':'نهاية الأسبوع', 'בוקר':'صباح', 'צהריים':'ما بعد الظهر', 'לילה':'ليل', 'ערב':'مساء', 'בוקר קצר':'صباح قصير', 'סופ"ש ארוך':'نهاية أسبوع طويلة', 'כפולה':'مزدوجة',
   'ראשון':'الأحد', 'שני':'الاثنين', 'שלישי':'الثلاثاء', 'רביעי':'الأربعاء', 'חמישי':'الخميس', 'שישי':'الجمعة', 'שבת':'السبت',
   // buttons and answers
   'ביטול':'إلغاء', 'חזרה':'رجوع', 'אישור':'موافقة', 'שמירה':'حفظ', 'שליחה':'إرسال', 'סגירה':'إغلاق', 'מחיקה':'حذف', 'תודה':'شكرًا', 'כתבו':'اكتبوا',
@@ -12588,10 +12688,8 @@ function thpRender(){
       <div class="portal-top"><button type="button" class="back-btn portal-back" id="therapy-home">→ מסך ראשי</button><h1 class="portal-title">פורטל הטיפול</h1>${side ? '<span></span>' : `<div class="mx-seg th-look-sm" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</div>`}</div>
       <div class="portal-hello">שלום ${pEsc(me.first || '')}</div>
       ${tabs.length > 1 ? thpTabsRow(tabs.map(t => [t[0], t[1], t[0] === 'todo' ? todoN : 0]), thp.tab, 'data-th-tab', side ? '' : 'th-nav-grid', true) : ''}
-      ${side ? `<div class="th-side-foot"><div class="mx-seg" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</div>
-        <button type="button" class="back-btn" id="therapy-home2">→ מסך ראשי</button></div>` : ''}
       </aside>
-      <div id="therapy-body">${!side && tabs.length > 1 ? '<button type="button" class="btn ghost small th-to-menu" id="th-to-menu">→ כל האזורים</button>' : ''}${!thp.planChild && (tabs.find(t => t[0] === thp.tab) || [])[1] ? `<h2 class="th-page-title">${pEsc(tabs.find(t => t[0] === thp.tab)[1])}</h2>` : ''}${inner}</div>
+      <div id="therapy-body">${side ? `<div class="ps-topbar th-topbar"><button type="button" class="back-btn" id="therapy-home2">→ מסך ראשי</button><span class="ps-topbar-end"><span class="mx-seg" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</span></span></div>` : ''}${!side && tabs.length > 1 ? '<button type="button" class="btn ghost small th-to-menu" id="th-to-menu">→ כל האזורים</button>' : ''}${!thp.planChild && (tabs.find(t => t[0] === thp.tab) || [])[1] ? `<h2 class="th-page-title">${pEsc(tabs.find(t => t[0] === thp.tab)[1])}</h2>` : ''}${inner}</div>
     </div></div>`;          // (on a computer the tabs row is gone, so every screen says its name: the simplicity checker)
   view.querySelectorAll('#therapy-home, #therapy-home2').forEach(b => b.addEventListener('click', () => { if(typeof personalRamzorKind === 'function' && !personalRamzorKind()) srvOpenPortal(); else showAppHome(); }));
   view.querySelectorAll('[data-th-look]').forEach(b => b.addEventListener('click', () => {          // (kept on this device; the other portals' own choice, the leopard included, is not touched)
@@ -15909,7 +16007,7 @@ function ocPaint(box, d){
   const mine = d.events.filter(e => !e.seen && (e.for_staff === me || (!e.for_staff && p.active_staff === me)));
   // a person is one folded line: taxi or not, and "הוזמן" for each way that needs one. Opened: each way by itself, with its time and address (Guy 2026-11-04)
   const dirHtml = (r, dir) => { const t = tripOf(r, dir), k = `${r.staff_id}|${r.day}|${r.shift}|${dir}`, w = dir === 'in' ? 'הגעה' : 'חזרה', tm = t.at_time || ocTripTime(r, dir);
-    return `<div class="oc-dir${t.need === 'need' ? ' need' : ''}" data-oc-trip="${k}"><div class="oc-dir-h"><b>${w}</b><span class="mx-seg oc-need" role="group" aria-label="${w}: מונית">${OC_NEED.map(([v, x]) => `<button type="button" data-oc-need="${v}" aria-pressed="${t.need === v}">${x}</button>`).join('')}</span></div>
+    return `<div class="oc-dir${t.need === 'need' ? ' need' : ''}" data-oc-trip="${k}"><div class="oc-dir-h"><b>${w}</b></div>
       <div class="oc-d-body"><label class="oc-field"><span>שעה</span><input type="text" inputmode="numeric" maxlength="20" data-oc-time value="${pEsc(tm)}" placeholder="למשל 06:30"></label>
         <label class="oc-field"><span>כתובת</span><input type="text" maxlength="120" data-oc-place value="${pEsc(t.place || d.addr[r.staff_id] || '')}"></label></div></div>`; };
   const personHtml = (r, g) => { const a = tripOf(r, 'in'), b = tripOf(r, 'out'), k = `${r.staff_id}|${r.day}|${r.shift}`, any = a.need === 'need' || b.need === 'need', none = !any && a.need === 'none' && b.need === 'none';
@@ -15919,17 +16017,13 @@ function ocPaint(box, d){
         <i class="oc-p-more" aria-hidden="true">▾</i>${any ? `<span class="oc-ords">${ord(a, 'in')}${ord(b, 'out')}</span>` : ''}</summary><div class="oc-p-body">${dirHtml(r, 'in')}${dirHtml(r, 'out')}</div></details>`; };
   // what "הוזמן לכולם" marks: who needs a taxi in this list, on this period, and is not marked yet
   d.waiting = []; list.forEach(r => ['in', 'out'].forEach(dir => { const t = tripOf(r, dir); if(t.need === 'need' && !t.ordered) d.waiting.push({ r, dir, t }); }));
-  const needN = list.reduce((n, r) => n + ['in', 'out'].filter(x => tripOf(r, x).need === 'need').length, 0);
-  // the schedule: the month, a week at first (the weekend's week)
-  const mk = monthKeyOf(p.from_day), days = daysOfMonth(mk), wk = oc.monthView ? null : (Number.isInteger(oc.week) && oc.weekMk === mk ? oc.week : mcalWeekOfDay(mk, p.from_day));
-  const lead = dowOf(days[0]), shown = wk === null ? days : days.filter((_, i) => Math.floor((lead + i) / 7) === wk);
+  const undoAll = oc.undoAll && oc.undoAll.key === p.key && oc.undoAll.trips.some(t => t.need === 'need' && t.ordered);          // (pressed again: what that press marked, and only that, is taken back)
   const cellIn = (day, s, rs) => { const can = d.may && ocInWindow(day, s);
     return `${rs.map(r => `<span class="mcal-name">${pEsc(nm(r.staff_id))}${d.may && ocInWindow(day, r.shift) ? ` <button type="button" class="oc-x" data-oc-un="${r.id}" aria-label="הסרת ${pEsc(nm(r.staff_id))} מ${ocShiftWord(r.shift)} ${ocShort(day)}">×</button>` : ''}</span>`).join('')}${can ? `<button type="button" class="oc-add" data-oc-add="${day}|${s}" aria-label="הוספת מדריך ל${ocShiftWord(s)} ${ocShort(day)}">+</button>` : ''}`; };
   const dayRow = (day, keep) => {
     const byShift = ['M', 'S', 'A', 'L', 'N'].map(s => [s, d.rows.filter(r => r.day === day && r.shift === s)]).filter(([s, rs]) => (rs.length || ['M', 'A', 'N'].includes(s)) && (!keep || keep(s)));
     return `<div class="mcal-wrow${[5, 6].includes(dowOf(day)) ? ' weekend' : ''}${day === isoDate(new Date()) ? ' today' : ''}"><div class="mcal-wrow-day"><b>${DOW_SHORT[dowOf(day)]}</b><span>${ocShort(day)}</span></div><div class="mcal-wrow-cells">${byShift.map(([s, rs]) => `<div class="mcal-wrow-shift"><span class="mcal-wrow-lbl">${ocShiftWord(s)}</span><div class="mcal-cell oc-cell">${cellIn(day, s, rs)}</div></div>`).join('')}</div></div>`; };
-  const sched = shown.map(day => dayRow(day)).join('');
-  // a phone: only two views. "שבוע": the seven days side by side, from the right, week after week past the month; "סוף השבוע הקרוב": Thursday night to Sunday morning, as in ocInWindow
+  // only two views, on a phone and on a computer (Guy 2026-11-04). "שבוע": the seven days side by side, from the right, week after week past the month; "סוף השבוע הקרוב": Thursday night to Sunday morning, as in ocInWindow
   const phoneSched = () => {
     const today = isoDate(new Date()), ws = oc.wkStart || ocSunday(p.from_day), week = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(ws, i)), fri = ocFridayOf(today), end = oc.schedView === 'weekend';
     const seg = `<div class="mx-seg oc-sv" role="group" aria-label="תצוגת הסידור"><button type="button" data-oc-sv="week" aria-pressed="${!end}">שבוע</button><button type="button" data-oc-sv="weekend" aria-pressed="${end}">סוף השבוע הקרוב</button></div>`;
@@ -15948,15 +16042,11 @@ function ocPaint(box, d){
     ${!p.active_staff && d.events.some(e => !e.for_staff && !e.seen) ? `<div class="pnote">${d.events.filter(e => !e.for_staff && !e.seen).length} שינויים נשמרו לבדיקה של מי שתיקח את הכוננות.</div>` : ''}
     <div class="mx-seg oc-views" role="group" aria-label="תצוגה"><button type="button" data-oc-view="list" aria-pressed="${oc.view !== 'sched'}">עובדי ${p.kind === 'weekend' ? 'סוף השבוע' : 'החג'} ומוניות</button><button type="button" data-oc-view="sched" aria-pressed="${oc.view === 'sched'}">סידור</button></div>
     ${oc.view !== 'sched' ? `<div class="oc-list">
-      ${needN ? `<div class="oc-all-row"><button type="button" class="btn small" data-oc-all-ordered${d.waiting.length ? '' : ' disabled'}>${d.waiting.length ? 'הוזמן לכולם' : '✓ הוזמן לכולם'}</button></div>` : ''}
+      ${d.waiting.length || undoAll ? `<div class="oc-all-row"><button type="button" class="btn small${d.waiting.length ? '' : ' ghost'}" data-oc-all-ordered aria-pressed="${!d.waiting.length}">${d.waiting.length ? 'הוזמן לכולם' : '✓ הוזמן לכולם'}</button></div>` : ''}
       <div class="pnote">לחיצה על שם פותחת הגעה וחזרה, עם שעה וכתובת.</div>
       ${groups.length ? groups.map(g => `<div class="oc-group"><div class="oc-group-h"><b>${pEsc(DOW_NAMES[dowOf(g.day)])} ${ocShort(g.day)} · ${ocShiftWord(g.shift)}</b> <bdi dir="ltr">${g.hours}</bdi></div>
         ${g.rows.map(r => personHtml(r, g)).join('')}</div>`).join('') : '<div class="pnote">אין עדיין שיבוצים בסידור לתקופה הזו.</div>'}
-    </div>` : `<div class="oc-sched">${ocPhone() ? phoneSched() : `
-      ${mcalViewBarHtml(mk, wk, 'oc-viewbar')}
-      ${d.may ? '<div class="pnote">אפשר להוסיף או להסיר מדריך במשמרות שבין חמישי 22:00 לראשון 11:00.</div>' : ''}
-      <div class="mcal mcal-wrows">${sched}</div>`}
-    </div>`}
+    </div>` : `<div class="oc-sched">${phoneSched()}</div>`}
   </div>`;
   ocWire(box, d);
 }
@@ -15968,8 +16058,6 @@ function ocWire(box, d){
   box.querySelectorAll('[data-oc-view]').forEach(b => b.addEventListener('click', () => { oc.view = b.dataset.ocView; again(); }));
   box.querySelectorAll('[data-oc-sv]').forEach(b => b.addEventListener('click', () => { oc.schedView = b.dataset.ocSv; paint(); }));
   box.querySelectorAll('[data-oc-wk]').forEach(b => b.addEventListener('click', () => { oc.wkStart = addDays(oc.wkStart || ocSunday(p.from_day), Number(b.dataset.ocWk)); again(); }));
-  mcalViewBarWire(box, 'oc-viewbar', monthKeyOf(p.from_day), () => (oc.monthView ? null : (Number.isInteger(oc.week) ? oc.week : mcalWeekOfDay(monthKeyOf(p.from_day), p.from_day))),
-    (mm, w) => { oc.monthView = w === null; oc.week = w; oc.weekMk = mm; }, again);
   const take = box.querySelector('[data-oc-take]');
   if(take) take.addEventListener('click', async () => {
     const prev = p.active_staff;
@@ -16025,21 +16113,18 @@ function ocWire(box, d){
   });
   // "הוזמן לכולם": a mark in the system only (no taxi is ordered by it), for who needs one in this list and nobody else
   { const all = box.querySelector('[data-oc-all-ordered]'); if(all) all.addEventListener('click', async () => {
-      const todo = d.waiting.slice(); if(!todo.length) return;
-      const was = todo.map(x => d.trips.find(t => t.staff_id === x.r.staff_id && t.day === x.r.day && t.shift === x.r.shift && t.dir === x.dir));
-      was.forEach(t => { t.ordered = true; }); paint();
-      const undo = () => { was.forEach(t => { t.ordered = false; }); paint(); toast('לא נשמר. אפשר לנסות שוב.'); };
+      const todo = d.waiting.slice(), mark = todo.length > 0;
+      const was = mark ? todo.map(x => d.trips.find(t => t.staff_id === x.r.staff_id && t.day === x.r.day && t.shift === x.r.shift && t.dir === x.dir)) : ((oc.undoAll && oc.undoAll.key === p.key && oc.undoAll.trips) || []).filter(t => t.need === 'need' && t.ordered);
+      if(!was.length) return;
+      was.forEach(t => { t.ordered = mark; }); oc.undoAll = mark ? { key:p.key, trips:was } : null; paint();
+      const undo = () => { was.forEach(t => { t.ordered = !mark; }); oc.undoAll = mark ? null : { key:p.key, trips:was }; paint(); toast('לא נשמר. אפשר לנסות שוב.'); };
       if(!(await ocEnsurePeriod(p))){ undo(); return; }
-      const at = new Date().toISOString(), r = await sbPersonal.from('oncall_trip').upsert(was.map(t => ({ period_key:p.key, staff_id:t.staff_id, day:t.day, shift:t.shift, dir:t.dir, need:'need', at_time:t.at_time || null, place:t.place || null, ordered:true, updated_by:srv.me, updated_at:at })));
+      const at = new Date().toISOString(), r = await sbPersonal.from('oncall_trip').upsert(was.map(t => ({ period_key:p.key, staff_id:t.staff_id, day:t.day, shift:t.shift, dir:t.dir, need:'need', at_time:t.at_time || null, place:t.place || null, ordered:mark, updated_by:srv.me, updated_at:at })));
       if(r.error){ undo(); return; }
-      ocTell(p, `הוזמן לכולם: ${todo.length} נסיעות`);
+      ocTell(p, `${mark ? 'הוזמן לכולם' : 'בוטל "הוזמן לכולם"'}: ${was.length} נסיעות`);
     }); }
   box.querySelectorAll('[data-oc-trip]').forEach(w => {
     const k = w.dataset.ocTrip, staff = k.split('|')[0];
-    w.querySelectorAll('[data-oc-need]').forEach(b => b.addEventListener('click', () => {
-      const cur = b.getAttribute('aria-pressed') === 'true', v = cur ? 'pending' : b.dataset.ocNeed;
-      quick(w, Object.assign({ need:v }, v !== 'need' ? { ordered:false } : {}), v === 'pending' ? 'הסימון הוסר' : v === 'need' ? 'צריך מונית' : 'לא צריך מונית');
-    }));
     const t = w.querySelector('[data-oc-time]'), pl = w.querySelector('[data-oc-place]');
     t.addEventListener('change', () => { const r0 = d.rows.find(x => x.staff_id === staff && x.day === k.split('|')[1] && x.shift === k.split('|')[2]), v = t.value.trim(), dflt = r0 ? ocTripTime(r0, k.split('|')[3]) : '';
       quick(w, { at_time:v && v !== dflt ? v : null }, `שעה ${v || '—'}`); });
@@ -16231,7 +16316,7 @@ function dgEdit(e, occDay, done){
 //   * messages to the staff (everybody or chosen people; portal or also e-mail) with who saw and who confirmed "קראתי"
 //   * the WhatsApp group of the framework: a shortcut only
 const mgr = { week:null, conv:null, kidsLoaded:false };
-const MGR_TABS = [['mhome', 'בית'], ['schedule', 'סידור העבודה'], ['timetable', 'לו"ז'], ['kids', 'הילדים'], ['chats', 'שיחות'], ['users', 'משתמשים']];          // (the messages to the staff: inside the home tab, Guy 2026-11-03)
+const MGR_TABS = [['schedule', 'סידור העבודה'], ['timetable', 'לו"ז'], ['kids', 'הילדים'], ['chats', 'שיחות'], ['users', 'משתמשים']];          // (the messages to the staff: inside the home tab, Guy 2026-11-03)
 const mgrIsMe = () => { try { return (portalMe() || {}).role === 'manager'; } catch(e){ return false; } };
 const mgrShort = iso => { const t = parseIso(iso); return t.getDate() + '/' + (t.getMonth() + 1); };
 const mgrWeekStart = () => { const t = isoDate(new Date()); return mgr.week || addDays(t, -dowOf(t)); };
@@ -16242,39 +16327,15 @@ async function mgrKids(){          // the children's names: the manager reads th
 }
 async function mgrRender(t, body){
   if(typeof sb !== 'undefined' && portalServerOn) sb = sbPersonal;          // (the timetable editor of the ahmash control reads with the personal session)
-  if(t === 'schedule') return mgrSchedule(body);
   if(t === 'timetable') return mgrTimetable(body);
   if(t === 'kids') return mgrKidsTab(body);
-  if(t === 'chats') return mgrChats(body);
+  if(t === 'chats'){          // (her messages to the staff live here, above the conversations: Guy 2026-11-04)
+    const group = String((portalLoad().waMsg || {}).group || '').trim();
+    body.innerHTML = `${group ? `<div class="mgr-links"><a class="btn ghost wa-group" href="${pEsc(waGroupUrl(group))}"${waTarget()}>${WA_SVG}<span>קבוצת הצוות</span></a></div>` : ''}<details class="pfold" data-fold="m-msg"${openFold('m-msg') ? ' open' : ''}><summary><span>הודעה לצוות</span></summary><div class="pfold-body" id="mgr-msgs"><div class="pnote">רק רגע...</div></div></details><div id="mgr-convs"></div>`;
+    wireFolds(body); mgrMessages(body.querySelector('#mgr-msgs')); return mgrChats(body.querySelector('#mgr-convs'));
+  }
   if(t === 'users') return mgrUsers(body);
-  return mgrHome(body);
-}
-// ---- home: the current week (Sunday–Saturday, Guy: "השבוע הנוכחי"), the timetable of the week, and the ways in
-async function mgrHome(body){
-  const st = portalLoad(), start = mgrWeekStart(), days = Array.from({ length:7 }, (_, i) => addDays(start, i)), mk = monthKeyOf(start), m = portalMonth(mk);
-  const thisWeek = start === addDays(isoDate(new Date()), -dowOf(isoDate(new Date())));
-  const fixed = await sbPersonal.from('timetable_fixed').select('weekday,items'), daily = await sbPersonal.from('timetable_day').select('day,items').gte('day', days[0]).lte('day', days[6]);
-  if(!body.isConnected) return;
-  const ttOf = d => ((daily.data || []).find(x => x.day === d) || (fixed.data || []).find(x => x.weekday === dowOf(d)) || {}).items || [];
-  const wk = mcalWeekOfDay(mk, start < mk + '-01' ? mk + '-01' : start);
-  const group = String((st.waMsg || {}).group || '').trim();
-  body.innerHTML = `
-    <div class="mcal-weeknav mgr-weeknav"><button type="button" class="mcal-wk" data-mw="-7" aria-label="השבוע הקודם"><bdi dir="ltr">›</bdi></button><b>${thisWeek ? 'השבוע הנוכחי' : 'שבוע'} <bdi dir="ltr">${mgrShort(days[0])}–${mgrShort(days[6])}</bdi></b><button type="button" class="mcal-wk" data-mw="7" aria-label="השבוע הבא"><bdi dir="ltr">‹</bdi></button></div>
-    <div class="mgr-links">
-      ${liveCut() ? '' : '<button type="button" class="btn ghost" data-mgo="kids">תוכניות הילדים</button>'}
-      ${group ? `<a class="btn ghost wa-group" href="${pEsc(waGroupUrl(group))}"${waTarget()}>${WA_SVG}<span>קבוצת הצוות</span></a>` : ''}
-    </div>
-    <details class="pfold" data-fold="m-msg"${openFold('m-msg') ? ' open' : ''}><summary><span>הודעה לצוות</span></summary><div class="pfold-body" id="mgr-msgs"><div class="pnote">רק רגע...</div></div></details>
-    <details class="pfold" data-fold="m-sched" open><summary><span>סידור העבודה השבוע</span></summary><div class="pfold-body">
-      ${m.published ? monthCalHtml(portalCtx(mk), m.assignments, { week:wk, rows:true, othersInCells:true }) : '<div class="pnote">הסידור של החודש עוד לא פורסם.</div>'}
-    </div></details>
-    <details class="pfold" data-fold="m-tt" open><summary><span>הלו"ז השבוע</span></summary><div class="pfold-body mgr-tt">
-      ${days.map(d => `<div class="mcal-wrow${d === isoDate(new Date()) ? ' today' : ''}"><div class="mcal-wrow-day"><b>${DOW_SHORT[dowOf(d)]}</b><span>${mgrShort(d)}</span></div><div class="mgr-tt-day">${ttOf(d).length ? ttOf(d).map(x => `<span class="mgr-tt-item"><bdi dir="ltr">${pEsc(x.t || '')}${x.end ? '–' + pEsc(x.end) : ''}</bdi> ${pEsc(x.n || '')}</span>`).join('') : '<span class="pnote">—</span>'}</div></div>`).join('')}
-    </div></details>`;
-  body.querySelectorAll('[data-mw]').forEach(b => b.addEventListener('click', () => { mgr.week = addDays(mgrWeekStart(), +b.dataset.mw); const nm = monthKeyOf(mgr.week); if(nm !== portalUi.month){ portalUi.month = nm; } mgrHome(body); }));
-  body.querySelectorAll('[data-mgo]').forEach(b => b.addEventListener('click', () => showPortal(b.dataset.mgo)));
-  wireFolds(body);
-  mgrMessages(body.querySelector('#mgr-msgs'));
+  return mgrSchedule(body);
 }
 // ---- the schedule: read only, a week at first
 function mgrSchedule(body){
@@ -16282,6 +16343,7 @@ function mgrSchedule(body){
   const wk = portalUi.mgrMonthView ? null : portalUi.mgrWeekMk === mk ? portalUi.mgrWeek : mk === monthKeyOf(today) ? mcalWeekOfDay(mk, today) : 0;
   body.innerHTML = `${monthNavHtml(mk)}<div class="pnote">צפייה בלבד.</div>${m.published ? mcalViewBarHtml(mk, wk, 'mgr-viewbar') + monthCalHtml(portalCtx(mk), m.assignments, { week:wk === null ? undefined : wk, rows:true, othersInCells:true }) : '<div class="pnote">הסידור של החודש עוד לא פורסם.</div>'}`;
   wireMonthNav(body);
+  { const seg = body.querySelector('#mgr-viewbar .mcal-seg'); if(seg){ seg.insertAdjacentHTML('afterend', `<button type="button" class="btn ghost mgr-share" id="mgr-share">${WA_SVG}<span>שיתוף</span></button>`); body.querySelector('#mgr-share').addEventListener('click', () => csShareSheet(mk, wk)); } }
   mcalViewBarWire(body, 'mgr-viewbar', mk, () => wk, (mm, w) => { portalUi.mgrMonthView = w === null; portalUi.mgrWeek = w; portalUi.mgrWeekMk = mm; portalUi.month = mm; }, () => portalRefresh());
 }
 // ---- the general timetable: the same editor as the ahmash control; the database tells the coordinator about her changes
@@ -16303,7 +16365,7 @@ async function mgrTimetableView(box){
   const [r, fixed, daily] = await Promise.all([sb.rpc('tv_timetable_today'), sbPersonal.from('timetable_fixed').select('weekday,items'), sbPersonal.from('timetable_day').select('day,items').gte('day', days[0]).lte('day', days[6])]);
   if(r.error) throw r.error;
   if(!box.isConnected) return;
-  const itemsOf = d => d === today ? (r.data.items || []) : ((daily.data || []).find(x => x.day === d) || (fixed.data || []).find(x => x.weekday === dowOf(d)) || {}).items || [];
+  const itemsOf = d => (d === today ? (r.data.items || []) : ((daily.data || []).find(x => x.day === d) || (fixed.data || []).find(x => x.weekday === dowOf(d)) || {}).items || []).filter(x => ttOn(x, d));
   const card = a => `<div class="mgr-ttv-item"><div class="mgr-ttv-time"><bdi dir="ltr">${pEsc(a.t || '')}${a.end ? '–' + pEsc(a.end) : ''}</bdi></div><div class="mgr-ttv-icon">${typeof ttArt === 'function' ? ttArt(a.i) : ''}</div><div class="mgr-ttv-name">${pEsc(a.n || '')}</div></div>`;
   const grid = list => list.length ? `<div class="mgr-ttv" style="--c:${list.length > 12 ? 4 : 3}">${list.map(card).join('')}</div>` : '<div class="pnote">אין לו"ז ליום הזה.</div>';
   const phone = matchMedia('(max-width:700px)').matches, pick = mgr.ttDay && days.includes(mgr.ttDay) ? mgr.ttDay : today;
@@ -16428,9 +16490,8 @@ async function mgrMessages(body){
       <textarea id="mm-text" rows="3" maxlength="1500" placeholder="מה רוצים לומר?"></textarea>
       <div class="mx-seg mgr-seg" role="group" aria-label="איך">${MGR_VIA.map(([k, w], i) => `<button type="button" data-mm-via="${k}" aria-pressed="${i === 0}">${w}</button>`).join('')}</div>
       <label class="oc-ordered"><input type="checkbox" id="mm-ack"> לבקש אישור "קראתי"</label>
-      <div class="mx-seg mgr-seg" role="group" aria-label="למי"><button type="button" data-mm-to="all" aria-pressed="true">לכל הצוות</button><button type="button" data-mm-to="some" aria-pressed="false">לחלק מהצוות</button></div>
       <div class="mm-groups">${MGR_GROUPS.map(([k, w], i) => `<label class="oc-ordered"><input type="checkbox" data-mm-grp="${k}"${i === 0 ? ' checked' : ''}> ${w}</label>`).join('')}</div>
-      <div class="mm-some" hidden>
+      <div class="mm-some">
         <label class="oc-ordered"><input type="checkbox" id="mm-ahm"> כל האחמ"שים</label>
         <details class="pfold mm-names"><summary><span>בחירת שמות</span><small id="mm-n"></small></summary><div class="pfold-body mm-list">${people.map(s => `<label class="oc-ordered"><input type="checkbox" data-mmp="${s.id}"> ${pEsc(s.display_name)}</label>`).join('')}</div></details>
       </div>
@@ -16441,16 +16502,15 @@ async function mgrMessages(body){
         <div class="pnote">${new Date(a.created_at).toLocaleString('he-IL', { dateStyle:'short', timeStyle:'short' })} · ${(MGR_VIA.find(v => v[0] === a.via) || MGR_VIA[0])[1]} · ${a.audience ? `ל-${a.audience.length} אנשים` : 'לכל הצוות'}</div>
         <div>${pEsc(a.text)}</div>
         <ul class="mgr-readers">${list.map(id => { const r = rs.find(x => x.staff_id === id); return `<li><span>${pEsc(names[id] || '?')}</span><small>${r && r.ack_at ? 'קראתי ✓' : r ? 'ראה/תה' : 'עוד לא'}</small></li>`; }).join('')}</ul></div></details>`; }).join('') || '<div class="pnote">עוד לא נשלחו הודעות.</div>'}`;
-  let toAll = true, via = 'portal';
+  let via = 'portal';
   const $ = q => body.querySelector(q);
   const chosen = () => {
-    if(toAll){ const g = [...body.querySelectorAll('[data-mm-grp]:checked')].map(x => x.dataset.mmGrp); return active.filter(s => MGR_GROUPS.some(([k, , f]) => g.includes(k) && f(s))).map(s => s.id); }
-    const set = new Set([...body.querySelectorAll('[data-mmp]:checked')].map(x => x.dataset.mmp));
+    const g = [...body.querySelectorAll('[data-mm-grp]:checked')].map(x => x.dataset.mmGrp), set = new Set(active.filter(s => MGR_GROUPS.some(([k, , f]) => g.includes(k) && f(s))).map(s => s.id));
+    body.querySelectorAll('[data-mmp]:checked').forEach(x => set.add(x.dataset.mmp));
     if($('#mm-ahm').checked) active.filter(s => (srv.ahmash || {})[s.id] > 0).forEach(s => set.add(s.id));
     return [...set];
   };
   const count = () => { const n = body.querySelectorAll('[data-mmp]:checked').length; $('#mm-n').textContent = n ? `נבחרו ${n}` : ''; };
-  body.querySelectorAll('[data-mm-to]').forEach(b => b.addEventListener('click', () => { toAll = b.dataset.mmTo === 'all'; body.querySelectorAll('[data-mm-to]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); $('.mm-groups').hidden = !toAll; $('.mm-some').hidden = toAll; }));
   body.querySelectorAll('[data-mmp]').forEach(x => x.addEventListener('change', count));
   body.querySelectorAll('[data-mm-via]').forEach(b => b.addEventListener('click', () => { via = b.dataset.mmVia; body.querySelectorAll('[data-mm-via]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
   wireFolds(body);
