@@ -8832,7 +8832,7 @@ async function srvSwapCandidates2(assignmentId){
 async function srvFillCandidates(box, assignmentId){
   const list = await srvSwapCandidates2(assignmentId); if(!box.isConnected) return;
   const st = portalLoad(), row = (st.rows || []).find(r => r.id === assignmentId), when = row ? `${dayLabel(row.day)} ${SRV_SHIFT_WORD[row.shift] || ''}` : '';
-  const txt = c => `היי ${String(c.name || '').split(' ')[0]}, ביקשתי החלפה ב${when}. יש מצב ש${c.female === false ? 'תוכל' : 'תוכלי'} לקחת אותה? אפשר להציע בפורטל, בלשונית "החלפות". תודה!`;
+  const txt = c => `היי ${String(c.name || '').replace(/ \S'?$/, '')}, ביקשתי החלפה ב${when}. יש מצב ש${c.female === false ? 'תוכל' : 'תוכלי'} לקחת אותה? אפשר להציע בפורטל, בלשונית "החלפות". תודה!`;
   const LV = { yes:'כן', can:'יכול' };
   box.innerHTML = list.length ? `<small class="pcands-title">יכולים לקחת את המשמרת:</small>${list.map(c => { const num = waNorm(c.wa);
       return `<span class="pcand">${pEsc(c.name)}${LV[c.level] ? ` <span class="mcal-name wish-${c.level === 'can' ? 'can' : 'yes'}">${LV[c.level]}</span>` : ''}${num ? `<a class="wa-btn" href="${pEsc(waUrl(num, txt(c)))}"${waTarget()} title="שאלה בוואטסאפ" aria-label="שאלה בוואטסאפ ל${pEsc(c.name)}">${WA_SVG}</a>` : ''}</span>`; }).join('')}`
@@ -10290,7 +10290,7 @@ function waText(staffId, key){
   const other = lv === 'no' && (((portalMonth(monthKeyOf(date)).prefs || {})[staffId] || {}).absent || []).includes(date) ? null          // (a day away: never "another shift")
     : st.shiftTypes.find(s => s.id !== shiftId && ['yes', 'can'].includes(srvWishFor(staffId, `${date}|${s.id}`)));
   const kind = other ? 'other' : lv === 'no' ? 'no' : 'none';
-  return waTemplate(kind, female).replace(/\{שם\}/g, String(p.first || '').split(' ')[0]).replace(/\{משמרת אחרת\}/g, other ? `משמרת ה${other.label}` : '').replace(/\{משמרת\}/g, `משמרת ה${sh.label || ''}`)
+  return waTemplate(kind, female).replace(/\{שם\}/g, String(p.first || '').replace(/ \S'?$/, '')).replace(/\{משמרת אחרת\}/g, other ? `משמרת ה${other.label}` : '').replace(/\{משמרת\}/g, `משמרת ה${sh.label || ''}`)
     .replace(/\{יום\}/g, `יום ${dayLabel(date)}`).replace(/\{שעות\}/g, `${sh.start || ''}–${sh.end || ''}`);
 }
 // WhatsApp opens in the computer's app (whatsapp://, no browser tab: Guy 2026-10-26) or in the browser, by the choice in the gear ("מתקדם")
@@ -10514,7 +10514,7 @@ function srvRenderCoordSettings(body){
       ${st.instructors.filter(p => p.role !== 'instructor' && !gone[p.id]).map(p => fold(p, p.admin ? 'מנהל' : p.role === 'teacher' ? calRoleWord(p.id, 'teacher') : KIND_WORD[p.role], false, `${p.role === 'teacher' && p.active ? `<button type="button" class="btn ghost small" data-fixed-hours="${p.id}">שעות קבועות</button>` : ''}
         ${contact(p)}${photoBtn(p)}${login(p)}${leave(p)}`)).join('')}
       <h3 class="psec">הוספת איש צוות</h3>
-      <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם (כפי שיוצג)"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option>${srv.profile && 'therapist' in srv.profile ? '<option value="therapist">איש/אשת טיפול</option>' : ''}${srv.meRow && srv.meRow.admin ? '<option value="manager">מנהלת מסגרת</option>' : ''}</select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
+      <div class="pstaff-add"><input type="text" id="new-name" placeholder="שם פרטי"><input type="text" id="new-last" placeholder="שם משפחה"><select id="new-kind"><option value="instructor">מדריך/ה</option><option value="service">בת שירות</option><option value="teacher">מורה / גננת</option>${srv.profile && 'therapist' in srv.profile ? '<option value="therapist">איש/אשת טיפול</option>' : ''}${srv.meRow && srv.meRow.admin ? '<option value="manager">מנהלת מסגרת</option>' : ''}</select><select id="new-role" aria-label="סוג המדריך"><option value="plain">מדריך/ה</option><option value="leader">מוביל/ה</option><option value="ahmash">אחמ"ש</option></select><input type="email" dir="ltr" id="new-mail" placeholder="מייל"><button type="button" class="btn small" id="new-go">הוספה</button></div>`;
       const wire = box => {
         box.querySelectorAll('[data-simple]').forEach(b => b.addEventListener('click', () => simplePrefsSheet(b.dataset.simple, again)));
         box.querySelectorAll('[data-oc-grant]').forEach(b => b.addEventListener('click', () => oncallGrantSheet(b.dataset.ocGrant)));          // (the admin: may this social worker add / remove instructors in the weekend shifts? scheduling-v50.sql)          // (the admin only: "שבוע אחרי שבוע" / "בלי צבעים" for somebody, Guy 2026-10-30)
@@ -10585,13 +10585,14 @@ function srvRenderCoordSettings(body){
         const kindSel = box.querySelector('#new-kind'), roleSel = box.querySelector('#new-role');
         kindSel.addEventListener('change', () => { roleSel.hidden = kindSel.value !== 'instructor'; });          // (the type - instructor, leader, ahmash - only for an instructor)
         box.querySelector('#new-go').addEventListener('click', async () => {
-          const name = box.querySelector('#new-name').value.trim(), kind = box.querySelector('#new-kind').value, mail = box.querySelector('#new-mail').value.trim().toLowerCase() || null;
-          if(!name){ toast('צריך שם'); return; }
+          const name = box.querySelector('#new-name').value.trim(), last = box.querySelector('#new-last').value.trim() || null, kind = box.querySelector('#new-kind').value, mail = box.querySelector('#new-mail').value.trim().toLowerCase() || null;
+          if(!name){ toast('צריך שם פרטי'); return; }
+          if(!last && st.instructors.some(p => p.active && (p.first === name || String(p.first).startsWith(name + ' ')))){ toast(`כבר יש ${name} ברשימה. צריך גם שם משפחה, כדי להבדיל ביניהם.`, 6000); return; }          // (the first letter of it shows only when two have the same first name: scheduling-v61.sql)
           const maxOrder = Math.max(0, ...st.instructors.map((p, i) => i + 1));
-          const s = await sbPersonal.from('staff').insert({ display_name:name, kind, sort_order:maxOrder + 1 }).select('id').single();
+          const s = await sbPersonal.from('staff').insert({ display_name:name, first_name:name, kind, sort_order:maxOrder + 1 }).select('id').single();
           if(s.error){ toast('ההוספה נכשלה'); return; }
           const role = kind === 'instructor' ? roleSel.value : 'plain';
-          const pr = await sbPersonal.from('staff_private').insert({ staff_id:s.data.id, email:mail, female:true, is_leader:role === 'leader', ahmash_rank:role === 'ahmash' ? 1 : 0, leader_priority:kind === 'instructor' ? instr.length + 1 : null, ...(kind === 'therapist' ? { is_therapist:true } : {}) });          // (a therapist: scheduling-v31.sql)
+          const pr = await sbPersonal.from('staff_private').insert({ staff_id:s.data.id, email:mail, last_name:last, female:true, is_leader:role === 'leader', ahmash_rank:role === 'ahmash' ? 1 : 0, leader_priority:kind === 'instructor' ? instr.length + 1 : null, ...(kind === 'therapist' ? { is_therapist:true } : {}) });          // (a therapist: scheduling-v31.sql)
           toast(pr.error ? 'האדם נוסף, אבל המייל לא נשמר' : 'נוסף. אפשר ליצור לו התחברות.'); again();
         });
       };
@@ -11919,6 +11920,8 @@ async function adminStaff(box, body){
   ]);
   const extra = !priv.error;          // (personal minimums, the day colleague and the language come with scheduling-v25.sql)
   if(!extra) priv = await sbPersonal.from('staff_private').select(BASE);
+  const nmF = await sbPersonal.from('staff').select('id,first_name'), nmL = await sbPersonal.from('staff_private').select('staff_id,last_name'), twoNames = !nmF.error && !nmL.error, firstOf = {}, lastOf = {};          // (first and family name: scheduling-v61.sql)
+  if(twoNames){ (nmF.data || []).forEach(r => { firstOf[r.id] = r.first_name; }); (nmL.data || []).forEach(r => { lastOf[r.staff_id] = r.last_name; }); }
   const thr = await sbPersonal.from('staff_private').select('staff_id,is_therapist'), mercury = !thr.error && mercuryOn();          // (Mercury: "also a therapist", scheduling-v31.sql)
   const rmv = await sbPersonal.from('staff').select('id').not('removed_at', 'is', null), gone = {}; if(!rmv.error) (rmv.data || []).forEach(r => { gone[r.id] = true; });          // (הסרה מהרשימה: scheduling-v60.sql)
   const isTh = {}; if(mercury) (thr.data || []).forEach(r => { isTh[r.staff_id] = !!r.is_therapist; });
@@ -11940,7 +11943,9 @@ async function adminStaff(box, body){
     const s = staff.data.find(x => x.id === b.dataset.admEdit), p = pv[s.id] || {};
     const yes = (id, label, on) => `<label class="adm-check"><input type="checkbox" id="${id}"${on ? ' checked' : ''}> ${label}</label>`;
     const sh = portalSheet(`<h2>עריכת ${pEsc(s.display_name)}</h2>
-      <label class="pfield">השם (כפי שמוצג)<input type="text" id="ae-name" maxlength="40" value="${pEsc(s.display_name)}"></label>
+      ${twoNames ? `<label class="pfield">שם פרטי<input type="text" id="ae-name" maxlength="40" value="${pEsc(firstOf[s.id] || s.display_name)}"></label>
+      <label class="pfield">שם משפחה<input type="text" id="ae-last" maxlength="40" value="${pEsc(lastOf[s.id] || '')}"></label>
+      <div class="pnote">בכל מקום מופיע רק השם הפרטי. האות הראשונה של שם המשפחה מופיעה רק כשיש עוד מישהו עם אותו שם.</div>` : `<label class="pfield">השם (כפי שמוצג)<input type="text" id="ae-name" maxlength="40" value="${pEsc(s.display_name)}"></label>`}
       <label class="pfield">תפקיד<select id="ae-kind">${Object.keys(KIND).filter(k => k !== 'admin' && (k !== 'therapist' || mercury)).map(k => `<option value="${k}"${s.kind === k ? ' selected' : ''}>${KIND[k]}</option>`).join('')}</select></label>
       <div class="adm-checks">${yes('ae-active', 'פעיל/ה', s.active)}${yes('ae-female', 'אישה', p.female !== false)}${yes('ae-leader', 'מוביל/ה', p.is_leader)}${yes('ae-nonights', 'לא עושה לילות', p.no_nights)}${yes('ae-manual', 'שיבוץ ידני בלבד', p.manual_only)}${yes('ae-long', 'רק סופ"ש ארוך', p.only_long_weekend)}${yes('ae-admin', 'מנהל (פורטל ניהול)', p.is_admin)}</div>
       ${mercury ? `<div class="adm-checks">${yes('ae-therapist', 'גם איש/אשת טיפול (רואה את הילדים שבאחריותו בפורטל הטיפול)', s.kind === 'therapist' || isTh[s.id])}</div>` : ''}
@@ -11956,9 +11961,10 @@ async function adminStaff(box, body){
       <div class="confirm-actions"><button type="button" class="btn ghost" data-close>ביטול</button><button type="button" class="btn" id="ae-save">שמירה</button></div>`);
     sh.querySelector('#ae-save').addEventListener('click', async () => {
       const v = id => sh.querySelector('#' + id), name = v('ae-name').value.trim(); if(!name){ toast('צריך שם'); return; }
-      const a = await sbPersonal.from('staff').update({ display_name:name, kind:v('ae-kind').value, active:v('ae-active').checked }).eq('id', s.id);
+      const a = await sbPersonal.from('staff').update({ [twoNames ? 'first_name' : 'display_name']:name, kind:v('ae-kind').value, active:v('ae-active').checked }).eq('id', s.id);
       const row = { female:v('ae-female').checked, is_leader:v('ae-leader').checked, no_nights:v('ae-nonights').checked, manual_only:v('ae-manual').checked, only_long_weekend:v('ae-long').checked,
                     is_admin:v('ae-admin').checked, ahmash_rank:+v('ae-ahm').value, latest_end_hour:v('ae-end').value ? +v('ae-end').value : null };
+      if(twoNames) row.last_name = v('ae-last').value.trim() || null;
       const num = id => { const x = v(id); if(!x || x.value === '') return null; const n = Math.round(+x.value); return isNaN(n) ? null : Math.max(0, n); };
       if(v('ae-mmid')) Object.assign(row, { min_mid:num('ae-mmid'), min_nights:num('ae-mnight'), min_weekend:num('ae-mwk'), day_buddy:v('ae-buddy').value || null });
       if(v('ae-lang')) row.lang = v('ae-lang').value === 'ar' ? 'ar' : null;
