@@ -3370,6 +3370,12 @@ body[data-rlook=light] .kq-word{ color:#7A5A00 !important; }
 .mx-brand-small{ flex-direction:row; gap:8px; margin:0; }
 .mx-brand-small .mx-brand-logo{ width:40px; height:40px; }
 .mx-brand-small .eyebrow-gold{ font-size:13px; }
+
+/* light / dark in the corner of the home screen (Guy 2026-11-08) */
+.mx-home .apphome-top-end{ display:flex; align-items:center; gap:8px; }
+.apphome-theme{ width:44px; height:44px; flex:none; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid var(--color-border, rgba(127,127,127,.35)); background:var(--color-surface, transparent); font-size:20px; line-height:1; cursor:pointer; padding:0; }
+.apphome-theme:focus-visible{ outline:3px solid var(--color-accent, #f2c14e); outline-offset:2px; }
+@media (forced-colors:active){ .apphome-theme{ border-color:CanvasText; } }
 /* ---------- the kids' screen: what it shows (the admin's switches) and the birthdays (Guy 2026-11-08, 14zp-tv-display.js) ---------- */
 
 /* the top bar of the TV: the name of the board and the dots, each may be hidden */
@@ -7378,7 +7384,7 @@ function showAppHome(){
   document.body.classList.toggle('leopard-bg', look === 'leopard');
   document.getElementById('view-apphome').innerHTML = `
     <div class="apphome mx-home" data-ptheme="${look}">
-      <div class="apphome-top"><div class="mx-brand-wrap mx-brand-small"><div class="mx-brand-logo" role="img" aria-label="Mercury"></div><div class="eyebrow-gold mx-brand">Mercury 1.2</div></div><button type="button" class="home-text-btn" id="apphome-logout">יציאה</button></div>
+      <div class="apphome-top"><div class="mx-brand-wrap mx-brand-small"><div class="mx-brand-logo" role="img" aria-label="Mercury"></div><div class="eyebrow-gold mx-brand">Mercury 1.2</div></div><span class="apphome-top-end"><button type="button" class="home-text-btn" id="apphome-logout">יציאה</button><button type="button" class="apphome-theme" id="apphome-theme" aria-label="${look === 'light' ? 'מעבר למצב כהה' : 'מעבר למצב בהיר'}" title="${look === 'light' ? 'מצב כהה' : 'מצב בהיר'}">${look === 'light' ? '🌙' : '☀️'}</button></span></div>
       <h1 class="apphome-title">מה תרצו לפתוח?</h1>
       <div class="apphome-cards">
         ${portalServerOn ? `<div class="apphome-hello">שלום ${pEsc((portalMe() || {}).first || '')}</div>` : ''}
@@ -7437,6 +7443,16 @@ function showAppHome(){
   { const ln = document.getElementById('apphome-learn'); if(ln) ln.addEventListener('click', showLearnHome); }          // (the admin's training videos, 14zh-learn.js)
   const mg = document.getElementById('apphome-manage'); if(mg) mg.addEventListener('click', () => { portalUi.manager = true; srvOpenPortal(); });
   document.getElementById('apphome-logout').addEventListener('click', () => document.getElementById('hub-logout-link').click());
+  // light / dark in the corner of the home screen, for everybody (Guy 2026-11-08). From the leopard: to light. Kept like the gear's choice
+  document.getElementById('apphome-theme').addEventListener('click', async () => {
+    const next = look === 'light' ? 'dark' : 'light', st = portalLoad();
+    st.settings.theme = next; try { localStorage.setItem('ramzor-portal-theme', next); } catch(e){}
+    if(!portalServerOn) portalSave();
+    const was = portalServerOn ? srv.portalTheme : null;
+    if(portalServerOn && was) srv.portalTheme = next;
+    showAppHome();
+    if(portalServerOn && was && typeof srvSaveSetting === 'function') await srvSaveSetting({ portalTheme:next });
+  });
 }
 
 // ---- the portal itself
@@ -11248,7 +11264,7 @@ async function srvSaveSimplePrefs(patch){
 }
 function openPortalSettings(){
   const coord = leopardAllowed(), leo = coord && portalThemeNow() === 'leopard';          // (the leopard look: exclusive — the coordinator, the admin, and whom the admin chose; never the default)          // (the leopard look: only the coordinator's portal)
-  const st = portalLoad(), v = portalVoice(), dark = st.settings.theme === 'dark', big = (() => { try { return localStorage.getItem('ramzor-portal-big') || '0'; } catch(e){ return '0'; } })();          // ('0' usual, '1' large, '2' very large)
+  const st = portalLoad(), v = portalVoice(), dark = st.settings.theme === 'dark', big = (() => { try { const v = localStorage.getItem('ramzor-portal-big') || '0'; return v === '2' ? '1' : v; } catch(e){ return '0'; } })();          // ('0' usual, '1' large; the very large one is gone from the settings: Guy 2026-11-08)
   const role = srv.meRow ? srv.meRow.role : '', isInstr = role === 'instructor', remOn = ['instructor', 'service'].includes(role);
   const ps = srv.prefStart || '', PS = { '':'הכל לא סומן', yes:'הכל "כן"', no:'הכל "לא"' };
   const gf = portalUi.gearFold = portalUi.gearFold || {};
@@ -11265,7 +11281,7 @@ function openPortalSettings(){
     ${remOn ? `<h3 class="psec">תזכורות במייל להגשת ההעדפות</h3>
     <div class="pchoice wrap"><button type="button" class="${srv.reminders === false ? '' : 'on'}" data-set-rem="1">לקבל תזכורות</button><button type="button" class="${srv.reminders === false ? 'on' : ''}" data-set-rem="0">בלי תזכורות</button></div>` : ''}`)}
     ${fold('look', 'מראה', lookNow, `<div class="pchoice wrap"><button type="button" class="${dark && !leo ? 'on' : ''}" data-set-theme="dark">מצב כהה</button><button type="button" class="${dark || leo ? '' : 'on'}" data-set-theme="light">מצב בהיר</button>${coord ? `<button type="button" class="${leo ? 'on' : ''}" data-set-theme="leopard">מצב מנומר 🐆</button>` : ''}</div>
-    <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${big === '0' ? 'on' : ''}" data-set-big="0">טקסט רגיל</button><button type="button" class="${big === '1' ? 'on' : ''}" data-set-big="1">טקסט גדול</button><button type="button" class="${big === '2' ? 'on' : ''}" data-set-big="2">טקסט גדול מאוד</button></div>`)}
+    <div class="pchoice wrap" style="margin-top:8px"><button type="button" class="${big === '0' ? 'on' : ''}" data-set-big="0">טקסט רגיל</button><button type="button" class="${big === '1' ? 'on' : ''}" data-set-big="1">טקסט גדול</button></div>`)}
     ${isInstr ? fold('prefs', 'ההעדפות שלי', PS[ps], `<h3 class="psec">איך מתחילות ההעדפות בכל חודש?</h3>
     <div class="pchoice wrap pref-start">${Object.keys(PS).map(k => `<button type="button" class="${ps === k ? 'on' : ''}" data-pref-start="${k}">${PS[k]}</button>`).join('')}</div>
     <div class="pnote">כשנפתח חודש חדש, כל המשמרות מסומנות אצלך כך מההתחלה, ומשנים רק את מה שצריך. ההעדפות הקבועות שלך נשארות "לא".</div>
@@ -11412,7 +11428,7 @@ function openChangePassword(){
   sh.querySelector('#chpw-new2').addEventListener('keydown', e => { if(e.key === 'Enter') save.click(); });
 }
 function applyPortalSize(){
-  let big = '0'; try { big = localStorage.getItem('ramzor-portal-big') || '0'; } catch(e){}
+  let big = '0'; try { big = localStorage.getItem('ramzor-portal-big') || '0'; if(big === '2'){ big = '1'; localStorage.setItem('ramzor-portal-big', '1'); } } catch(e){}          // (who had "טקסט גדול מאוד" gets "טקסט גדול": Guy 2026-11-08)
   document.body.classList.toggle('portal-big', big === '1');
   document.body.classList.toggle('portal-huge', big === '2');
 }
@@ -12853,8 +12869,8 @@ async function thpLoad(){
 
 // the size of the text: the same three choices as in everybody's settings, kept the same way; "רגיל" until she chooses (Guy 2026-11-04)
 function thpTextSizeHtml(){
-  let big = '0'; try { big = localStorage.getItem('ramzor-portal-big') || '0'; } catch(e){}
-  return `<div class="pfield th-text-size"><span>גודל הכתב</span><div class="pchoice wrap">${[['0', 'טקסט רגיל'], ['1', 'טקסט גדול'], ['2', 'טקסט גדול מאוד']].map(([k, w]) => `<button type="button" class="${big === k ? 'on' : ''}" data-th-big="${k}">${w}</button>`).join('')}</div></div>`;
+  let big = '0'; try { big = localStorage.getItem('ramzor-portal-big') || '0'; if(big === '2') big = '1'; } catch(e){}
+  return `<div class="pfield th-text-size"><span>גודל הכתב</span><div class="pchoice wrap">${[['0', 'טקסט רגיל'], ['1', 'טקסט גדול']].map(([k, w]) => `<button type="button" class="${big === k ? 'on' : ''}" data-th-big="${k}">${w}</button>`).join('')}</div></div>`;
 }
 // the tabs of each portal
 function thpTabs(){
