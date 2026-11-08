@@ -3388,6 +3388,12 @@ body.tvd-no-label #slide-label, body.tvd-no-dots #slide-dots{ visibility:hidden;
 .bd-today{ color:var(--p-accent, #c77700); }
 @media (max-width:420px){ .bd-row{ flex-wrap:wrap; } .bd-edit{ width:100%; justify-content:flex-start; } }
 @media (forced-colors:active){ .tvd-row, .bd-edit input[type=date]{ border-color:CanvasText; } }
+
+/* the admin's "מסך הילדים" card: the folded parts, each with a short line under its name */
+#kids-parts{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+#kids-parts summary > span{ display:flex; flex-direction:column; gap:2px; }
+.kids-sub{ font-weight:400; font-size:.82em; opacity:.75; }
+#kids-parts #tv-remote-card{ margin:0; box-shadow:none; }
 </style>
 </head>
 <body>
@@ -10813,24 +10819,7 @@ function srvRenderCoordSettings(body){
       ${GROUPS.map(([key, title, test]) => { const list = rows.filter(test); return `<details class="pfold pfold-in" data-lgroup="${key}"><summary><span>${title}</span><span class="pcount">${list.length}</span></summary><div class="pfold-body">${list.slice(0, 60).map(line).join('') || '<div class="pnote">אין.</div>'}${list.length > 60 ? `<div class="pnote">ועוד ${list.length - 60} שינויים ישנים יותר.</div>` : ''}</div></details>`; }).join('')}`;
       return { html, wire:() => {} };
     }],
-    screens: [() => 'מסכי הילדים בחדר', async () => {          // (Mercury stage 6: no staff password; a screen joins by a code sent by e-mail, scheduling-v32.sql)
-      const r = await sbPersonal.from('tv_devices').select('id,name,created_at,last_seen,active').order('created_at', { ascending:false });
-      if(r.error) return { html:'<div class="pnote">צריך את SQL 32.</div>', wire:() => {} };
-      const when = x => x ? new Date(x).toLocaleString('he-IL', { dateStyle:'short', timeStyle:'short' }) : 'עוד לא';
-      const html = `<div class="pnote">מסך ילדים מתחבר פעם אחת בקוד קצר. הקוד מופיע כאן מיד (ונשלח גם במייל), תקף ל-15 דקות, ומקלידים אותו במסך (בכתובת של מסך הילדים).</div>
-        <button type="button" class="btn" id="tv-code-new">קוד למסך חדש</button>
-        ${(r.data || []).map(d => `<div class="pmine-row"><span><b>${pEsc(d.name)}</b><br><small>חובר ${when(d.created_at)} · נראה לאחרונה ${when(d.last_seen)}${d.active ? '' : ' · מנותק'}</small></span>${d.active ? `<button type="button" class="btn ghost small" data-tv-off="${d.id}">ניתוק</button>` : ''}</div>`).join('') || '<div class="pnote">עוד אין מסכים מחוברים.</div>'}`
-        + ((portalMe() || {}).admin && typeof tvdAdminHtml === 'function' ? await tvdAdminHtml() : '');          // (what the kids' screen shows: the admin only, 14zp-tv-display.js)
-      return { html, wire:box => {
-        if(typeof tvdAdminWire === 'function') tvdAdminWire(box);
-        box.querySelector('#tv-code-new').addEventListener('click', async e => { e.target.disabled = true; const x = await sbPersonal.rpc('tv_code_new'); e.target.disabled = false; if(x.error){ toast('יצירת הקוד נכשלה'); return; }
-          // the code at once on the screen (the e-mail goes out with the hourly sending, later than the 15 minutes): read from her own notice
-          const n = await sbPersonal.from('notices').select('text').eq('to_staff', srv.me).eq('kind', 'tv').order('created_at', { ascending:false }).limit(1), code = ((((n.data || [])[0] || {}).text || '').match(/\b(\d{6})\b/) || [])[1];
-          if(!code){ toast('הקוד נשלח למייל שלך. הוא תקף ל-15 דקות'); return; }
-          portalSheet(`<h2>הקוד למסך הילדים</h2><div class="tv-code-big" dir="ltr">${code}</div><div class="pnote">מקלידים אותו במסך הילדים (בכתובת של מסך הילדים). תקף ל-15 דקות, לשימוש אחד. נשלח גם למייל שלך.</div><div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סגירה</button></div>`); });
-        box.querySelectorAll('[data-tv-off]').forEach(b => b.addEventListener('click', async () => { if(!(await confirmSheet({ title:'לנתק את המסך?', text:'המסך יפסיק להציג עד שיחובר מחדש בקוד.', okLabel:'כן, לנתק', cancelLabel:'חזרה', danger:true }))) return; const x = await sbPersonal.rpc('tv_revoke', { p_id:b.dataset.tvOff }); toast(x.error ? 'הניתוק נכשל' : 'המסך נותק'); again(); }));
-      } };
-    }]
+    screens: [() => 'מסכי הילדים בחדר', () => tvScreensSection(again)]
   };
   const fill = async id => {
     const box = body.querySelector(`[data-sbody="${id}"]`); if(!box || box.dataset.filled) return;
@@ -10846,6 +10835,24 @@ function srvRenderCoordSettings(body){
     fill(d.dataset.sfold);
   }));
   Object.keys(sections).forEach(id => { if(portalUi.setFold[id]) fill(id); });
+}
+
+// the screens in the room: a code for a new screen, the list, disconnecting. In the coordinator's settings, and in the admin's "מסך הילדים" card (14zp-tv-display.js)
+async function tvScreensSection(again){
+      const r = await sbPersonal.from('tv_devices').select('id,name,created_at,last_seen,active').order('created_at', { ascending:false });
+      if(r.error) return { html:'<div class="pnote">צריך את SQL 32.</div>', wire:() => {} };
+      const when = x => x ? new Date(x).toLocaleString('he-IL', { dateStyle:'short', timeStyle:'short' }) : 'עוד לא';
+      const html = `<div class="pnote">מסך ילדים מתחבר פעם אחת בקוד קצר. הקוד מופיע כאן מיד (ונשלח גם במייל), תקף ל-15 דקות, ומקלידים אותו במסך (בכתובת של מסך הילדים).</div>
+        <button type="button" class="btn" id="tv-code-new">קוד למסך חדש</button>
+        ${(r.data || []).map(d => `<div class="pmine-row"><span><b>${pEsc(d.name)}</b><br><small>חובר ${when(d.created_at)} · נראה לאחרונה ${when(d.last_seen)}${d.active ? '' : ' · מנותק'}</small></span>${d.active ? `<button type="button" class="btn ghost small" data-tv-off="${d.id}">ניתוק</button>` : ''}</div>`).join('') || '<div class="pnote">עוד אין מסכים מחוברים.</div>'}`;
+      return { html, wire:box => {
+        box.querySelector('#tv-code-new').addEventListener('click', async e => { e.target.disabled = true; const x = await sbPersonal.rpc('tv_code_new'); e.target.disabled = false; if(x.error){ toast('יצירת הקוד נכשלה'); return; }
+          // the code at once on the screen (the e-mail goes out with the hourly sending, later than the 15 minutes): read from her own notice
+          const n = await sbPersonal.from('notices').select('text').eq('to_staff', srv.me).eq('kind', 'tv').order('created_at', { ascending:false }).limit(1), code = ((((n.data || [])[0] || {}).text || '').match(/\b(\d{6})\b/) || [])[1];
+          if(!code){ toast('הקוד נשלח למייל שלך. הוא תקף ל-15 דקות'); return; }
+          portalSheet(`<h2>הקוד למסך הילדים</h2><div class="tv-code-big" dir="ltr">${code}</div><div class="pnote">מקלידים אותו במסך הילדים (בכתובת של מסך הילדים). תקף ל-15 דקות, לשימוש אחד. נשלח גם למייל שלך.</div><div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn" data-close>סגירה</button></div>`); });
+        box.querySelectorAll('[data-tv-off]').forEach(b => b.addEventListener('click', async () => { if(!(await confirmSheet({ title:'לנתק את המסך?', text:'המסך יפסיק להציג עד שיחובר מחדש בקוד.', okLabel:'כן, לנתק', cancelLabel:'חזרה', danger:true }))) return; const x = await sbPersonal.rpc('tv_revoke', { p_id:b.dataset.tvOff }); toast(x.error ? 'הניתוק נכשל' : 'המסך נותק'); await again(); }));
+      } };
 }
 
 // a photo from the phone or computer -> a small square JPEG (centre cut), so that it stays light for everybody
@@ -17054,12 +17061,12 @@ const secApi = {
 function secHomeCards(){
   const card = (id, ico, title, sub) => `<button type="button" class="home-card" id="${id}"><span class="apphome-emoji apphome-ico">${psIco(ico)}</span><span class="home-card-title">${title}</span><span class="home-card-sub">${sub}</span></button>`;
   return (secIsMe() ? card('apphome-sectt', 'schedule', 'לו"ז', 'הלו"ז של היום, של השבוע ועריכה') : '') + (secEventsOk() ? card('apphome-secev', 'people', 'חונכויות והתנדבויות', 'אירועים ודף קשר') : '')
-    + (typeof bdOk === 'function' && bdOk() ? card('apphome-secbd', 'cake', 'ימי הולדת', 'תאריכי הלידה של הילדים, למסך הילדים') : '');          // (Guy 2026-11-08: 14zp-tv-display.js)
+    + (typeof kidsOk === 'function' && kidsOk() ? card('apphome-kidstv', 'tv', 'מסך הילדים', 'מה מוצג, ימי הולדת וחיבור מסכים') : '');          // (the admin only for now: Guy 2026-11-08, 14zp-tv-display.js)
 }
 function secHomeWire(){
   { const b = document.getElementById('apphome-sectt'); if(b) b.addEventListener('click', () => showSecScreen('tt')); }
   { const b = document.getElementById('apphome-secev'); if(b) b.addEventListener('click', () => showSecScreen('ev')); }
-  { const b = document.getElementById('apphome-secbd'); if(b) b.addEventListener('click', () => showSecScreen('bd')); }
+  { const b = document.getElementById('apphome-kidstv'); if(b) b.addEventListener('click', () => showSecScreen('kids')); }
 }
 // ---- the Ramzor's first screen: two more cards
 function secHubButtons(){
@@ -17084,7 +17091,7 @@ function showSecScreen(mode, from){
   portalActivateView('view-sec');
   let look = 'dark';
   try { look = (srv.portalTheme && srv.portalTheme !== 'leopard' ? srv.portalTheme : portalLoad().settings.theme) || 'dark'; } catch(e){}
-  const title = { stars:'ניהול כוכבים', tt:'לו"ז', ev:'חונכויות והתנדבויות', bd:'ימי הולדת' }[sec.mode];
+  const title = { stars:'ניהול כוכבים', tt:'לו"ז', ev:'חונכויות והתנדבויות', kids:'מסך הילדים' }[sec.mode];
   document.getElementById('view-sec').innerHTML = `<div class="portal-shell" data-ptheme="${pEsc(look)}">
     <div class="portal-top"><button type="button" class="back-btn portal-back" id="sec-back">→ ${sec.mode === 'stars' || sec.from === 'control' ? 'חזרה' : 'מסך ראשי'}</button><h1 class="portal-title">${title}</h1><span class="portal-top-actions"></span></div>
     <div id="sec-screen"><div class="pnote">רק רגע...</div></div></div>`;
@@ -17092,7 +17099,7 @@ function showSecScreen(mode, from){
   const box = document.getElementById('sec-screen');
   if(sec.mode === 'stars') return renderSecStars(box);
   if(sec.mode === 'tt') return mgrTimetable(box);
-  if(sec.mode === 'bd') return renderBirthdays(box);
+  if(sec.mode === 'kids') return renderKidsScreen(box);
   return renderSecEvents(box);
 }
 
@@ -17425,9 +17432,8 @@ function tvdAdminWire(box){
   });
 }
 
-// ---- the birthdays (the admin and the secretary; a card on their home screen)
+// ---- the birthdays (a part of the admin's "מסך הילדים" card; the database lets the secretary too, her place comes later)
 if(typeof PS_ICON !== 'undefined' && !PS_ICON.cake) PS_ICON.cake = 'M4 20.5h16M5 20.5v-7h14v7M5 16c2.3 1.6 4.7 1.6 7 0s4.7-1.6 7 0M12 13.5V10M12 7.5c-1.2-1-1.2-2.2 0-3.5 1.2 1.3 1.2 2.5 0 3.5z';
-const bdOk = () => typeof secOn === 'function' && secOn() && (secIsMe() || !!secMe().admin || !!(srv.profile && srv.profile.admin));
 const bdApi = {
   list:async () => { const r = await sbPersonal.from('kid_birthday').select('child_id,born'); if(r.error) throw r.error; const m = {}; (r.data || []).forEach(x => { m[x.child_id] = x.born; }); return m; },
   set:async (id, born) => { const r = await sbPersonal.from('kid_birthday').upsert({ child_id:id, born, updated_at:new Date().toISOString() }); if(r.error) throw r.error; },
@@ -17481,6 +17487,59 @@ async function renderBirthdays(box){
       toast('נמחק'); tvdTellScreens('tt'); renderBirthdays(box);
     });
   });
+}
+
+// ---- the admin's "מסך הילדים" card on the home screen (Guy 2026-11-08): everything about controlling the kids' screen, in folded parts, one open at a time.
+//   1. what the screen shows now + a child's summary (the same card the instructors have in the Ramzor, moved here while this part is open)
+//   2. what is shown on the screen (the switches)   3. the birthdays   4. the screens in the room (also in the coordinator's settings)
+// The admin only for now; the secretary's place for the birthdays, the timetable and the duties comes in a later version.
+if(typeof PS_ICON !== 'undefined' && !PS_ICON.tv) PS_ICON.tv = 'M3 5.5h18v11.5H3zM8.5 21h7M12 17v4';
+const kidsOk = () => typeof secOn === 'function' && secOn() && (!!secMe().admin || !!(srv.profile && srv.profile.admin));
+const KIDS_PARTS = [
+  ['remote', 'מה המסך מציג עכשיו', 'בחירת לוח, השהיה, תצוגה מקדימה וסיכום לילד'],
+  ['show', 'מה מוצג במסך', 'להסתיר מסכים וחלקים, או להחזיר אותם'],
+  ['birthdays', 'ימי הולדת', 'תאריכי הלידה של הילדים'],
+  ['screens', 'חיבור מסכים', 'קוד למסך חדש וניתוק']
+];
+const kidsUi = { open:null };
+// the remote card lives in the Ramzor's control area; while "מה המסך מציג עכשיו" is open it is moved here, and it goes back afterwards
+let kidsRemoteHome = null;
+function kidsRemoteBack(){
+  const card = document.getElementById('tv-remote-card');
+  if(card && kidsRemoteHome && card.parentNode !== kidsRemoteHome.parent){ kidsRemoteHome.parent.insertBefore(card, kidsRemoteHome.next); if(typeof disconnectTvRemote === 'function') disconnectTvRemote(); }
+}
+function kidsRemoteHere(box){
+  const card = document.getElementById('tv-remote-card'); if(!card) return;
+  if(!kidsRemoteHome) kidsRemoteHome = { parent:card.parentNode, next:card.nextSibling };
+  box.innerHTML = ''; box.appendChild(card);
+  const body = document.getElementById('tv-remote-body'), tgl = document.getElementById('tv-remote-toggle');
+  if(body){ body.hidden = false; tgl.setAttribute('aria-expanded', 'true'); }
+  if(typeof connectTvRemote === 'function') connectTvRemote();
+}
+{ const v = document.getElementById('view-sec');          // (leaving the screen in any way puts the card back and closes the connection)
+  if(v) new MutationObserver(() => { if(!v.classList.contains('active') || !document.getElementById('kids-parts')) kidsRemoteBack(); }).observe(v, { attributes:true, attributeFilter:['class'], childList:true }); }
+
+async function renderKidsScreen(box){
+  if(typeof roster !== 'undefined' && !roster.length && typeof getRoster === 'function') roster = await getRoster();
+  box.innerHTML = `<div id="kids-parts">${KIDS_PARTS.map(([id, title, sub]) => `<details class="pfold" data-kfold="${id}"${kidsUi.open === id ? ' open' : ''}><summary><span>${title}<small class="kids-sub">${sub}</small></span></summary><div class="pfold-body" data-kbody="${id}"></div></details>`).join('')}</div>`;
+  const fill = async id => {
+    const b = box.querySelector(`[data-kbody="${id}"]`); if(!b) return;
+    if(id === 'remote') return kidsRemoteHere(b);
+    b.innerHTML = '<div class="pnote">רק רגע...</div>';
+    try {
+      if(id === 'show'){ b.innerHTML = await tvdAdminHtml(); tvdAdminWire(b); }
+      else if(id === 'birthdays') await renderBirthdays(b);
+      else if(id === 'screens'){ const again = async () => { if(b.isConnected){ const r2 = await tvScreensSection(again); b.innerHTML = r2.html; r2.wire(b); } }; const r = await tvScreensSection(again); b.innerHTML = r.html; r.wire(b); }
+    } catch(e){ b.innerHTML = '<div class="pnote">הטעינה נכשלה. נסו לפתוח שוב.</div>'; }
+  };
+  box.querySelectorAll('details[data-kfold]').forEach(d => d.addEventListener('toggle', () => {
+    const id = d.dataset.kfold;
+    if(!d.open){ if(kidsUi.open === id) kidsUi.open = null; if(id === 'remote') kidsRemoteBack(); return; }
+    kidsUi.open = id;
+    box.querySelectorAll('details[data-kfold]').forEach(o => { if(o !== d && o.open) o.open = false; });          // (one part open at a time)
+    fill(id);
+  }));
+  if(kidsUi.open) fill(kidsUi.open);
 }
 // ---------- bottom navigation bar (phones) ----------
 // One button, "בית": back to the first screen — the choice between the Ramzor and the portal (when the portal is on), or the Ramzor's home.
