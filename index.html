@@ -17446,7 +17446,7 @@ async function renderBirthdays(box){
     return `גיל ${i.age}${i.days === 0 ? ' · <b class="bd-today">🎂 יום הולדת היום!</b>' : i.days <= 30 ? ` · בעוד ${i.days} ימים` : ''}`; };
   const soon = kids.filter(c => dates[c.id]).map(c => ({ c, i:bdInfo(dates[c.id], today) })).filter(x => x.i.days <= 30).sort((a, b) => a.i.days - b.i.days);
   box.innerHTML = `<div class="pnote">ילד עם תאריך מופיע במסך הילדים ביום ההולדת שלו, עם הגיל. ילד שיוצא מהרשימה של המסגרת יוצא גם מכאן.</div>
-    ${soon.length ? `<h3 class="psec">בחודש הקרוב</h3>${soon.map(({ c, i }) => `<div class="pmine-row"><span><b>${pEsc(displayName(c))}</b> · ${i.days === 0 ? 'היום! 🎂' : i.days === 1 ? 'מחר' : `בעוד ${i.days} ימים`} · יהיה/תהיה בן/בת ${i.days === 0 ? i.age : i.age + 1}</span></div>`).join('')}` : ''}
+    ${soon.length ? `<h3 class="psec">בחודש הקרוב</h3>${soon.map(({ c, i }) => `<div class="pmine-row"><span><b>${pEsc(displayName(c))}</b> · ${i.days === 0 ? `היום! 🎂 · חוגג/ת ${i.age}` : `${i.days === 1 ? 'מחר' : `בעוד ${i.days} ימים`} · יהיה/תהיה בן/בת ${i.age + 1}`}</span></div>`).join('')}` : ''}
     <h3 class="psec">כל הילדים</h3>
     ${kids.map(c => `<div class="pmine-row bd-row" data-bd="${pEsc(c.id)}"><span><b>${pEsc(displayName(c))}</b><br><small data-bd-word>${word(dates[c.id])}</small></span>
       <span class="bd-edit"><input type="date" max="${today}" min="1990-01-02" value="${dates[c.id] || ''}" aria-label="תאריך הלידה של ${pEsc(displayName(c))}">${dates[c.id] ? '<button type="button" class="btn ghost small" data-bd-clear>מחיקה</button>' : ''}</span></div>`).join('') || '<div class="pnote">אין ילדים ברשימה.</div>'}`;
