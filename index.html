@@ -3048,6 +3048,31 @@ html[data-contrast=high] body[data-rlook=light] .toast{
 body:has(.view.active .mx-login[data-ptheme=light]){ background:#FAF7F2; }
 body:has(.view.active .mx-login[data-ptheme=light])::before{ display:none; }
 .mx-login[data-ptheme=light]{ background:transparent; }
+
+/* the plan builder (Guy 2026-11-10): its own bottom bar חזור | בית | הבא, opaque, on a phone and on a computer; the app's bar steps aside while building */
+.tp-bar{ position:sticky; bottom:0; z-index:55; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:var(--space-4, 16px); padding:6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); background:var(--p-bg, #0e1530); border-top:1px solid var(--line, #333); }
+.therapy-shell[data-ptheme] .tp-bar{ background:var(--color-bg); border-top-color:var(--color-border); }
+.tp-bar-btn{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:52px; border:0; background:none; border-radius:12px; color:inherit; font-family:'Assistant', Arial, sans-serif; font-weight:600; font-size:13px; cursor:pointer; }
+.therapy-shell[data-ptheme] .tp-bar-btn{ color:var(--color-text-secondary); }
+.therapy-shell[data-ptheme] .tp-bar-btn:hover{ background:var(--color-surface-alt); color:var(--color-text); }
+.therapy-shell[data-ptheme] .tp-bar-next, .therapy-shell[data-ptheme] .tp-bar-next:hover{ background:var(--color-primary); color:var(--color-on-primary); }
+.tp-bar-next[disabled]{ opacity:.55; cursor:not-allowed; }
+.tp-bar-next small{ font-weight:400; font-size:11px; line-height:1.2; }
+.tp-bar-btn:focus-visible{ outline:2px solid currentColor; outline-offset:-2px; }
+#protected-app:has(.tp-builder) > #bottom-nav{ display:none !important; }
+.therapy-shell:has(.tp-builder) #therapy-home2{ display:none; }
+/* while a plan is being built, the side menu on a computer folds to its icons; ☰ opens it (Guy 2026-11-10) */
+.th-side-toggle{ display:none; }
+@media (min-width:1024px){
+  .therapy-shell[data-ptheme] .th-frame:has(.tp-builder):not(.side-open){ grid-template-columns:64px minmax(0, 1fr); gap:var(--space-6); }
+  .therapy-shell[data-ptheme] .th-frame:has(.tp-builder) .th-side-toggle{ order:0; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; margin:0 auto var(--space-2); border:0; border-radius:var(--radius-sm); background:none; color:var(--color-text-secondary); cursor:pointer; }
+  .therapy-shell[data-ptheme] .th-frame:has(.tp-builder) .th-side-toggle:hover{ background:var(--color-surface-alt); color:var(--color-text); }
+  .therapy-shell[data-ptheme] .th-frame:has(.tp-builder):not(.side-open) :is(.portal-title, .portal-hello, .th-nav-w, .pcount, .th-side-foot, .th-nav-sep, .back-btn){ display:none !important; }
+  .therapy-shell[data-ptheme] .th-frame:has(.tp-builder):not(.side-open) .th-side .portal-tabs button{ justify-content:center; padding:var(--space-2) 0; }
+}
+.tp-whatnext .tp-done{ text-align:center; font-weight:600; margin:var(--space-4, 16px) 0 0; color:var(--color-success, #4caf7d); }
+.tp-list .tp-start{ align-self:flex-start; margin:-4px 0 4px; margin-inline-start:58px; }
+@media (max-width:700px){ #protected-app:has(.tp-builder){ padding-bottom:0; } }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -13048,7 +13073,7 @@ const THP_ICO = { chats:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h
   videos:'<rect x="3.5" y="6" width="12" height="12" rx="2"/><path d="M15.5 10.5l5-3v9l-5-3"/>', overview:'<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>', archive:'<rect x="3.5" y="4.5" width="17" height="4.5" rx="1"/><path d="M5 9v10.5h14V9M10 13h4"/>' };
 function thpTabsRow(tabs, active, attr, cls, side){
   const ico = k => side && THP_ICO[k] ? `<svg class="th-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${THP_ICO[k]}</svg>` : '';
-  const btn = ([k, w, n]) => `<button type="button" role="tab" ${attr}="${k}" class="${k === active ? 'active' : ''}">${ico(k)}${w}${n ? ` <span class="pcount">${n}</span>` : ''}</button>`;
+  const btn = ([k, w, n]) => `<button type="button" role="tab" ${attr}="${k}" class="${k === active ? 'active' : ''}"${side ? ` title="${pEsc(w)}"` : ''}>${ico(k)}<span class="th-nav-w">${w}</span>${n ? ` <span class="pcount">${n}</span>` : ''}</button>`;
   if(side){ const sep = tabs.findIndex(t => !THP_DAILY.includes(t[0])); return `<nav class="portal-tabs${cls ? ' ' + cls : ''}" role="tablist" aria-orientation="vertical">${tabs.map((t, i) => (i === sep && i > 0 ? '<span class="th-nav-sep" role="separator"></span>' : '') + btn(t)).join('')}</nav>`; }
   if(tabs.length <= 5) return `<nav class="portal-tabs${cls ? ' ' + cls : ''}" role="tablist">${tabs.map(btn).join('')}</nav>`;
   const rest = tabs.slice(4), hidden = rest.find(t => t[0] === active), n = rest.reduce((s, t) => s + (+t[2] || 0), 0);
@@ -13175,12 +13200,14 @@ function thpRender(){
   const side = thpWide(), look = portalLoad().settings.theme === 'light' ? 'light' : 'dark';          // (no leopard in this portal: Guy 2026-10-30)
   view.innerHTML = `<div class="portal-shell therapy-shell" data-ptheme="${look}" data-thmode="${thp.mode}" data-thmenu="${thp.navMenu && !thp.planChild && !thp.editing ? 1 : 0}"><div class="th-frame">
       <aside class="th-side" aria-label="פורטל הטיפול">
+      ${side ? '<button type="button" class="th-side-toggle" id="th-side-toggle" aria-expanded="false" aria-label="פתיחת התפריט"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>' : ''}
       <div class="portal-top"><button type="button" class="back-btn portal-back" id="therapy-home">→ מסך ראשי</button><h1 class="portal-title">פורטל הטיפול</h1>${side ? '<span></span>' : `<div class="mx-seg th-look-sm" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</div>`}</div>
       <div class="portal-hello">שלום ${pEsc(me.first || '')}</div>
       ${tabs.length > 1 ? thpTabsRow(tabs.map(t => [t[0], t[1], t[0] === 'todo' ? todoN : 0]), thp.tab, 'data-th-tab', side ? '' : 'th-nav-grid', true) : ''}
       </aside>
       <div id="therapy-body">${side ? `<div class="ps-topbar th-topbar"><button type="button" class="back-btn" id="therapy-home2">→ מסך ראשי</button><span class="ps-topbar-end"><span class="mx-seg" role="group" aria-label="מראה">${[['light', 'בהיר'], ['dark', 'כהה']].map(([k, w]) => `<button type="button" data-th-look="${k}" aria-pressed="${look === k}">${w}</button>`).join('')}</span></span></div>` : ''}${!side && tabs.length > 1 ? '<button type="button" class="btn ghost small th-to-menu" id="th-to-menu">→ כל האזורים</button>' : ''}${!thp.planChild && (tabs.find(t => t[0] === thp.tab) || [])[1] ? `<h2 class="th-page-title">${pEsc(tabs.find(t => t[0] === thp.tab)[1])}</h2>` : ''}${inner}</div>
     </div></div>`;          // (on a computer the tabs row is gone, so every screen says its name: the simplicity checker)
+  { const tg = view.querySelector('#th-side-toggle'), fr = view.querySelector('.th-frame'); if(tg && fr) tg.addEventListener('click', () => { const o = fr.classList.toggle('side-open'); tg.setAttribute('aria-expanded', String(o)); tg.setAttribute('aria-label', o ? 'סגירת התפריט' : 'פתיחת התפריט'); }); }          // (while building a plan the menu is folded to icons: Guy 2026-11-10)
   view.querySelectorAll('#therapy-home, #therapy-home2').forEach(b => b.addEventListener('click', () => { if(typeof personalRamzorKind === 'function' && !personalRamzorKind()) srvOpenPortal(); else showAppHome(); }));
   view.querySelectorAll('[data-th-look]').forEach(b => b.addEventListener('click', () => {          // (kept on this device; the other portals' own choice, the leopard included, is not touched)
     portalLoad().settings.theme = b.dataset.thLook; try { localStorage.setItem('ramzor-portal-theme', b.dataset.thLook); } catch(e){}
@@ -14924,7 +14951,7 @@ function tpListHtml(){
     const n = s => goals.filter(g => tpStatusOf(g) === s).length, state = r.published_version ? (r.draft && JSON.stringify(r.draft) !== JSON.stringify(r.published) ? 'יש שינויים שלא פורסמו' : 'פורסמה') : (r.draft ? 'טיוטה' : 'אין תוכנית');
     return `<button type="button" class="tp-row" data-tp-kid="${pEsc(c.id)}">${thpAvatar(c)}<span class="tp-row-text"><b class="ar-keep">${pEsc(displayName(c))}</b>
       <small><span class="tp-state ${r.published_version ? 'ok' : ''}">${state}</span>${focus.length ? ` · 🎯 ${focus.map(g => pEsc(g.title)).join(' · ')}` : ''}</small>
-      <small>${n('waiting') ? (n('waiting') === 1 ? 'מטרה אחת מחכה' : `${n('waiting')} מטרות מחכות`) : ''}${n('waiting') && n('achieved') ? ' · ' : ''}${n('achieved') ? (n('achieved') === 1 ? 'מטרה אחת הושגה' : `${n('achieved')} מטרות הושגו`) : ''}${r.review_date ? `${n('waiting') || n('achieved') ? ' · ' : ''}בדיקה מחדש ${pEsc(dayLabel(r.review_date))}` : ''}</small></span><span class="th-todo-go" aria-hidden="true">‹</span></button>`; };
+      <small>${n('waiting') ? (n('waiting') === 1 ? 'מטרה אחת מחכה' : `${n('waiting')} מטרות מחכות`) : ''}${n('waiting') && n('achieved') ? ' · ' : ''}${n('achieved') ? (n('achieved') === 1 ? 'מטרה אחת הושגה' : `${n('achieved')} מטרות הושגו`) : ''}${r.review_date ? `${n('waiting') || n('achieved') ? ' · ' : ''}בדיקה מחדש ${pEsc(dayLabel(r.review_date))}` : ''}</small></span><span class="th-todo-go" aria-hidden="true">‹</span></button>${!r.published_version && !r.draft && thp.v32 && planCanEdit(c.id) ? `<button type="button" class="btn small tp-start" data-tp-start="${pEsc(c.id)}">להתחיל תוכנית</button>` : ''}`; };          // (a child without a plan: start right away, step by step — Guy 2026-11-10)
   return `<div class="tp-filter">${[['all', 'כולם'], ['need', 'צריכים תוכנית'], ['review', 'לבדיקה מחדש']].map(([k, w]) => `<button type="button" class="th-chip${f === k ? ' on' : ''}" data-tp-f="${k}">${w}</button>`).join('')}
       <input type="search" id="tp-q" class="th-search" placeholder="חיפוש ילד/ה" aria-label="חיפוש ילד/ה" value="${pEsc(q)}"></div>
     <div class="tp-list">${list.map(row).join('') || `<div class="th-empty"><span aria-hidden="true">📋</span><b>${thpScope().length ? 'אין ילדים שמתאימים לסינון' : 'עוד לא שויכו אלייך ילדים'}</b><small>${thpScope().length ? 'אפשר לבחור "כולם".' : 'השיוך נעשה אצל הרכזת או מנהל המערכת.'}</small></div>`}</div>`;
@@ -14934,6 +14961,7 @@ function tpWireList(body){
   body.querySelectorAll('[data-tp-f]').forEach(b => b.addEventListener('click', () => { thp.tpFilter = b.dataset.tpF; thpRender(); }));
   const q = body.querySelector('#tp-q'); if(q) q.addEventListener('change', () => { thp.tpQ = q.value.trim(); thpRender(); });
   body.querySelectorAll('[data-tp-kid]').forEach(b => b.addEventListener('click', () => { thp.planChild = b.dataset.tpKid; thpRender(); }));
+  body.querySelectorAll('[data-tp-start]').forEach(b => b.addEventListener('click', () => { thp.planChild = b.dataset.tpStart; thp.planView = 'work'; tpBuilder(b.dataset.tpStart, null); window.scrollTo(0, 0); }));
 }
 // open a child's plan from anywhere (the child's workspace, "משימות")
 function tpOpenPlan(id){ thp.tab = 'plans'; thp.planChild = id; thp.editing = null; thp.wtab = null; thp.planView = 'work'; thpRender(); }
@@ -14965,21 +14993,25 @@ async function tpPlanPage(id, box){
   const main = !can ? '' : changed ? '<button type="button" class="btn tp-main" id="tp-publish">פרסום</button>' : '<button type="button" class="btn tp-main" id="tp-new">+ מטרה חדשה</button>';          // (a goal being built: "להמשיך" in the status bar only)
   const bar = can && (changed || building || !row.published_version) ? `<div class="tp-statebar" role="status">${!row.published_version && !changed ? '<span>עוד לא פורסמה תוכנית</span>' : changed ? `<span><b>בטיוטה:</b> ${diff.length === 1 ? 'שינוי אחד שלא פורסם' : diff.length + ' שינויים שלא פורסמו'}</span>` : '<span>הכול פורסם</span>'}
       ${building ? `<span class="tp-sb-build">· מטרה אחת בבנייה <button type="button" class="btn ghost small" id="tp-resume2">להמשיך</button><button type="button" class="btn ghost small" id="tp-drop">לבטל</button></span>` : ''}</div>` : '';
-  if(can && thp.planView === 'review'){ tpReviewPage(id, box); return; }          // ("סקירה": a clean reading view, Guy 2026-10-30)
+  if(can && thp.planView === 'review'){ tpReviewPage(id, box); return; }
+  // versions, documents, a new video: under "עוד" for the one who builds — the page keeps ONE main button (Guy 2026-11-10)
+  const links = `<div class="tp-links">${row.published_version ? '<button type="button" class="btn ghost small" id="tp-versions">גרסאות קודמות</button>' : ''}<button type="button" class="btn ghost small" id="tp-docs">מסמכים</button>
+      ${can && row.published_version ? `<button type="button" class="btn ghost small" id="tp-video-new"${vOld ? '' : ' disabled'} title="נוצר סרטון חדש מהתוכנית שפורסמה">🎬 סרטון חדש</button>` : ''}</div>`;          // ("סקירה": a clean reading view, Guy 2026-10-30)
   box.innerHTML = `<div class="tp-page"><div class="tp-side"><div class="th-ed-head"><button type="button" class="btn ghost small" id="tp-back">→ כל התוכניות</button><div class="th-child-head">${c ? thpAvatar(c) : ''}<h2 class="ar-keep">${pEsc(c ? displayName(c) : careName(id))}</h2></div>
       <span class="th-status">${row.published_version ? 'פורסמה גרסה ' + row.published_version : 'עוד לא פורסמה'}</span></div>
     ${can ? tpViewSwitchHtml('work') : ''}
     ${bar}${main}${can && changed ? `<button type="button" class="btn ghost small tp-second" id="tp-new2">+ מטרה חדשה</button>` : ''}
-    <div class="tp-links">${row.published_version ? '<button type="button" class="btn ghost small" id="tp-versions">גרסאות קודמות</button>' : ''}<button type="button" class="btn ghost small" id="tp-docs">מסמכים</button>
-      ${can && row.published_version ? `<button type="button" class="btn ghost small" id="tp-video-new"${vOld ? '' : ' disabled'} title="נוצר סרטון חדש מהתוכנית שפורסמה">🎬 סרטון חדש</button>` : ''}</div></div>
+    ${can ? '' : links}</div>
     <div class="tp-main-col">
     ${vd && vd.status === 'draft' ? `<div id="tp-video">${thpVideoPanelHtml(id)}</div>` : ''}
     ${group('focus').length ? group('focus').map(x => tpGoalCard(id, x.g, x.i, can)).join('') : `<div class="th-empty"><span aria-hidden="true">🎯</span><b>עוד אין מטרה במוקד</b><small>${can ? 'בונים מטרה אחת, צעד אחר צעד: "+ מטרה חדשה".' : 'איש/אשת הטיפול האחראי/ת בונה את התוכנית.'}</small></div>`}
     ${[['waiting', 'בהמתנה'], ['achieved', 'הושגו'], ['stopped', 'הופסקו']].map(([s, w]) => group(s).length ? `<details class="pfold"><summary><span>${w}</span><span class="pcount">${group(s).length}</span></summary><div class="pfold-body">${group(s).map(x => tpGoalCard(id, x.g, x.i, can)).join('')}</div></details>` : '').join('')}
-    ${can ? tpMoreHtml(id, d) : ''}</div></div>`;
+    ${can ? tpMoreHtml(id, d, links) : ''}</div></div>`;
   const $ = s => box.querySelector(s), on = (s, f) => { const el = $(s); if(el) el.addEventListener('click', f); };
   on('#tp-back', () => { thp.planChild = null; thpRender(); });
   tpWireViewSwitch(id, box);
+  if(thp.openMore){ thp.openMore = false; const m = $('.tp-more'); if(m){ m.open = true; setTimeout(() => m.scrollIntoView({ block:'start', behavior:'smooth' }), 50); } }          // (from "מה עכשיו?")
+  if(thp.focusPublish){ thp.focusPublish = false; const pb = $('#tp-publish'); if(pb) setTimeout(() => { pb.scrollIntoView({ block:'center' }); pb.focus(); }, 50); }
   const fresh = () => { if(!building){ tpBuilder(id, null); return; }          // (never erase a goal being built by default or by a tap outside: the checker, round 3)
     const s2 = portalSheet(`<h2>יש מטרה שבבנייה</h2><div class="cs-rebuild-opts"><button type="button" class="btn" data-fr="keep"><b>להמשיך אותה</b><small>מהמקום שעצרת</small></button>
       <button type="button" class="btn ghost danger" data-fr="new"><b>להתחיל מטרה חדשה</b><small>המטרה שבבנייה תימחק</small></button></div><div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>חזרה</button></div>`);
@@ -15063,9 +15095,9 @@ function tpReviewPage(id, box){
   });
 }
 // "עוד": the summary (with a suggestion), "ברגעים קשים" (what to avoid stands out, signs, what calms), routine, the child's gender, a file
-function tpMoreHtml(id, d){
+function tpMoreHtml(id, d, links){
   const part = (k, w, cls) => `<label class="pfield${cls ? ' ' + cls : ''}">${w} <button type="button" class="btn ghost small th-tpl-btn" data-tpl="${k}">📚 נוסחים מוכנים</button><textarea id="tm-${k}" rows="2">${pEsc(d[k] || '')}</textarea></label>`;
-  return `<details class="pfold tp-more"><summary><span>עוד</span><small>תקציר, ברגעים קשים, שגרה ועוד</small><span class="tm-state" id="tm-state" role="status" aria-live="polite"></span></summary><div class="pfold-body">
+  return `<details class="pfold tp-more"><summary><span>עוד</span><small>תקציר, ברגעים קשים, שגרה, מסמכים ועוד</small><span class="tm-state" id="tm-state" role="status" aria-live="polite"></span></summary><div class="pfold-body">${links || ''}
     <label class="pfield">תקציר לצוות <button type="button" class="btn ghost small" id="tm-suggest">הצעה</button><textarea id="tm-summary" rows="3" placeholder="כמה משפטים: מה חשוב לדעת עכשיו">${pEsc(d.summary || '')}</textarea></label>
     <h3 class="psec">ברגעים קשים</h3>${part('avoid', 'ממה להימנע', 'th-avoid-field')}${part('signs', 'אותות מוקדמים')}${part('calm', 'מה עוזר להירגע')}
     ${part('routine', 'שגרה יומית מיוחדת')}
@@ -15178,13 +15210,16 @@ async function tpBuilder(id, state){
   const persist = async () => { const d = tpDraftOf(id); d.builder = Object.assign({}, s); await planSave(id, d, (thp.plans[id] || {}).review_date || null); };
   const go = async step => { s.step = step; await persist(); draw(); };
   const c = roster.find(x => x.id === id);
-  const nav = (next, label, disabled, why) => `<div class="tp-nav">${TP_STEPS.findIndex(x => x[0] === s.step) > 0 ? '<button type="button" class="btn ghost" id="tb-prev">→ הקודם</button>' : '<span></span>'}${next ? `<span class="tp-nav-go">${disabled && why ? `<small>${why}</small>` : ''}<button type="button" class="btn" id="tb-next"${disabled ? ' disabled' : ''}>${label || 'הבא ←'}</button></span>` : ''}</div>`;
+  // the bottom bar of the builder (Guy 2026-11-10): חזור | בית | הבא, in its own fixed place, on a phone and on a computer; "הבא" only where a step needs it (a tap on a card moves on by itself)
+  const TB_ICO = { back:'<path d="M9 6l6 6-6 6"/>', home:'<path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/>', next:'<path d="M15 6l-6 6 6 6"/>' };
+  const tbIco = k => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TB_ICO[k]}</svg>`;
+  const nav = (next, label, disabled, why) => `<nav class="tp-bar" aria-label="ניווט בבנייה">${TP_STEPS.findIndex(x => x[0] === s.step) > 0 ? `<button type="button" class="tp-bar-btn" id="tb-prev">${tbIco('back')}<span>חזור</span></button>` : '<span></span>'}<button type="button" class="tp-bar-btn" id="tb-home">${tbIco('home')}<span>בית</span></button>${next ? `<button type="button" class="tp-bar-btn tp-bar-next" id="tb-next"${disabled ? ' disabled' : ''}${disabled && why ? ` title="${pEsc(why)}"` : ''}>${tbIco('next')}<span>${pEsc(String(label || 'הבא').replace(/\s*←\s*$/, ''))}</span>${disabled && why ? `<small>${pEsc(why)}</small>` : ''}</button>` : '<span></span>'}</nav>`;
   function draw(){
     const i0 = TP_STEPS.findIndex(x => x[0] === s.step);
     let inner = '';
     if(s.step === 'start') inner = `${gender ? '' : `<div class="tp-gender"><span>${pEsc(c ? displayName(c) : '')}:</span><div class="pchoice"><button type="button" data-gender="m">בן</button><button type="button" data-gender="f">בת</button></div><small>כדי שהנוסחים ייכתבו נכון. שואלים פעם אחת.</small></div>`}
       <h2>איך תרצי להתחיל?</h2><div class="tp-big">${[['theme', '🧭', 'לפי תמה', 'ויסות, ביטחון, אובדן...'], ['method', '🧩', 'לפי שיטה', 'ARC, Theraplay, סמכות חדשה...'], ['search', '🔎', 'חיפוש', 'מילה שמתארת את מה שצריך']].map(([k, e, w, sub]) => `<button type="button" class="tp-bigbtn" data-entry="${k}"><span aria-hidden="true">${e}</span><b>${w}</b><small>${sub}</small></button>`).join('')}</div>
-      <button type="button" class="btn ghost small" id="tb-own">משהו משלי: מטרה שאני כותבת</button>`;
+      <button type="button" class="btn ghost small" id="tb-own">משהו משלי: מטרה שאני כותבת</button>${nav(false)}`;
     else if(s.step === 'pick'){
       const nGoals = n => n === 1 ? 'מטרה אחת' : n + ' מטרות';          // (only what exists is offered: the checker, principle 10)
       if(s.entry === 'theme'){ const th = PLAN_CATS.map(t => [t, tpGoalsV2().filter(x => bankThemesOf(x).includes(t)).length]).filter(x => x[1]);          // (under the super-topics: Guy 2026-11-10)
@@ -15208,11 +15243,15 @@ async function tpBuilder(id, state){
       const mean = (t, k) => t[k] ? `<div class="tp-rate-mean">${t[k]} = ${pEsc((t.scale || [])[t[k] - 1] || '')}</div>` : '<div class="tp-rate-mean dim">בוחרים מספר, ורואים כאן מה הוא אומר</div>';          // (the meaning of the number: the UX reviewer, finding 2)
       const row = (t, k, w) => `<div role="group" aria-label="${w}"><span>${w}</span>${[1, 2, 3, 4, 5].map(v => `<button type="button" class="${t[k] === v ? 'on' : ''}" aria-pressed="${t[k] === v}" aria-label="${w} ${v}: ${pEsc((t.scale || [])[v - 1] || '')}" data-rate="${pEsc(t.id)}" data-k="${k}" data-v="${v}">${v}</button>`).join('')}</div>${mean(t, k)}`;
       const ratings = t => tpSpiralPick(t);          // (a real spiral to tap, instead of two rows of 1-5: Guy 2026-10-29)
+      // the spiral opens in place, under ONE selected target at a time; the others show a short line (Guy 2026-11-10)
+      if(!s.targets.some(t => t.id === s.openT)) s.openT = (s.targets.find(t => !t.now || !t.target) || s.targets[s.targets.length - 1] || {}).id;
+      const spiralOf = t => s.openT === t.id ? scaleEd(t) + ratings(t)
+        : `<button type="button" class="btn ghost small tp-t-open" data-open-t="${pEsc(t.id)}">${t.now ? `עכשיו ${t.now}${t.target ? ' · רוצים ' + t.target : ''}` : 'עוד לא סומן עכשיו ורוצים'} · לסמן בספירלה</button>`;
       const scaleEd = t => `<details class="tp-scale-ed"><summary>הספירלה של היעד (5 תחנות)</summary>${[0, 1, 2, 3, 4].map(k => `<input type="text" data-scale="${pEsc(t.id)}" data-k="${k}" value="${pEsc((t.scale || [])[k] || '')}" placeholder="${k + 1}">`).join('')}</details>`;
       inner = `<h2>יעדים <small>(1–3)</small></h2>${TP_SCALE_HELP}${lib() && !lib().content.ages[s.age] ? `<div class="pnote">המטרה נכתבה ל${pEsc(BANK_AGE_WORD[Object.keys(lib().content.ages)[0]] || '')}, ומוצג הנוסח שלה.</div>` : ''}
         ${bank.map(t => { const on = sel.has(t.id), mine = s.targets.find(x => x.id === t.id) || t;
-          return `<div class="tp-pick${on ? ' on' : ''}"><label><input type="checkbox" data-target="${pEsc(t.id)}"${on ? ' checked' : ''}> <span><b>${pEsc(G(t.text))}</b><small>לצוות: ${pEsc(G(t.staff))}</small></span></label>${on ? scaleEd(mine) + ratings(mine) : ''}</div>`; }).join('')}
-        ${s.targets.filter(t => t.own).map(t => `<div class="tp-pick on"><span><b>${pEsc(t.text)}</b><small>לצוות: ${pEsc(t.staff)}</small></span>${scaleEd(t)}${ratings(t)}<button type="button" class="btn ghost small" data-own-x="${pEsc(t.id)}">הסרה</button></div>`).join('')}
+          return `<div class="tp-pick${on ? ' on' : ''}"><label><input type="checkbox" data-target="${pEsc(t.id)}"${on ? ' checked' : ''}> <span><b>${pEsc(G(t.text))}</b><small>לצוות: ${pEsc(G(t.staff))}</small></span></label>${on ? spiralOf(mine) : ''}</div>`; }).join('')}
+        ${s.targets.filter(t => t.own).map(t => `<div class="tp-pick on"><span><b>${pEsc(t.text)}</b><small>לצוות: ${pEsc(t.staff)}</small></span>${spiralOf(t)}<button type="button" class="btn ghost small" data-own-x="${pEsc(t.id)}">הסרה</button></div>`).join('')}
         <details class="pfold"><summary><span>משהו משלי</span></summary><div class="pfold-body"><textarea id="tb-t-text" rows="2" placeholder="היעד, במילים מקצועיות"></textarea><input type="text" id="tb-t-staff" placeholder="במילים פשוטות לצוות"><button type="button" class="btn small" id="tb-t-add">הוספה</button></div></details>
         ${nav(true, null, !s.targets.length, 'בחרי לפחות יעד אחד')}`;
     }
@@ -15263,6 +15302,9 @@ async function tpBuilder(id, state){
   function wire(){
     const $ = q => body.querySelector(q), on = (q, f) => { const el = $(q); if(el) el.addEventListener('click', f); };
     on('#tb-out', async () => { await persist(); thp.tab = 'plans'; thp.planChild = id; thpRender(); });
+    on('#tb-home', async () => {          // ("בית" in the middle asks first: Guy 2026-11-10)
+      if(!(await confirmSheet({ title:'לצאת?', text:'מה שעשית עד עכשיו נשמר, ואפשר להמשיך מאותו מקום.', okLabel:'לצאת', cancelLabel:'להמשיך לבנות' }))) return;
+      await persist(); thp.planChild = id; if(typeof goHome === 'function') goHome(); else { thp.tab = 'plans'; thpRender(); } });
     on('#tb-prev', () => { const i0 = TP_STEPS.findIndex(x => x[0] === s.step); go(TP_STEPS[Math.max(0, i0 - 1)][0]); });
     body.querySelectorAll('[data-entry]').forEach(b => b.addEventListener('click', () => { s.entry = b.dataset.entry; go('pick'); }));
     body.querySelectorAll('[data-gender]').forEach(b => b.addEventListener('click', async () => { gender = b.dataset.gender; const d = tpDraftOf(id); d.gender = gender; d.builder = Object.assign({}, s); await planSave(id, d, (thp.plans[id] || {}).review_date || null); draw(); }));          // (once per child: the UX reviewer, finding 5)
@@ -15276,7 +15318,7 @@ async function tpBuilder(id, state){
     on('#tb-own-go', () => { const t = $('#tb-own-title').value.trim(); if(!t){ toast('כותבים שם למטרה'); return; } Object.assign(s, { libId:null, title:t, targets:[], ints:[], why:'' }); go('targets'); });
     body.querySelectorAll('[data-target]').forEach(b => b.addEventListener('change', () => {
       const t = (ageW().targets || []).find(x => x.id === b.dataset.target);
-      if(b.checked){ if(s.targets.length >= 3){ b.checked = false; toast('אפשר עד 3 יעדים'); return; } s.targets.push({ id:t.id, text:G(t.text), staff:G(t.staff), scale:(t.scale || []).map(G), now:null, target:null }); }
+      if(b.checked){ if(s.targets.length >= 3){ b.checked = false; toast('אפשר עד 3 יעדים'); return; } s.targets.push({ id:t.id, text:G(t.text), staff:G(t.staff), scale:(t.scale || []).map(G), now:null, target:null }); s.openT = t.id; }
       else s.targets = s.targets.filter(x => x.id !== t.id);
       draw(); }));
     body.querySelectorAll('[data-rate]').forEach(b => b.addEventListener('click', () => { const t = s.targets.find(x => x.id === b.dataset.rate); if(t){ t[b.dataset.k] = +b.dataset.v; draw(); } }));
@@ -15286,7 +15328,8 @@ async function tpBuilder(id, state){
       const k = tpSpMode(t); t[k] = +v; if(k === 'now' && !t.target) TP_SP_MODE[tid] = 'target'; draw(); }));
     body.querySelectorAll('[data-scale]').forEach(i => i.addEventListener('change', () => { const t = s.targets.find(x => x.id === i.dataset.scale); if(t){ t.scale = t.scale || []; t.scale[+i.dataset.k] = i.value.trim(); } }));
     on('#tb-t-add', () => { const text = $('#tb-t-text').value.trim(), staff = $('#tb-t-staff').value.trim(); if(!text){ toast('כותבים את היעד'); return; } if(s.targets.length >= 3){ toast('אפשר עד 3 יעדים'); return; }
-      s.targets.push({ id:tpUid('t'), own:true, text, staff:staff || text, scale:['', '', '', '', ''], now:null, target:null }); draw(); });
+      s.targets.push({ id:tpUid('t'), own:true, text, staff:staff || text, scale:['', '', '', '', ''], now:null, target:null }); s.openT = s.targets[s.targets.length - 1].id; draw(); });
+    body.querySelectorAll('[data-open-t]').forEach(b => b.addEventListener('click', () => { s.openT = b.dataset.openT; draw(); }));
     body.querySelectorAll('[data-own-x]').forEach(b => b.addEventListener('click', () => { s.targets = s.targets.filter(x => x.id !== b.dataset.ownX); draw(); }));
     const so = $('#tb-sort'); if(so) so.addEventListener('change', () => { s.sortAppr = so.checked; draw(); });
     const al = $('#tb-all'); if(al) al.addEventListener('change', () => { s.showAll = al.checked; draw(); });
@@ -15323,7 +15366,26 @@ async function tpBuilder(id, state){
     const at = d.goals.findIndex(x => x.id === g.id);
     if(at >= 0) d.goals[at] = Object.assign({}, d.goals[at], g); else d.goals.push(g);
     delete d.builder;
-    if(await tpSave(id, d)){ toast(s.editIndex >= 0 ? 'השינויים נשמרו בטיוטה' : 'המטרה נוספה לטיוטה. כשתסיימי: "פרסום"', 5000); thp.tab = 'plans'; thp.planChild = id; thpRender(); }
+    if(!(await tpSave(id, d))) return;
+    thp.tab = 'plans'; thp.planChild = id;
+    if(s.editIndex >= 0){ toast('השינויים נשמרו בטיוטה', 5000); thpRender(); return; }
+    whatNext();
+  }
+  // "מה עכשיו?" (Guy 2026-11-10): after a new goal, the next step of the whole plan — another goal / the other parts (optional) / check and publish
+  function whatNext(){
+    const opts = [['more', '➕', 'עוד מטרה', 'בונים מטרה נוספת, צעד אחר צעד'], ['parts', '📝', 'להשלים חלקים', 'תקציר, ברגעים קשים, שגרה. רשות'], ['publish', '📣', 'לבדוק ולפרסם', 'רואים את התוכנית ומפרסמים לצוות']];
+    body.innerHTML = `<div class="tp-builder tp-whatnext"><div class="th-ed-head"><span></span><div class="th-child-head">${c ? thpAvatar(c) : ''}<h2 class="ar-keep">${pEsc(c ? displayName(c) : '')}</h2></div><span></span></div>
+      <div class="tp-done" role="status">✓ המטרה נוספה לטיוטה</div><h2>מה עכשיו?</h2>
+      <div class="tp-big">${opts.map(([k, e, w, sub]) => `<button type="button" class="tp-bigbtn" data-wn="${k}"><span aria-hidden="true">${e}</span><b>${w}</b><small>${sub}</small></button>`).join('')}</div>
+      <div class="pnote">הצוות יראה את התוכנית רק אחרי "פרסום".</div>
+      <nav class="tp-bar" aria-label="ניווט"><span></span><button type="button" class="tp-bar-btn" id="tb-home">${tbIco('home')}<span>בית</span></button><span></span></nav></div>`;
+    window.scrollTo(0, 0);
+    body.querySelector('#tb-home').addEventListener('click', () => { if(typeof goHome === 'function') goHome(); else thpRender(); });
+    body.querySelectorAll('[data-wn]').forEach(b => b.addEventListener('click', () => {
+      const k = b.dataset.wn; thp.planView = 'work';
+      if(k === 'more'){ tpBuilder(id, null); return; }
+      thp.openMore = k === 'parts'; thp.focusPublish = k === 'publish'; thpRender();
+    }));
   }
   draw();
 }
