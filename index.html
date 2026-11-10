@@ -3073,6 +3073,27 @@ body:has(.view.active .mx-login[data-ptheme=light])::before{ display:none; }
 .tp-whatnext .tp-done{ text-align:center; font-weight:600; margin:var(--space-4, 16px) 0 0; color:var(--color-success, #4caf7d); }
 .tp-list .tp-start{ align-self:flex-start; margin:-4px 0 4px; margin-inline-start:58px; }
 @media (max-width:700px){ #protected-app:has(.tp-builder){ padding-bottom:0; } }
+/* the scale as a straight line, 5 at the top (Guy 2026-11-10: instead of the spiral) */
+.tp-ladder{ position:relative; display:flex; flex-direction:column; gap:4px; margin:8px 0; }
+.tp-ladder::before{ content:''; position:absolute; top:22px; bottom:22px; inset-inline-start:21px; width:2px; background:var(--color-border-strong, rgba(255,255,255,.25)); }
+.tl-row{ position:relative; display:flex; align-items:flex-start; gap:12px; width:100%; min-height:44px; padding:5px 4px; border:0; border-radius:10px; background:none; color:inherit; font:inherit; text-align:start; }
+button.tl-row{ cursor:pointer; } button.tl-row:hover{ background:var(--color-surface-alt, rgba(255,255,255,.05)); }
+button.tl-row:focus-visible{ outline:2px solid var(--color-primary, #d4a83a); outline-offset:1px; }
+.tl-dot{ position:relative; z-index:1; flex:none; display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; border:2px solid var(--color-border-strong, rgba(255,255,255,.35)); background:var(--color-surface, #1a2244); font-weight:700; }
+.tl-txt{ display:flex; flex-direction:column; gap:3px; padding-top:6px; font-size:14px; line-height:1.45; color:var(--color-text-secondary, inherit); }
+.tl-marks{ display:flex; flex-wrap:wrap; gap:6px; }
+.tl-m{ font-size:12px; font-weight:700; padding:1px 8px; border-radius:10px; }
+.tl-m.now{ background:var(--color-primary, #1d9e75); color:var(--color-on-primary, #fff); }
+.tl-m.goal{ border:1.5px solid var(--color-primary, #d4a83a); color:var(--color-text, inherit); }
+.tl-m.rated{ background:var(--color-surface-alt, rgba(255,255,255,.08)); color:var(--color-text, inherit); border:1px solid var(--color-border-strong, rgba(255,255,255,.3)); }
+.tl-row.now .tl-dot{ background:var(--color-primary, #1d9e75); border-color:var(--color-primary, #1d9e75); color:var(--color-on-primary, #fff); }
+.tl-row.goal .tl-dot{ box-shadow:0 0 0 3px var(--color-primary-soft, rgba(212,168,58,.35)); border-color:var(--color-primary, #d4a83a); }
+.tl-row.rated:not(.now) .tl-dot{ border-style:dashed; border-color:var(--color-text, #fff); }
+.tl-row.way .tl-dot{ border-color:var(--color-primary, #d4a83a); }
+.tl-row:is(.now, .goal, .rated) .tl-txt{ color:var(--color-text, inherit); }
+.tp-sp.tp-sp-line{ display:block; }
+.tp-sp.tp-sp-line .tp-sp-modes{ margin-bottom:6px; }
+.tp-rate-month{ display:flex; align-items:center; gap:8px; margin-top:6px; }
   /* ---------- the learning area: training videos (14zh-learn.js) ---------- */
   body.learn-page{ padding-bottom:0; overflow:hidden; }
   body.learn-page > *:not(#learn-root):not(.toast){ display:none !important; }
@@ -15246,8 +15267,8 @@ async function tpBuilder(id, state){
       // the spiral opens in place, under ONE selected target at a time; the others show a short line (Guy 2026-11-10)
       if(!s.targets.some(t => t.id === s.openT)) s.openT = (s.targets.find(t => !t.now || !t.target) || s.targets[s.targets.length - 1] || {}).id;
       const spiralOf = t => s.openT === t.id ? scaleEd(t) + ratings(t)
-        : `<button type="button" class="btn ghost small tp-t-open" data-open-t="${pEsc(t.id)}">${t.now ? `עכשיו ${t.now}${t.target ? ' · רוצים ' + t.target : ''}` : 'עוד לא סומן עכשיו ורוצים'} · לסמן בספירלה</button>`;
-      const scaleEd = t => `<details class="tp-scale-ed"><summary>הספירלה של היעד (5 תחנות)</summary>${[0, 1, 2, 3, 4].map(k => `<input type="text" data-scale="${pEsc(t.id)}" data-k="${k}" value="${pEsc((t.scale || [])[k] || '')}" placeholder="${k + 1}">`).join('')}</details>`;
+        : `<button type="button" class="btn ghost small tp-t-open" data-open-t="${pEsc(t.id)}">${t.now ? `עכשיו ${t.now}${t.target ? ' · רוצים ' + t.target : ''}` : 'עוד לא סומן עכשיו ורוצים'} · לסמן בסולם</button>`;
+      const scaleEd = t => `<details class="tp-scale-ed"><summary>לערוך את הנוסח של 5 הדרגות</summary>${[0, 1, 2, 3, 4].map(k => `<input type="text" data-scale="${pEsc(t.id)}" data-k="${k}" value="${pEsc((t.scale || [])[k] || '')}" placeholder="${k + 1}">`).join('')}</details>`;
       inner = `<h2>יעדים <small>(1–3)</small></h2>${TP_SCALE_HELP}${lib() && !lib().content.ages[s.age] ? `<div class="pnote">המטרה נכתבה ל${pEsc(BANK_AGE_WORD[Object.keys(lib().content.ages)[0]] || '')}, ומוצג הנוסח שלה.</div>` : ''}
         ${bank.map(t => { const on = sel.has(t.id), mine = s.targets.find(x => x.id === t.id) || t;
           return `<div class="tp-pick${on ? ' on' : ''}"><label><input type="checkbox" data-target="${pEsc(t.id)}"${on ? ' checked' : ''}> <span><b>${pEsc(G(t.text))}</b><small>לצוות: ${pEsc(G(t.staff))}</small></span></label>${on ? spiralOf(mine) : ''}</div>`; }).join('')}
@@ -15403,17 +15424,21 @@ function tpGoalFromState(s, G){
 // and the way between them in gold. Two small switches choose which mark a tap sets; the meaning of both stations is written under it
 const TP_SP_MODE = {};
 const tpSpMode = t => TP_SP_MODE[t.id] || (!t.now ? 'now' : !t.target ? 'target' : 'now');
-function tpSpiralPick(t){
-  const C = 110, A = 9, B = 6.4, TH = [0.9, 1.75, 2.6, 3.45, 4.3].map(x => x * Math.PI), at = th => { const r = A + B * th; return [C + r * Math.cos(th), C + r * Math.sin(th)]; };
-  const path = (a, b) => { const pts = []; for(let th = a; th <= b + 1e-6; th += 0.06) pts.push(at(th).map(n => n.toFixed(1)).join(',')); return 'M' + pts.join(' L'); };
-  const mode = tpSpMode(t), lo = t.now && t.target ? Math.min(t.now, t.target) : 0, hi = t.now && t.target ? Math.max(t.now, t.target) : 0;
-  const sc = t.scale || [], mean = v => v ? `${v} = ${pEsc(sc[v - 1] || '')}` : '—';
-  const st = TH.map((th, i) => { const [x, y] = at(th), v = i + 1, cls = `${t.now === v ? ' now' : ''}${t.target === v ? ' goal' : ''}`;
-    return `<button type="button" class="tp-sp-st${cls}" style="left:${(x / 2.2).toFixed(1)}%;top:${(y / 2.2).toFixed(1)}%" data-spst="${pEsc(t.id)}|${v}" aria-label="תחנה ${v}: ${pEsc(sc[i] || '')}">${t.target === v ? '★' : v}</button>`; }).join('');
-  return `<div class="tp-sp">
+// the scale as a straight line, 5 at the top down to 1, with the wording next to every number (Guy 2026-11-10: instead of the spiral — the rating is seen at a glance)
+// o.pick: the rows are buttons (the builder); o.rated: the last rating (tracking); o.nowWord: the word for t.now
+function tpLadderHtml(t, o){
+  o = o || {}; const sc = t.scale || [], lo = t.now && t.target ? Math.min(t.now, t.target) : 0, hi = t.now && t.target ? Math.max(t.now, t.target) : 0;
+  return `<div class="tp-ladder" role="${o.pick ? 'group' : 'list'}" aria-label="הסולם, 5 למעלה">${[5, 4, 3, 2, 1].map(v => {
+    const cls = `${t.now === v ? ' now' : ''}${t.target === v ? ' goal' : ''}${o.rated === v ? ' rated' : ''}${lo && v > lo && v <= hi ? ' way' : ''}`;
+    const marks = `${t.now === v ? `<b class="tl-m now">● ${o.nowWord || 'עכשיו'}</b>` : ''}${t.target === v ? '<b class="tl-m goal">★ רוצים</b>' : ''}${o.rated === v ? '<b class="tl-m rated">◆ דורג לאחרונה</b>' : ''}`;
+    const inner = `<span class="tl-dot" aria-hidden="true">${v}</span><span class="tl-txt">${pEsc(sc[v - 1] || '')}${marks ? `<span class="tl-marks">${marks}</span>` : ''}</span>`;
+    return o.pick ? `<button type="button" class="tl-row${cls}" data-spst="${pEsc(t.id)}|${v}" aria-label="${v}: ${pEsc(sc[v - 1] || '')}">${inner}</button>` : `<div class="tl-row${cls}" role="listitem">${inner}</div>`; }).join('')}</div>`;
+}
+function tpSpiralPick(t){          // (the builder: what is marked now, then the line to tap)
+  const mode = tpSpMode(t);
+  return `<div class="tp-sp tp-sp-line">
     <div class="tp-sp-modes" role="group" aria-label="מה מסמנים"><button type="button" class="${mode === 'now' ? 'on' : ''}" data-spmode="${pEsc(t.id)}|now" aria-pressed="${mode === 'now'}">● איפה עכשיו</button><button type="button" class="${mode === 'target' ? 'on' : ''}" data-spmode="${pEsc(t.id)}|target" aria-pressed="${mode === 'target'}">★ לאן רוצים להגיע</button></div>
-    <div class="tp-sp-box"><svg viewBox="0 0 220 220" aria-hidden="true"><path class="tp-sp-line" d="${path(0.25 * Math.PI, 4.45 * Math.PI)}"/>${lo ? `<path class="tp-sp-way" d="${path(TH[lo - 1], TH[hi - 1])}"/>` : ''}</svg>${st}</div>
-    <div class="tp-sp-mean"><div><b>● עכשיו:</b> ${mean(t.now)}</div><div><b>★ רוצים:</b> ${mean(t.target)}</div></div>
+    ${tpLadderHtml(t, { pick:true })}
   </div>`;
 }
 // ---- the staff's view of one goal (Q21, Q25-27): the plain targets, the interventions with their approach, 2 sentences + "עוד", 👍/👎
@@ -15480,11 +15505,10 @@ async function tpSpiralSection(id, box){
   const D = await tpSpiralData(id, since), last = {};
   D.scale.forEach(x => { last[x.goal_id] = x; });
   const sec = document.createElement('div'); sec.className = 'cr-graphs';
-  sec.innerHTML = `<h3 class="psec">איפה ${pEsc(careName(id))} עכשיו</h3><details class="pfold"><summary><span>מה זו הספירלה?</span></summary><div class="pfold-body pnote">ההתקדמות לא בקו ישר. כל נקודה היא יום; הנקודה הגדולה היא היום. הספירלה נבנית מצעדים במסע, מתצפיות, מאירועים, מ👍/👎 של הצוות ומהדירוג שלך. נתונים, לא מסקנה.</div></details>${TP_SCALE_HELP}
-    ${goals.map(g => `<details class="tp-goal" open><summary><b>${pEsc(g.title)}</b> <small>${pEsc(TP_STATUS[tpStatusOf(g)])}</small></summary><div class="tp-goal-body">${g.targets_list.map(t => { const lv = tpSpiralLevels(g, t, D, since, days), r = last[g.id + ':' + t.id];
-      return `<details class="tp-target"><summary><span>${pEsc(t.text)}</span><em class="tp-now">עכשיו ${Math.round(lv[lv.length - 1].lv)}${t.target ? ' · רוצים ' + t.target : ''}</em></summary><div class="tp-t-body tp-sp-row">${tpSpiralSvg(t, lv)}
-        <div class="tp-sp-side"><ol class="tp-stations">${(t.scale || []).map((s2, j) => `<li class="${t.target === j + 1 ? 'goal' : ''}">${pEsc(s2)}</li>`).join('')}</ol>
-          <label>הדירוג של החודש <select data-sp-rate="${pEsc(g.id + ':' + t.id)}"><option value="">—</option>${[1, 2, 3, 4, 5].map(k => `<option${r && r.rated_on.slice(0, 7) === careToday().slice(0, 7) && r.value === k ? ' selected' : ''}>${k}</option>`).join('')}</select></label></div></div></details>`; }).join('')}</div></details>`).join('')}`;
+  sec.innerHTML = `<h3 class="psec">איפה ${pEsc(careName(id))} עכשיו</h3>${TP_SCALE_HELP}
+    ${goals.map(g => `<details class="tp-goal" open><summary><b>${pEsc(g.title)}</b> <small>${pEsc(TP_STATUS[tpStatusOf(g)])}</small></summary><div class="tp-goal-body">${g.targets_list.map(t => { const r = last[g.id + ':' + t.id];          // (a straight line 5..1 with the wording: where it started, where to, the last rating — Guy 2026-11-10)
+      return `<details class="tp-target"><summary><span>${pEsc(t.text)}</span><em class="tp-now">${r ? 'דורג ' + r.value : t.now ? 'בהתחלה ' + t.now : 'עוד לא דורג'}${t.target ? ' · רוצים ' + t.target : ''}</em></summary><div class="tp-t-body">${tpLadderHtml(t, { rated:r ? r.value : null, nowWord:'בהתחלה' })}
+          <label class="tp-rate-month">הדירוג של החודש <select data-sp-rate="${pEsc(g.id + ':' + t.id)}"><option value="">—</option>${[1, 2, 3, 4, 5].map(k => `<option${r && r.rated_on.slice(0, 7) === careToday().slice(0, 7) && r.value === k ? ' selected' : ''}>${k}</option>`).join('')}</select></label></div></details>`; }).join('')}</div></details>`).join('')}`;
   box.appendChild(sec);
   sec.querySelectorAll('[data-sp-rate]').forEach(s2 => s2.addEventListener('change', async () => {
     if(!s2.value) return;
