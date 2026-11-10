@@ -2174,7 +2174,7 @@
   .bk-ev-pop::after{ content:''; position:absolute; top:100%; inset-inline-start:14px; border:7px solid transparent; border-top-color:currentColor; }
   .bk-ev:hover .bk-ev-pop, .bk-ev:focus .bk-ev-pop, .bk-ev:focus-within .bk-ev-pop{ display:block; }
   .say-ico{ width:1.05em; height:1.05em; vertical-align:-.18em; margin-inline-end:5px; color:var(--gold, #d4a83a); flex:none; }
-  .bk-ev-tested{ color:#4caf7d; } .bk-ev-derived{ color:#5b8def; } .bk-ev-new{ color:#c9932b; }
+  .bk-ev-tested{ color:#4caf7d; } .bk-ev-derived{ color:#5b8def; } .bk-ev-new{ color:#c9932b; } .bk-ev-pro{ color:#8a6fd1; }
   .bk-age-also{ font-size:12px; opacity:.75; margin-inline-start:6px; }
   /* the method tiles: the card of the method in a dark bubble while the mouse rests on the tile (Guy 2026-10-29); touch screens keep "מה זו?" */
   .tp-tile-wrap{ position:relative; }
@@ -2208,6 +2208,9 @@
   .tp-sp-mean b{ color:var(--p-muted, var(--muted)); font-weight:700; }
   @media (max-width:520px){ .tp-sp{ grid-template-columns:1fr; grid-template-areas:"modes" "box" "mean"; } .tp-sp-box{ margin:0 auto; } }
   .tp-builder h2{ text-align:center; text-wrap:balance; }          /* (the title of every step in the middle: Guy 2026-10-29) */
+  /* the legend of the scale (LIB-006): help next to the scale */
+  .tp-scale-help .pfold-body p{ margin:0 0 6px; } .tp-scale-help ol, .tp-scale-help ul{ margin:4px 0 6px; padding-inline-start:22px; } .tp-scale-help li{ margin:2px 0; line-height:1.5; }
+  .tp-group-h{ margin:14px 0 6px; } .bk-fam{ margin:10px 0 4px; font-size:13px; opacity:.8; }
 /* ---------- Mercury's design system, first on the therapy portal (Guy 2026-10-30; his "מרקורי — הנחיות מפתחים למערכת העיצוב" v1.0) ----------
    Calm, secure, curious: warm natural minimalism. Two themes here (light / dark; no leopard in this portal). Headings Rubik (Guy's choice), body Assistant.
    Tokens: raw values live only in the two theme blocks below; everything else reads the semantic ones. The older --p-* and base variables
@@ -14057,6 +14060,15 @@ function thpOverviewHtml(){
 // the text; ⭐ favourites first, then the most used. What Claude wrote is a draft until the admin approves it (a review screen, one after another).
 // A therapist who changes a Mercury template gets a copy in the center's library. Changing a template never changes a child's plan.
 const BANK_THEMES = PLAN_CATS;          // (14x: the ten themes)
+// the super-topics over the themes and the families of the methods (Perplexity's package LIB-006, DEC-013): headings in the library (Guy 2026-11-10)
+const BANK_SUPER = [['ביטחון, קשר ושייכות', ['ביטחון ויציבות', 'היקשרות וקשר עם מבוגר', 'קליטה וימים ראשונים']], ['רגשות, גוף וויסות', ['ויסות רגשי']],
+  ['זהות, כוחות ומסוגלות', ['זהות ודימוי עצמי']], ['יחסים, תקשורת וגבולות', ['קשרים חברתיים', 'התנהגות מסכנת וגבולות']],
+  ['חיי יום־יום, למידה ועצמאות', ['שינה ואכילה', 'גוף, היגיינה ופרטיות', 'למידה ותפקוד', 'מסכים וחיים דיגיטליים']], ['שינוי, פרידה וחוויות קשות', ['מעברים ושגרה', 'אובדן ופרידה']]];
+const BANK_FAMILY = [['ויסות, התפתחות וסביבה טיפולית', ['ARC', 'NMT', 'ויסות חושי']], ['קשר וביטחון', ['TBRI', 'DDP/PACE', 'Theraplay', 'מעגל הביטחון']],
+  ['מיומנויות, התנהגות ופתרון בעיות', ['CPS', 'TF-CBT', 'סמכות חדשה']], ['משחק, הבעה ומשמעות', ['טיפול נרטיבי']]];
+// items (in their own order) under the headings of the groups; what is in no group goes under "אחר"; empty groups are left out
+const bankGroup = (groups, items, key) => { key = key || (x => x); const used = new Set(), out = groups.map(([g, l]) => [g, items.filter(x => l.includes(key(x)))]).filter(x => x[1].length);
+  out.forEach(([, l]) => l.forEach(x => used.add(x))); const rest = items.filter(x => !used.has(x)); if(rest.length) out.push(['אחר', rest]); return out; };
 // four age groups (Guy 2026-10-29, after the research report): every goal is written for one of them, and may be marked fit for an adjacent one too
 const BANK_AGES = [['2-5', 'גילאי 2–5'], ['6-9', 'גילאי 6–9'], ['10-12', 'גילאי 10–12'], ['13-15', 'גילאי 13–15']];
 const BANK_AGE_WORD = Object.assign({ '5-8':'גילאי 5–8', '8-12':'גילאי 8–12' }, Object.fromEntries(BANK_AGES));          // (+ the two of the first bank)
@@ -14064,7 +14076,11 @@ const BANK_LEGACY = { '6-9':'5-8', '10-12':'5-8', '13-15':'5-8' };          // (
 // how well a goal is grounded in research (the therapist only): tested / derived from a supported approach / a new adaptation not tested yet
 const BANK_EVIDENCE = { tested:'נבדק מחקרית', derived:'נגזר מגישה מבוססת', new:'התאמה חדשה, טרם נבדקה' };
 // the label opens a small dark bubble in its own colour with the reason (hover, or a tap / focus on a phone) — not the browser's white box
-const bankEvidenceTag = ev => ev && BANK_EVIDENCE[ev.level] ? `<span class="bk-ev bk-ev-${pEsc(ev.level)}" tabindex="0">${BANK_EVIDENCE[ev.level]}${ev.note ? `<span class="bk-ev-pop" role="tooltip">${pEsc(ev.note)}</span>` : ''}</span>` : '';
+// Perplexity's package (LIB-006): the summary opens with one of three labels, and that label is the tag (Guy 2026-11-10); older goals keep the level
+const BANK_EV_LABELS = [['בסיס מחקרי עקיף', 'derived'], ['המלצה מקצועית', 'pro'], ['עדיין אין מחקר ישיר', 'new']];
+const bankEvOf = ev => { if(!ev) return null; const n = String(ev.note || ''), l = BANK_EV_LABELS.find(([w]) => n.startsWith(w));
+  return l ? { word:l[0], cls:l[1], rest:n.slice(l[0].length).replace(/^\s*[:：]\s*/, '') } : BANK_EVIDENCE[ev.level] ? { word:BANK_EVIDENCE[ev.level], cls:ev.level, rest:n } : null; };
+const bankEvidenceTag = ev => { const e = bankEvOf(ev); return e ? `<span class="bk-ev bk-ev-${pEsc(e.cls)}" tabindex="0">${pEsc(e.word)}${ev.note ? `<span class="bk-ev-pop" role="tooltip">${pEsc(ev.note)}</span>` : ''}</span>` : ''; };
 // a sentence to say to the child: a round speech bubble in the portal's gold
 const SAY = '<svg class="say-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.2c-5.1 0-9.2 3.4-9.2 7.7 0 2.3 1.2 4.4 3.1 5.8-.2 1.5-1 2.9-2.2 3.9 2.1 0 4.1-.8 5.6-2 .9.2 1.8.3 2.7.3 5.1 0 9.2-3.4 9.2-7.9S17.1 3.2 12 3.2z"/></svg>';
 const BANK_METHODS0 = ['ARC', 'DDP/PACE', 'TF-CBT', 'Theraplay', 'ויסות חושי', 'NMT'];
@@ -14153,7 +14169,7 @@ function bankPreviewHtml(x, age){
   const c = x.content || {};
   if(c.v === 2){          // (the bank of the walkthrough: targets and interventions per age)
     const w = bankWording(x, age) || {};
-    return `${c.evidence ? `<div class="bk-pv-row"><b>ביסוס</b><span>${bankEvidenceTag(c.evidence)}${c.evidence.note ? ` <small>${pEsc(c.evidence.note)}</small>` : ''}</span></div>` : ''}<div class="bk-pv-row"><b>יעדים</b><span>${(w.targets || []).map(t => `<span class="bk-line">• ${pEsc(t.text)} <small>(לצוות: ${pEsc(t.staff)})</small></span>`).join('')}</span></div>
+    return `${c.evidence ? `<div class="bk-pv-row"><b>ביסוס</b><span>${bankEvidenceTag(c.evidence)}${(bankEvOf(c.evidence) || {}).rest ? ` <small>${pEsc(bankEvOf(c.evidence).rest)}</small>` : ''}</span></div>` : ''}<div class="bk-pv-row"><b>יעדים</b><span>${(w.targets || []).map(t => `<span class="bk-line">• ${pEsc(t.text)} <small>(לצוות: ${pEsc(t.staff)})</small></span>`).join('')}</span></div>
       <div class="bk-pv-row"><b>דרכי התערבות</b><span>${(w.interventions || []).map(i => `<span class="bk-line"><b>${pEsc(i.name)}</b> ${pEsc(i.what)} <em class="tp-appr">${pEsc(i.approach)}</em><br><small>${pEsc(i.freq || '')} · ${(i.sentences || []).map(s => SAY + pEsc(s)).join(' ')}</small>${i.avoid ? `<small class="tp-avoid">🚫 ${pEsc(i.avoid)}</small>` : ''}</span>`).join('')}</span></div>
       ${(c.strengths || []).length ? `<div class="bk-pv-row"><b>חוזקות</b><span>${c.strengths.map(pEsc).join(' · ')}</span></div>` : ''}`;
   }
@@ -14177,7 +14193,7 @@ function bankPick(kind, opts){
   const f = { theme:'', method:'', age:opts.age || '', q:'' }, title = { goal:'בנק המטרות', plan:'תוכניות שלמות', todo:'מה הצוות עושה' }[kind] || (PLAN_KIND_WORD[kind] || 'תבניות') + ' מהבנק';
   const sel = (id, label, list, v) => `<select id="${id}" aria-label="${label}"><option value="">${label}</option>${list.map(o => { const [k, w] = Array.isArray(o) ? o : [o, o]; return `<option value="${pEsc(k)}"${k === v ? ' selected' : ''}>${pEsc(w)}</option>`; }).join('')}</select>`;
   const sh = portalSheet(`<h2>${pEsc(title)}</h2>${bankNote()}
-    <div class="bk-filter">${sel('bk-theme', 'כל התמות', BANK_THEMES, '')}${kind === 'goal' || kind === 'plan' ? sel('bk-method', 'כל השיטות', bankMethods(), '') : ''}${kind !== 'plan' ? sel('bk-agef', 'כל הגילאים', BANK_AGES, f.age) : ''}
+    <div class="bk-filter"><select id="bk-theme" aria-label="כל התמות"><option value="">כל התמות</option>${bankGroup(BANK_SUPER, BANK_THEMES).map(([g, l]) => `<optgroup label="${pEsc(g)}">${l.map(t => `<option value="${pEsc(t)}">${pEsc(t)}</option>`).join('')}</optgroup>`).join('')}</select>${kind === 'goal' || kind === 'plan' ? sel('bk-method', 'כל השיטות', bankMethods(), '') : ''}${kind !== 'plan' ? sel('bk-agef', 'כל הגילאים', BANK_AGES, f.age) : ''}
       <input type="search" id="bk-q" placeholder="חיפוש בכל הטקסט" aria-label="חיפוש"></div>
     ${opts.age ? '' : (kind !== 'plan' ? '<div class="pnote">הגיל של הילד/ה לא ידוע: מוצגים כל הגילאים. אפשר לבחור טווח.</div>' : '')}
     <div class="bk-list" id="bk-list"></div><div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>סגירה</button></div>`);
@@ -14384,7 +14400,7 @@ function bankLibraryTopHtml(){
       <label class="th-important">מטרות במוקד בבת אחת: <select id="bk-focusmax">${[1, 2, 3].map(n => `<option${(+((thp.mopts || {}).focus_max) || 1) === n ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="th-important">תוכנית ראשונה תוך <input type="number" id="bk-firstdays" min="3" max="60" value="${+((thp.mopts || {}).first_plan_days) || 14}" style="width:4.5em"> ימים מההגעה</label></div>` : ''}
     <button type="button" class="btn ghost" id="bk-open" style="width:100%">📚 בנק המטרות</button>
-    ${ms.length ? `<details class="pfold"><summary><span>שיטות הטיפול</span><span class="pcount">${ms.length}</span></summary><div class="pfold-body">${ms.map(m => `<details class="bk-mcard"><summary><b>${pEsc(m.title)}</b>${m.scope === 'center' ? '<span class="bk-center">המרכז</span>' : ''}${bankDraftTag(m)}</summary><div>${pEsc(m.description || '')}</div></details>`).join('')}</div></details>` : ''}`;
+    ${ms.length ? `<details class="pfold"><summary><span>שיטות הטיפול</span><span class="pcount">${ms.length}</span></summary><div class="pfold-body">${bankGroup(BANK_FAMILY, ms, m => m.title).map(([f, l]) => `<h4 class="bk-fam">${pEsc(f)}</h4>${l.map(m => `<details class="bk-mcard"><summary><b>${pEsc(m.title)}</b>${m.scope === 'center' ? '<span class="bk-center">המרכז</span>' : ''}${bankDraftTag(m)}</summary><div>${pEsc(m.description || '')}</div></details>`).join('')}`).join('')}</div></details>` : ''}`;
 }
 function bankWireLibrary(body){
   const rv = body.querySelector('#bk-review'); if(rv) rv.addEventListener('click', () => { const s = bankReview(0); const close = s.close; s.close = () => { close(); thpRender(); }; });
@@ -14859,6 +14875,19 @@ async function careDocsSection(id, box){
 // The progress of a target is a spiral, not a line: a dot a day, from the journey steps, the observations, the incidents, the staff's 👍/👎
 // and the therapist's monthly rating. The old fields of a goal (targets, interventions, sentences, focus) are kept in sync for the older screens.
 const TP_STATUS = { focus:'במוקד', waiting:'בהמתנה', achieved:'הושגה', stopped:'הופסקה' };
+// the legend of the scale (Perplexity's package LIB-006, scale-legend.md): shown once, as help next to the scale (the builder's targets, the spiral)
+const TP_SCALE_HELP = `<details class="pfold tp-scale-help"><summary><span>איך מדרגים?</span></summary><div class="pfold-body pnote">
+  <p>הסולם מתאר כמה תמיכה הילד/ה צריך/ה, לא הישג. זו מסגרת תצפית מקומית, לא כלי מתוקף.</p>
+  <ol class="tp-legend"><li>עדיין: המבוגר מדגים, והילד/ה משתתף/ת. ביצוע במקום הילד/ה אינו דרגה</li><li>יחד עם המבוגר</li><li>כשהמבוגר מזכיר במילים</li><li>בעצמו/ה אחרי רמז קטן בלבד (מבט, תנועה או כרטיס)</li><li>בעצמו/ה, בלי תזכורת ובלי רמז. המבוגר זמין כרגיל</li></ol>
+  <ul><li>נמדדת רק התמיכה הנוספת. התפקיד הרגיל של המבוגר בשיחה או בפעילות, ושאלה שהיא חלק מהפעילות, אינם רמז.</li>
+  <li>אמצעי נגישות קבוע (תמונה, שיר, טיימר, כרטיס תקשורת) אינו מוריד דרגה.</li>
+  <li>בהבעת רגש או חוויה מדגימים דוגמה ניטרלית ולא מכתיבים את התשובה. אפשר לא לענות.</li>
+  <li>סירוב, אי־השתתפות, "לא נצפה" ו"לא הייתה הזדמנות" אינם דרגה. במקרים כאלה לא מדרגים.</li>
+  <li>מצוקה, רגיעה, שינה ופגיעה ממשיכות להיות מתועדות כתצפית או לפי נוהל, מחוץ לסולם.</li>
+  <li>אותה התנהגות באותו אירוע נרשמת פעם אחת, במטרה אחת שנקבעה בתוכנית.</li>
+  <li>ביעדים שבהם אפשר לבקש הפסקה או לסיים, הדרגה משקפת בחירה ותקשורת, לא התמדה או השלמת משימה.</li>
+  <li>הדרגה נקבעת לפי הדפוס השכיח ב־4–6 שבועות, לא לפי אירוע בודד (במטרות של ימים ראשונים התקופה קצרה יותר).</li>
+  <li>הדרגה אינה מעידה בהכרח על התקדמות טיפולית, ואין להשוות בה בין ילדים.</li></ul></div></details>`;
 const tpFocusMax = () => Math.max(1, Math.min(3, +((thp.mopts || {}).focus_max) || 1));
 const tpStatusOf = g => g.status || (g.focus ? 'focus' : 'waiting');
 const tpIsV2 = g => Array.isArray(g.targets_list);
@@ -15158,9 +15187,11 @@ async function tpBuilder(id, state){
       <button type="button" class="btn ghost small" id="tb-own">משהו משלי: מטרה שאני כותבת</button>`;
     else if(s.step === 'pick'){
       const nGoals = n => n === 1 ? 'מטרה אחת' : n + ' מטרות';          // (only what exists is offered: the checker, principle 10)
-      if(s.entry === 'theme') inner = `<h2>איזו תמה?</h2><div class="tp-grid">${PLAN_CATS.map(t => [t, tpGoalsV2().filter(x => bankThemesOf(x).includes(t)).length]).filter(x => x[1]).map(([t, n]) => `<button type="button" class="tp-tile" data-theme="${pEsc(t)}"><b>${pEsc(t)}</b><small>${nGoals(n)}</small></button>`).join('') || '<div class="pnote">עוד אין מטרות בבנק. אפשר "משהו משלי".</div>'}</div>`;
-      else if(s.entry === 'method') inner = `<h2>איזו שיטה?</h2><div class="tp-grid">${bankMethods().map(m => [m, tpGoalsV2().filter(x => (x.methods || []).includes(m)).length]).filter(x => x[1]).map(([m, n]) => { const card = (thp.library || []).find(y => y.kind === 'method' && y.title === m);
-        return `<div class="tp-tile-wrap"><button type="button" class="tp-tile" data-method="${pEsc(m)}"><b>${pEsc(m)}</b><small>${nGoals(n)}</small></button>${card ? `<span class="tp-mpop" role="tooltip">${pEsc(card.description || '')}</span><details class="tp-mcard"><summary>מה זו?</summary><div>${pEsc(card.description || '')}</div></details>` : ''}</div>`; }).join('') || '<div class="pnote">עוד אין מטרות בבנק. אפשר "משהו משלי".</div>'}</div>`;
+      if(s.entry === 'theme'){ const th = PLAN_CATS.map(t => [t, tpGoalsV2().filter(x => bankThemesOf(x).includes(t)).length]).filter(x => x[1]);          // (under the super-topics: Guy 2026-11-10)
+        inner = `<h2>איזו תמה?</h2>${bankGroup(BANK_SUPER, th, x => x[0]).map(([g, l]) => `<h3 class="psec tp-group-h">${pEsc(g)}</h3><div class="tp-grid">${l.map(([t, n]) => `<button type="button" class="tp-tile" data-theme="${pEsc(t)}"><b>${pEsc(t)}</b><small>${nGoals(n)}</small></button>`).join('')}</div>`).join('') || '<div class="pnote">עוד אין מטרות בבנק. אפשר "משהו משלי".</div>'}`; }
+      else if(s.entry === 'method'){ const ms = bankMethods().map(m => [m, tpGoalsV2().filter(x => (x.methods || []).includes(m)).length]).filter(x => x[1]);          // (under the families: Guy 2026-11-10)
+        inner = `<h2>איזו שיטה?</h2>${bankGroup(BANK_FAMILY, ms, x => x[0]).map(([f, l]) => `<h3 class="psec tp-group-h">${pEsc(f)}</h3><div class="tp-grid">${l.map(([m, n]) => { const card = (thp.library || []).find(y => y.kind === 'method' && y.title === m);
+        return `<div class="tp-tile-wrap"><button type="button" class="tp-tile" data-method="${pEsc(m)}"><b>${pEsc(m)}</b><small>${nGoals(n)}</small></button>${card ? `<span class="tp-mpop" role="tooltip">${pEsc(card.description || '')}</span><details class="tp-mcard"><summary>מה זו?</summary><div>${pEsc(card.description || '')}</div></details>` : ''}</div>`; }).join('')}</div>`).join('') || '<div class="pnote">עוד אין מטרות בבנק. אפשר "משהו משלי".</div>'}`; }
       else inner = `<h2>חיפוש</h2><input type="search" id="tb-q" class="th-search" placeholder="למשל: מעברים, להירגע, פרידה" value="${pEsc(s.q || '')}"><div id="tb-res"></div>`;
       inner += nav(false);
     }
@@ -15178,7 +15209,7 @@ async function tpBuilder(id, state){
       const row = (t, k, w) => `<div role="group" aria-label="${w}"><span>${w}</span>${[1, 2, 3, 4, 5].map(v => `<button type="button" class="${t[k] === v ? 'on' : ''}" aria-pressed="${t[k] === v}" aria-label="${w} ${v}: ${pEsc((t.scale || [])[v - 1] || '')}" data-rate="${pEsc(t.id)}" data-k="${k}" data-v="${v}">${v}</button>`).join('')}</div>${mean(t, k)}`;
       const ratings = t => tpSpiralPick(t);          // (a real spiral to tap, instead of two rows of 1-5: Guy 2026-10-29)
       const scaleEd = t => `<details class="tp-scale-ed"><summary>הספירלה של היעד (5 תחנות)</summary>${[0, 1, 2, 3, 4].map(k => `<input type="text" data-scale="${pEsc(t.id)}" data-k="${k}" value="${pEsc((t.scale || [])[k] || '')}" placeholder="${k + 1}">`).join('')}</details>`;
-      inner = `<h2>יעדים <small>(1–3)</small></h2>${lib() && !lib().content.ages[s.age] ? `<div class="pnote">המטרה נכתבה ל${pEsc(BANK_AGE_WORD[Object.keys(lib().content.ages)[0]] || '')}, ומוצג הנוסח שלה.</div>` : ''}
+      inner = `<h2>יעדים <small>(1–3)</small></h2>${TP_SCALE_HELP}${lib() && !lib().content.ages[s.age] ? `<div class="pnote">המטרה נכתבה ל${pEsc(BANK_AGE_WORD[Object.keys(lib().content.ages)[0]] || '')}, ומוצג הנוסח שלה.</div>` : ''}
         ${bank.map(t => { const on = sel.has(t.id), mine = s.targets.find(x => x.id === t.id) || t;
           return `<div class="tp-pick${on ? ' on' : ''}"><label><input type="checkbox" data-target="${pEsc(t.id)}"${on ? ' checked' : ''}> <span><b>${pEsc(G(t.text))}</b><small>לצוות: ${pEsc(G(t.staff))}</small></span></label>${on ? scaleEd(mine) + ratings(mine) : ''}</div>`; }).join('')}
         ${s.targets.filter(t => t.own).map(t => `<div class="tp-pick on"><span><b>${pEsc(t.text)}</b><small>לצוות: ${pEsc(t.staff)}</small></span>${scaleEd(t)}${ratings(t)}<button type="button" class="btn ghost small" data-own-x="${pEsc(t.id)}">הסרה</button></div>`).join('')}
@@ -15387,7 +15418,7 @@ async function tpSpiralSection(id, box){
   const D = await tpSpiralData(id, since), last = {};
   D.scale.forEach(x => { last[x.goal_id] = x; });
   const sec = document.createElement('div'); sec.className = 'cr-graphs';
-  sec.innerHTML = `<h3 class="psec">איפה ${pEsc(careName(id))} עכשיו</h3><details class="pfold"><summary><span>מה זו הספירלה?</span></summary><div class="pfold-body pnote">ההתקדמות לא בקו ישר. כל נקודה היא יום; הנקודה הגדולה היא היום. הספירלה נבנית מצעדים במסע, מתצפיות, מאירועים, מ👍/👎 של הצוות ומהדירוג שלך. נתונים, לא מסקנה.</div></details>
+  sec.innerHTML = `<h3 class="psec">איפה ${pEsc(careName(id))} עכשיו</h3><details class="pfold"><summary><span>מה זו הספירלה?</span></summary><div class="pfold-body pnote">ההתקדמות לא בקו ישר. כל נקודה היא יום; הנקודה הגדולה היא היום. הספירלה נבנית מצעדים במסע, מתצפיות, מאירועים, מ👍/👎 של הצוות ומהדירוג שלך. נתונים, לא מסקנה.</div></details>${TP_SCALE_HELP}
     ${goals.map(g => `<details class="tp-goal" open><summary><b>${pEsc(g.title)}</b> <small>${pEsc(TP_STATUS[tpStatusOf(g)])}</small></summary><div class="tp-goal-body">${g.targets_list.map(t => { const lv = tpSpiralLevels(g, t, D, since, days), r = last[g.id + ':' + t.id];
       return `<details class="tp-target"><summary><span>${pEsc(t.text)}</span><em class="tp-now">עכשיו ${Math.round(lv[lv.length - 1].lv)}${t.target ? ' · רוצים ' + t.target : ''}</em></summary><div class="tp-t-body tp-sp-row">${tpSpiralSvg(t, lv)}
         <div class="tp-sp-side"><ol class="tp-stations">${(t.scale || []).map((s2, j) => `<li class="${t.target === j + 1 ? 'goal' : ''}">${pEsc(s2)}</li>`).join('')}</ol>
