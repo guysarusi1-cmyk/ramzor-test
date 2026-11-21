@@ -3800,8 +3800,8 @@ body.portal-big #view-tw .tw-tab{ flex:1 1 auto; }
 .tw-pick-main[aria-disabled=true]{ cursor:not-allowed; }
 .tw-pick-side{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding-inline-end:10px; }
 .tw-pick-row.on .btn.ghost{ color:#1C1A17; border-color:#1C1A17; }
-.wa-btn{ flex:none; display:inline-grid; place-items:center; width:40px; height:40px; border-radius:50%; background:#25d366; color:#fff; text-decoration:none; }
-.wa-btn:focus-visible{ outline:2px solid currentColor; outline-offset:2px; }
+body.product-shibutz .wa-btn{ flex:none; display:inline-grid; place-items:center; width:40px; height:40px; border-radius:50%; background:#25d366; color:#fff; text-decoration:none; }
+body.product-shibutz .wa-btn:focus-visible{ outline:2px solid currentColor; outline-offset:2px; }
 .tw-wline{ margin:6px 0; }
 /* the pilot, step 3 on a computer: the table and the names to drag beside it; on a phone (and a narrow screen) only the table */
 #view-tw .tw-drag{ display:none; }
@@ -3839,7 +3839,7 @@ body.portal-big #view-tw .tw-tab{ flex:1 1 auto; }
 .sb-set .tw-chk-l input{ width:24px; height:24px; }
 #view-tw .tw-add-fold > summary{ font-weight:700; }
 /* Rita's check 19.11: no white scroll bar in a dark window; the page behind an open window does not scroll; the ✓ button readable */
-.sheet .sheet-card{ scrollbar-color:color-mix(in srgb, var(--p-text, #ddd) 35%, transparent) transparent; scrollbar-width:thin; }
+body.product-shibutz .sheet .sheet-card{ scrollbar-color:color-mix(in srgb, var(--p-text, #ddd) 35%, transparent) transparent; scrollbar-width:thin; }
 body.product-shibutz:has(> .sheet){ overflow:hidden; }          /* (only the scheduling product, whose windows are added and removed: the first site keeps its windows hidden in the page, and the rule locked its scrolling — Guy 21.11) */
 .tw-pick-row.on .btn.ghost{ background:#1C1A17; color:#F3EEE4; border-color:#1C1A17; }
 #view-tw .tw-pday.tw-off .tw-day-name{ opacity:.6; }
@@ -3854,8 +3854,8 @@ body.product-shibutz:has(> .sheet){ overflow:hidden; }          /* (only the sch
 #view-tw .tw-wmiss{ margin:4px 0 0; padding-inline-start:20px; font-size:14px; }
 #view-tw .tw-wmiss li{ margin:2px 0; }
 /* a long undo message (a warning inside it): wide, not a narrow tall column (the check of 2026-11-20) */
-.toast-undo.toast-long{ width:min(92vw, 520px); max-width:92vw; box-sizing:border-box; }
-.toast-undo.toast-long > span{ flex:1 1 auto; min-width:0; }
+body.product-shibutz .toast-undo.toast-long{ width:min(92vw, 520px); max-width:92vw; box-sizing:border-box; }
+body.product-shibutz .toast-undo.toast-long > span{ flex:1 1 auto; min-width:0; }
 
 /* ---- Guy's walkthrough 2026-11-21: the preferences ---- */
 /* the view (rows / calendar) and the week, above the table, always */
@@ -7987,7 +7987,7 @@ function showAppHome(){
   document.body.classList.toggle('leopard-bg', look === 'leopard');
   document.getElementById('view-apphome').innerHTML = `
     <div class="apphome mx-home" data-ptheme="${look}">
-      <div class="apphome-top"><div class="mx-brand-wrap mx-brand-small"><div class="mx-brand-logo" role="img" aria-label="Mercury"></div><div class="eyebrow-gold mx-brand">Mercury 1.2</div></div><span class="apphome-top-end"><button type="button" class="home-text-btn" id="apphome-logout">יציאה</button><button type="button" class="apphome-theme" id="apphome-theme" aria-label="${look === 'light' ? 'מעבר למצב כהה' : 'מעבר למצב בהיר'}" title="${look === 'light' ? 'מצב כהה' : 'מצב בהיר'}">${look === 'light' ? '🌙' : '☀️'}</button></span></div>
+      <div class="apphome-top"><div class="mx-brand-wrap mx-brand-small"><div class="mx-brand-logo" role="img" aria-label="Mercury"></div><div class="eyebrow-gold mx-brand">Mercury 1.3</div></div><span class="apphome-top-end"><button type="button" class="home-text-btn" id="apphome-logout">יציאה</button><button type="button" class="apphome-theme" id="apphome-theme" aria-label="${look === 'light' ? 'מעבר למצב כהה' : 'מעבר למצב בהיר'}" title="${look === 'light' ? 'מצב כהה' : 'מצב בהיר'}">${look === 'light' ? '🌙' : '☀️'}</button></span></div>
       <h1 class="apphome-title">מה תרצו לפתוח?</h1>
       <div class="apphome-cards">
         ${portalServerOn ? `<div class="apphome-hello">שלום ${pEsc((portalMe() || {}).first || '')}</div>` : ''}
@@ -8609,7 +8609,7 @@ function renderInstructorPrefs(body){
       <div class="pconsent"><span>אם נצטרך, האם יהיה לך נוח להישאר עד 16:00 במשמרת בוקר?</span>${choice('extend')}<small>עד 4 הארכות בחודש</small></div>
       <div class="pconsent"><span>אם נצטרך, האם יהיה לך נוח להמשיך משבת בלילה עד יום ראשון ב-11:00?</span>${choice('pull')}</div>
     </div>
-    <label class="pfield">יש משהו שחשוב לך שנדע? (לא חובה)<textarea id="prefs-note" rows="2" maxlength="400"${locked ? ' disabled' : ''}>${pEsc(m.notes && m.notes[me.id] || '')}</textarea></label>` : ''}
+    <label class="pfield">יש משהו שחשוב לך שנדע? (לא חובה)<textarea id="prefs-note" rows="2" maxlength="400"${locked ? ' disabled' : ''}>${pEsc(prefNoteGet(mk, me.id) ?? (m.notes && m.notes[me.id]) ?? '')}</textarea></label>` : ''}
     ${locked ? '' : `<div class="pprefs-actions"><button type="button" class="btn" id="prefs-submit">${submitted ? 'עדכון והגשה מחדש' : 'הגשת ההעדפות'}</button><span class="pnote">${portalServerOn ? (neutral > 0 ? 'עוד ' + neutral + ' משמרות לסימון' : 'כל המשמרות מסומנות') : (marked ? marked + ' סימונים שאינם "כן"' : 'הכל "כן"')}</span></div>
     <div class="plevelbar" role="group" aria-label="בחירת רמה">${levels.map(b => `<button type="button" class="lvbtn lv-${b[0]}${portalUi.level === b[0] ? ' active' : ''}" data-plevel="${b[0]}">${b[1]}</button>`).join('')}<button type="button" class="lvbtn lv-clear" id="prefs-clear-all">נקה הכל</button></div>`}`;
   wireMonthNav(body, 'pmonth'); wireFolds(body);
@@ -8682,13 +8682,16 @@ function renderInstructorPrefs(body){
         if(how === 'back'){ const first = body.querySelector('.pshift.lv-neutral'); if(first) first.scrollIntoView({ block:'center' }); return; }
         um.forEach(k => { prefs.slots[k] = how === 'can' ? 'avoid' : 'no'; }); portalSave(); renderInstructorPrefs(body);          // ("avoid" is the "יכול" of the screen)
       }
-      try { await srvSubmit(mk, (document.getElementById('prefs-note').value || '').trim(), m.goals[me.id] || null); } catch(e){ toast(tx('submit_fail')); return; }
+      const noteNow = prefNoteGet(mk, me.id) ?? ((document.getElementById('prefs-note') || {}).value || (m.notes && m.notes[me.id]) || '');          // (the draft: the screen may have been drawn again since she wrote it)
+      try { await srvSubmit(mk, String(noteNow).trim(), m.goals[me.id] || null); } catch(e){ toast(tx('submit_fail')); return; }
+      prefNoteSet(mk, me.id, null);
       const left = prefUnmarkedKeys(mk, prefs).length;          // (counted again: the shifts just filled by "יכול"/"לא" are no longer left, Guy 2026-11-09)
       if(left > 0) toast(tx('submit_neutral', left), 8000); else toast(tx('submit_ok'));          // (the "not complete yet" message stays long enough to be read)
       renderInstructorPrefs(body); return;
     }
     m.submitted[me.id] = true; portalSave(); toast(tx('submit_ok')); renderInstructorPrefs(body);
   });
+  { const nt = body.querySelector('#prefs-note'); if(nt) nt.addEventListener('input', () => prefNoteSet(mk, me.id, nt.value)); }          // (kept as she writes: Guy 21.11, the note vanished when the screen was drawn again)
   prefMonthExtras(body, mk, prefs, locked, submitted);
 }
 // an hour range as people read it: 23–7 and not 23–31 (an hour after 24 is the next morning: Guy 21.11)
@@ -8713,6 +8716,12 @@ function hoursEffects(date, prefs){
   });
   return out;
 }
+// the note in "יש משהו שחשוב לך שנדע?" as she writes it, until it is handed in (Guy 21.11: it vanished when she tapped elsewhere and the
+// screen was drawn again). In memory and on this device; null = no draft (the saved note is shown)
+const PREF_NOTE_DRAFT = {};
+const prefNoteKey = (mk, id) => `ramzor-prefs-note-${mk}-${id}`;
+function prefNoteGet(mk, id){ const k = prefNoteKey(mk, id); if(k in PREF_NOTE_DRAFT) return PREF_NOTE_DRAFT[k]; try { const v = localStorage.getItem(k); return v === null ? null : v; } catch(e){ return null; } }
+function prefNoteSet(mk, id, v){ const k = prefNoteKey(mk, id); if(v === null){ delete PREF_NOTE_DRAFT[k]; try { localStorage.removeItem(k); } catch(e){} } else { PREF_NOTE_DRAFT[k] = v; try { localStorage.setItem(k, v); } catch(e){} } }
 // custom hours for one day: up to two ranges (whole hours). (Guy 21.11: the words "used only when they complete a full shift" were removed from the window, they confused)
 function openHoursSheet(date, prefs, done){
   const cur = (prefs.hours[date] || []).slice(0, 2);
@@ -9468,7 +9477,7 @@ function srvLoginHtml(step, email, again){
         <button type="button" class="btn ghost" id="plogin-send">שלחו לי קוד למייל</button>
         ${staffLink}`;
   let look = 'dark'; try { if(localStorage.getItem('ramzor-portal-theme') === 'light') look = 'light'; } catch(e){}          // (the sign-in wears the new look, light or dark as last chosen on this device)
-  return `<div class="plogin mx-home mx-login" data-ptheme="${look}"><div class="mx-brand-wrap"><div class="mx-brand-logo" role="img" aria-label="Mercury"></div><div class="eyebrow-gold mx-brand">Mercury 1.2</div></div><h1 class="apphome-title">כניסה אישית</h1>
+  return `<div class="plogin mx-home mx-login" data-ptheme="${look}"><div class="mx-brand-wrap"><div class="mx-brand-logo" role="img" aria-label="Mercury"></div><div class="eyebrow-gold mx-brand">Mercury 1.3</div></div><h1 class="apphome-title">כניסה אישית</h1>
     <div class="card">${inner}
       <div id="plogin-error" class="plogin-error" role="alert"></div>
     </div></div>`;
@@ -13433,6 +13442,7 @@ const AR_RX = [
   [/^עוד (\d+) משמרות עם נקודה$/, (m, n) => `${n} مناوبات أخرى مع نقطة`],
   [/^עוד (\d+) נקודות$/, (m, n) => `${n} نقاط أخرى`], [/^עוד 1 נקודה$/, () => 'نقطة واحدة أخرى'],
   [/^שעות אחרות ב(.+)$/, (m, g) => `ساعات أخرى في ${arWords(g)}`],
+  [/^(\d+) נשארו$/, (m, n) => `بقي ${n}`],          // (the badge of "משימות משתנות")
   [/^(\d\d:00) \(למחרת\)$/, (m, h) => `${h} (اليوم التالي)`],          // (an hour after midnight in the "עד" list: Guy 21.11)
   [/^(\S+) (\d+\/\d+): ב(.+?) ישבצו אותך רק (\S+), לפי השעות שכתבת\.$/, (m, d, dt, w, h) => `${arWords(d)} ${dt}: في مناوبة ${arWords(w)} ستُعيَّنون فقط ${h}، حسب الساعات التي كتبتموها.`],
   [/^(\S+) (\d+\/\d+): ב(.+?) לא ישבצו אותך, כי השעות שכתבת לא מגיעות למשמרת הזו\.$/, (m, d, dt, w) => `${arWords(d)} ${dt}: لن تُعيَّنوا في مناوبة ${arWords(w)}، لأن الساعات التي كتبتموها لا تصل إلى هذه المناوبة.`],
@@ -13522,7 +13532,10 @@ Object.assign(AR, {
   'אם סימנת גם משמרת ביום הזה, ישבצו אותך בה רק בשעות שכתבת':'إذا اخترتم أيضًا مناوبة في هذا اليوم، ستُعيَّنون فيها فقط في الساعات التي كتبتموها',
   'אפשר גם אחרי חצות, עד 08:00 בבוקר שלמחרת':'يمكن أيضًا بعد منتصف الليل، حتى الساعة 08:00 صباح اليوم التالي',
   'אפשר לסיים עד 08:00 בבוקר שלמחרת':'يمكن الإنهاء حتى الساعة 08:00 صباح اليوم التالي',
-  'שעות אחרות וגם משמרת באותו יום':'ساعات أخرى ومناوبة في نفس اليوم'
+  'שעות אחרות וגם משמרת באותו יום':'ساعات أخرى ومناوبة في نفس اليوم',
+  // the cards of the first screen: "משימות משתנות" (14zr) and the two-week schedule (14zq) — the checks of 21.11
+  'משימות משתנות':'مهام متغيرة', "צ'ק ליסט, מוניות וכו'":'قائمة مهام، سيارات أجرة وغيرها',
+  'סידור דו-שבועי':'جدول لأسبوعين', 'הגשת אופציות, בניית הסידור והסידור שפורסם':'تقديم الخيارات، بناء الجدول والجدول المنشور'
 });
 const AR_HE = /[\u0590-\u05FF]/;
 const arEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -19972,6 +19985,7 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && twOwnSite()
 new MutationObserver(ms => ms.forEach(m => {
   m.addedNodes.forEach(n => {
     if(n.nodeType !== 1 || !n.classList.contains('sheet')) return;
+    if(!twOwnSite() && !document.querySelector('#view-tw.active')) return;          // (in the big site only the two-week screen's own windows: the rest of the first site keeps its own focus, check 21.11)
     if(twOwnSite()){ try { history.pushState({ tw:'sheet' }, ''); } catch(e){} }
     setTimeout(() => { if(!n.isConnected || n.contains(document.activeElement)) return; const h = n.querySelector('h2'); if(h){ h.tabIndex = -1; h.focus(); } }, 0);
   });
