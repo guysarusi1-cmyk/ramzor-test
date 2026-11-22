@@ -1,8 +1,8 @@
 // Service worker: keeps the app (the single page + icons) available offline, and picks up new releases.
 // The data (children, stars, bonuses) always comes live from Supabase and is NEVER cached here.
-const VERSION = 'f22579ebb170';
+const VERSION = 'd0907943062b';
 const CACHE = 'ramzor-' + VERSION;
-const SHELL = ['./', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
+const SHELL = ['./', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'boards/star-board.jpg', 'boards/moon-board.jpg', 'boards/mercury-board.webp'];          // (the three board pictures: files of their own since 22.11, not inside the page, so the page is about 1 MB lighter)
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
