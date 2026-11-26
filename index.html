@@ -4182,6 +4182,43 @@ body.product-shibutz .toast-undo.toast-long > span{ flex:1 1 auto; min-width:0; 
 #view-tw .tw-pw{ display:inline-flex; flex-wrap:wrap; gap:8px; align-items:center; }
 #view-tw .tw-pw [hidden]{ display:none; }
 #view-tw .tw-form .tw-pw .tw-most{ color:inherit; font:inherit; font-weight:700; }
+/* the wording of the WhatsApp messages, in "ניהול" (Guy 26.11) */
+#view-tw .tw-watext{ display:grid; gap:6px; margin:12px 0; }
+#view-tw .tw-watext label{ display:grid; gap:6px; font-weight:700; }
+#view-tw .tw-watext textarea{ min-height:84px; padding:8px 10px; border-radius:10px; border:1px solid var(--p-line, var(--line)); background:var(--p-panel2, var(--panel-2)); color:var(--p-text, var(--text)); font:inherit; font-weight:400; width:100%; box-sizing:border-box; resize:vertical; }
+#view-tw .tw-watext-tags{ display:flex; flex-wrap:wrap; gap:8px; }
+#view-tw .tw-watext-ex{ white-space:pre-wrap; margin:0; }
+/* (Guy 26.11) the preview of the schedule's picture while building */
+.tw-sheet .tw-prev-img{ display:block; width:100%; height:auto; border-radius:8px; border:1px solid var(--p-line, var(--line)); margin:10px 0; }
+#view-tw .tw-build-acts{ margin:8px 0 4px; }
+#view-tw a.tw-wa-group{ text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }          /* (a button, not a link: Guy 26.11) */
+/* ---------- the mountain map of the space journey on the kids' screen, and the animals' catalog (Guy 26.11.2026; TEST) ---------- */
+.tv-journey .jm{ position:relative; width:min(100%, calc((100vh - 150px) * 1672 / 941)); aspect-ratio:1672 / 941; margin:0 auto; overflow:hidden; border-radius:18px; }
+.tv-journey .jm-cam{ position:absolute; inset:0; transition:transform .5s cubic-bezier(.4,0,.2,1); will-change:transform; }
+.tv-journey .jm-bg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.tv-journey .jm-faces{ position:absolute; inset:0; }
+.tv-journey .jm-face{ position:absolute; aspect-ratio:1; will-change:transform; }
+.tv-journey .jm-face img{ display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,.35); background:#2b2620;
+  animation:jm-float 3.2s ease-in-out infinite; animation-delay:var(--d, 0s); }
+.tv-journey .jm-face.jm-me img{ border-color:#e2aa42; box-shadow:0 0 0 4px rgba(226,170,66,.55), 0 6px 14px rgba(0,0,0,.4); }
+@keyframes jm-float{ 0%, 100%{ transform:translateY(0); } 50%{ transform:translateY(-4%); } }
+@media (prefers-reduced-motion: reduce){ .tv-journey .jm-face img{ animation:none; } .tv-journey .jm-cam{ transition:none; } }
+.jm-video{ position:fixed; inset:0; width:100vw; height:100vh; object-fit:contain; background:#000; z-index:60; opacity:0; transition:opacity .3s; }
+.jm-video.on{ opacity:1; }
+#jm-catalog{ position:fixed; inset:0; z-index:55; background:rgba(20,18,15,.94); display:flex; align-items:center; justify-content:center; }
+#jm-catalog[hidden]{ display:none; }
+.jm-cat{ display:grid; grid-template-columns:repeat(6, 1fr); gap:2.2vmin 3vmin; padding:3vmin; width:min(96vw, 150vh); }
+.jm-cat-item{ position:relative; }
+.jm-cat-item img{ display:block; width:100%; aspect-ratio:1; border-radius:50%; object-fit:cover; border:4px solid #fff; }
+.jm-cat-item b{ position:absolute; left:50%; bottom:-1.2vmin; transform:translateX(-50%); min-width:5.4vmin; padding:.3vmin 1.2vmin; border-radius:99px; background:#e2aa42; color:#1c1a17;
+  font:800 3.6vmin/1.1 Rubik, Assistant, sans-serif; text-align:center; }
+/* the instructor's phone: a tiny picture and the number */
+.jm-nums{ display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; margin:12px 0; }
+.jm-num{ display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 2px; border-radius:12px; border:1px solid var(--line, #777); background:transparent; color:inherit; font:700 15px/1 inherit; }
+.jm-num img{ width:100%; max-width:44px; aspect-ratio:1; border-radius:50%; object-fit:cover; }
+.jm-num.on{ background:#e2aa42; color:#1c1a17; border-color:#e2aa42; }
+.jm-pick-row{ display:flex; align-items:center; gap:10px; margin:8px 0; flex-wrap:wrap; }
+.jm-pick-face{ width:44px; height:44px; border-radius:50%; object-fit:cover; }
 /* "משימות משתנות" (Guy 2026-11-18; 14zr-varying-tasks.js) */
 .mx-home #apphome-vt{ outline:2px solid var(--p-yes, #4f9a55); outline-offset:-2px; }
 .vt-badge{ position:absolute; top:10px; inset-inline-start:10px; font-size:13px; font-weight:800; color:#fff; background:#3f8a46; border-radius:14px; padding:3px 9px; }
@@ -7302,7 +7339,7 @@ function celebrateFeedbackEvent(ev){
   if(!document.getElementById('view-display').classList.contains('active')) return;
   const type = ev.type, childId = ev.child_id;
   const child = roster.find(c => c.id === childId);
-  if(type === 'moon' || type === 'mercury' || type === 'journey') return;          // (the old Mercury boards are off for now: Guy 2026-11-08)
+  if(type === 'moon' || type === 'mercury' || (type === 'journey' && !mercuryOn())) return;          // (the old Mercury boards are off for now: Guy 2026-11-08; the new journey's map: TEST, 26.11)
   if(typeof tvdOff === 'function' && tvdOff('celebration')) return;          // (the admin hid the celebrations; the boards show the news in their turn)
   if(type === 'journey'){ if(child && typeof journeyCelebrate === 'function') journeyCelebrate(ev, child); return; }          // (Mercury: a step of the new journey)
   if(!(type in EVENT_TYPE_SLIDE) || type === 'bonus' || !child) return;
@@ -14579,6 +14616,223 @@ async function planTemple(id, box){
     }));
   } catch(e){ box.innerHTML = ''; }
 }
+// ---------- MERCURY: THE MOUNTAIN MAP and THE CHILD'S ANIMAL (Guy 26.11.2026; TEST only, like the whole new journey: mercuryOn) ----------
+// The kids' screen shows the mountain (7 numbered stations, the numbers are part of the picture) with a round face for every child who is
+// climbing, at the station they reached; all faces of one station have exactly the same size and never cover the number plate.
+// A step: the camera comes closer, the face walks to the next station (about 2 s, drawn by the screen), the clip of that animal at that
+// station plays in full (with sound), and the camera goes back. An animal without clips: only the walk. One clip at a time; the clips are
+// not in the site: they are in a public, read-only bucket of the database's storage ('journey', base address in ONE place: JM_MEDIA), and
+// the screen keeps only the NEXT clip of each child in its cache. The instructor's phone never downloads a clip.
+// Every child has an animal (one of 30), chosen by the child in front of the screen (a catalog of faces with fixed numbers) and entered by
+// the instructor by number; a chosen animal is not offered to anybody else; it may be changed until the child's first step. The animal is
+// the child's figure everywhere on the kids' screen. (scheduling-v94.sql)
+const JM_MEDIA = SUPABASE_URL + '/storage/v1/object/public/journey/';          // (the one place of the clips' address: to move them, change this line)
+const JM_MAP = 'boards/journey/himalaya-map.webp', JM_W = 1672, JM_H = 941;
+const jmFace = a => 'boards/journey/faces/' + a + '.webp';
+const jmFaceSm = a => 'boards/journey/faces-sm/' + a + '.webp';          // (72 px, about 2 KB: the instructor's phone, only while choosing)
+// the 30 animals, in a fixed order: the number of an animal never changes (1–30), also when some are taken
+const JM_ANIMALS = ['fox', 'elephant', 'golden-retriever-dog', 'giant-panda', 'orange-tabby-cat', 'koala', 'brown-bear', 'blue-dolphin', 'blue-whale', 'brown-horse',
+  'brown-owl', 'giraffe', 'gray-seal', 'green-turtle', 'hedgehog', 'kangaroo', 'male-lion-with-golden-mane', 'monkey', 'orange-crab', 'penguin',
+  'polar-bear', 'purple-octopus', 'red-macaw-parrot', 'red-squirrel', 'rhinoceros', 'spotted-deer-with-antlers', 'white-rabbit', 'white-sheep', 'yellow-duck', 'zebra'];
+const jmNum = a => JM_ANIMALS.indexOf(a) + 1;
+// the stations on the map picture (mountain_map_stations.json): where a face stands (bottom centre) and the number plate nobody covers
+const JM_START = [60, 900];
+const JM_ST = [[[428, 795], [380, 833, 476, 881]], [[1014, 659], [966, 697, 1062, 745]], [[606, 544], [558, 582, 654, 630]], [[846, 381], [798, 419, 894, 467]],
+  [[1296, 320], [1248, 358, 1344, 406]], [[930, 206], [882, 244, 978, 292]], [[1317, 149], [1269, 137, 1365, 185]]];
+const JM_FACE_W = 84;          // (a face's size on the map picture, when there is room)
+let CHILD_ANIMAL = {};          // child id -> animal (from child_journeys; the kids' screen from tv_journeys)
+let jmRows = [];
+
+if(mercuryOn()){
+  // the animal is the child's figure everywhere on the kids' screen (Guy 26.11: "בכל מקום")
+  JM_ANIMALS.forEach(a => { CHARACTERS['an:' + a] = { src:jmFace(a), ring:'#e2aa42', label:a }; });
+  const charOld = characterFor;
+  characterFor = id => CHILD_ANIMAL[id] ? 'an:' + CHILD_ANIMAL[id] : charOld(id);
+}
+
+// ---- the data
+async function jmLoad(){
+  const rows = typeof journeyTvRows === 'function' ? await journeyTvRows() : [];
+  jmRows = rows || [];
+  const m = {}; jmRows.forEach(r => { if(r.animal) m[r.child_id] = r.animal; }); CHILD_ANIMAL = m;
+  return jmRows;
+}
+async function jmLoadApp(){          // (the staff's app: everybody's animal, for the figure and for "taken")
+  try { const r = await sb.from('child_journeys').select('child_id,animal'); if(!r.error){ const m = {}; (r.data || []).forEach(x => { if(x.animal) m[x.child_id] = x.animal; }); CHILD_ANIMAL = m; } } catch(e){}
+  return CHILD_ANIMAL;
+}
+let jmManifest = null, jmManifestAt = 0;
+async function jmClips(){
+  if(jmManifest && Date.now() - jmManifestAt < 30 * 60e3) return jmManifest;
+  try { const r = await fetch(JM_MEDIA + 'manifest.json', { cache:'no-store' }); if(r.ok){ jmManifest = await r.json(); jmManifestAt = Date.now(); } } catch(e){}
+  return jmManifest || { clips:[] };
+}
+async function jmClipFor(animal, step){
+  const name = animal;          // (the clips' list names the animal as the faces do; an animal without clips: none)
+  const c = ((await jmClips()).clips || []).find(x => x.world === 'himalaya' && x.animal === name && x.step === step && !x.after);
+  return c ? JM_MEDIA + c.file : null;
+}
+// the climbers: stage 'climb' (step 0–6); after step 7 the child is in the ship (stage 'fly')
+const jmClimbers = () => jmRows.filter(r => r.stage === 'climb' && roster.some(c => c.id === r.child_id));
+
+// ---- the cache of the next clips (one each child, nothing else is kept)
+const JM_CACHE = 'jm-clips-v1';
+async function jmPreload(){
+  if(typeof caches === 'undefined' || typeof IS_TV_PREVIEW !== 'undefined' && IS_TV_PREVIEW) return;
+  const want = [];
+  for(const r of jmClimbers()){ const a = CHILD_ANIMAL[r.child_id]; const u = a && await jmClipFor(a, r.step + 1); if(u) want.push(u); }
+  try {
+    const cache = await caches.open(JM_CACHE);
+    for(const req of await cache.keys()) if(!want.includes(req.url)) await cache.delete(req);          // (only the next clips stay)
+    for(const u of want){ if(!(await cache.match(u))){ const res = await fetch(u); if(res.ok) await cache.put(u, res); } }          // (one after the other, quietly)
+  } catch(e){}
+}
+async function jmClipSrc(url){
+  try { if(typeof caches !== 'undefined'){ const hit = await caches.match(url); if(hit) return URL.createObjectURL(await hit.blob()); } } catch(e){}
+  return url;          // (not in the cache: straight from the storage; the player waits a little for it, else only the walk is shown)
+}
+
+// ---- the board
+function jmSpots(){          // child id -> [x, y, size] on the map picture
+  const at = {}; jmClimbers().forEach(r => { (at[r.step] = at[r.step] || []).push(r.child_id); });
+  const out = {};
+  Object.entries(at).forEach(([st, ids]) => {
+    st = +st; ids.sort();
+    const [sx, sy0] = st === 0 ? JM_START : JM_ST[st - 1][0], box = st === 0 ? null : JM_ST[st - 1][1];
+    const sy = box ? Math.min(sy0, box[1] - 6) : sy0;          // (never over the number plate)
+    const n = ids.length, perRow = Math.min(n, 5), rows = Math.ceil(n / perRow);
+    const size = Math.round(n <= 3 ? JM_FACE_W : n <= 5 ? JM_FACE_W * 0.86 : JM_FACE_W * 0.74);          // (the same size for all the faces of a station)
+    ids.forEach((id, i) => {
+      const row = Math.floor(i / perRow), inRow = Math.min(perRow, n - row * perRow), k = i - row * perRow;
+      let x = sx + (k - (inRow - 1) / 2) * size * 1.04;
+      const lift = Math.abs(k - (inRow - 1) / 2) * size * 0.14;          // (a small arc)
+      let y = sy - row * size * 0.92 + lift;
+      x = Math.max(size / 2 + 4, Math.min(JM_W - size / 2 - 4, x));
+      out[id] = [x, y, size];
+    });
+  });
+  return out;
+}
+function jmFaceHtml(id, spot){
+  const a = CHILD_ANIMAL[id], [x, y, s] = spot, k = !a && typeof characterFor === 'function' && characterFor(id);
+  const img = a ? `<img src="${jmFace(a)}" alt="" decoding="async">` : k && CHARACTERS[k] ? `<img src="${CHARACTERS[k].src}" alt="">` : '';
+  return `<div class="jm-face" data-jm="${escapeHtml(id)}" style="left:${((x - s / 2) / JM_W * 100).toFixed(3)}%;top:${((y - s) / JM_H * 100).toFixed(3)}%;width:${(s / JM_W * 100).toFixed(3)}%;--d:-${(id.length * 0.37 % 3).toFixed(2)}s">${img}</div>`;
+}
+async function jmRenderBoard(){
+  const el = document.getElementById('tv-journey'); if(!el) return;
+  await jmLoad();
+  const spots = jmSpots();
+  el.innerHTML = `<div class="jm"><div class="jm-cam"><img class="jm-bg" src="${JM_MAP}" alt="" decoding="async"><div class="jm-faces">${Object.entries(spots).map(([id, s]) => jmFaceHtml(id, s)).join('')}</div></div></div>`;
+  jmPreload();
+}
+
+// ---- a step: closer, the walk, the clip, back
+async function jmStep(child, step){
+  if(typeof tvdOff === 'function' && tvdOff('celebration')) return;
+  const view = document.getElementById('view-display'); if(!view || !view.classList.contains('active')) return;
+  const before = jmSpots()[child.id];
+  if(typeof tvHold === 'function') tvHold();
+  jmWire(); await showSlide(13);          // (the map, as it is after the step: the face is already at the new station)
+  const el = document.getElementById('tv-journey'), cam = el.querySelector('.jm-cam'), face = el.querySelector(`[data-jm="${CSS.escape(child.id)}"]`);
+  try {
+    if(face && cam){
+      const after = jmSpots()[child.id] || before, from = before || [JM_START[0], JM_START[1], after[2]];
+      const box = cam.getBoundingClientRect(), k = box.width / JM_W;
+      // the face starts where it was, and walks
+      face.style.transition = 'none'; face.style.transform = `translate(${(from[0] - after[0]) * k}px, ${(from[1] - after[1]) * k}px)`; face.classList.add('jm-me');
+      // the camera: twice as close, on the middle of the way
+      const mx = (from[0] + after[0]) / 2, my = (from[1] + after[1]) / 2, z = 1.9;
+      cam.style.transformOrigin = '0 0';
+      cam.style.transform = `translate(${box.width / 2 - mx * k * z}px, ${box.height / 2 - my * k * z}px) scale(${z})`;
+      await waitMs(550);
+      face.style.transition = 'transform 1.5s cubic-bezier(.45,.05,.35,1)'; face.style.transform = 'translate(0, 0)';
+      await waitMs(1600);
+    }
+    const a = CHILD_ANIMAL[child.id], url = a && await jmClipFor(a, step);
+    if(url) await jmPlay(url);
+  } finally {
+    if(cam){ cam.style.transform = ''; await waitMs(550); }
+    if(face) face.classList.remove('jm-me');
+    if(typeof tvRelease === 'function') tvRelease();
+    jmPreload();
+  }
+}
+// one clip in full screen, from the cache when it is there; when it does not start within a few seconds, it is skipped (nothing gets stuck)
+async function jmPlay(url){
+  const v = document.createElement('video'); v.className = 'jm-video'; v.playsInline = true; v.preload = 'auto';
+  const src = await jmClipSrc(url); v.src = src; document.body.appendChild(v);
+  try {
+    const ready = await Promise.race([new Promise(r => v.addEventListener('canplay', () => r(true), { once:true })), waitMs(5000).then(() => false)]);
+    if(!ready) return;
+    try { v.muted = !(typeof tvSoundReady === 'function' && tvSoundReady()); await v.play(); } catch(e){ v.muted = true; try { await v.play(); } catch(e2){ return; } }
+    v.classList.add('on');
+    await Promise.race([new Promise(r => v.addEventListener('ended', r, { once:true })), waitMs(((v.duration || 9) + 2) * 1000)]);
+  } finally {
+    v.classList.remove('on'); await waitMs(300); v.remove(); if(src.startsWith('blob:')) URL.revokeObjectURL(src);
+  }
+}
+
+// ---- the animals' catalog on the kids' screen (the instructor opens it from the app; the child points, the instructor presses the number)
+async function jmShowCatalog(childId){
+  await jmLoad();
+  const taken = new Set(Object.entries(CHILD_ANIMAL).filter(([id]) => id !== childId).map(([, a]) => a));
+  const view = document.getElementById('view-display'); let el = document.getElementById('jm-catalog');
+  if(!el){ el = document.createElement('div'); el.id = 'jm-catalog'; view.appendChild(el); }
+  el.innerHTML = `<div class="jm-cat">${JM_ANIMALS.map((a, i) => taken.has(a) ? '' : `<div class="jm-cat-item"><img src="${jmFace(a)}" alt="" decoding="async"><b>${i + 1}</b></div>`).join('')}</div>`;
+  el.hidden = false; if(typeof tvHold === 'function') tvHold();
+  clearTimeout(jmShowCatalog.t); jmShowCatalog.t = setTimeout(jmHideCatalog, 4 * 60e3);
+}
+function jmHideCatalog(){
+  const el = document.getElementById('jm-catalog'); if(!el || el.hidden) return;
+  el.hidden = true; clearTimeout(jmShowCatalog.t); if(typeof tvRelease === 'function') tvRelease();
+  const s = document.getElementById('slide-13'); if(s && s.classList.contains('active')) jmRenderBoard();
+}
+
+// ---- in the instructor's app: choosing the animal (Guy 26.11: a tiny picture with every number, so a child can also choose on the phone)
+async function jmPickAnimal(child, j){
+  await jmLoadApp();
+  const taken = new Set(Object.entries(CHILD_ANIMAL).filter(([id]) => id !== child.id).map(([, a]) => a)), mine = CHILD_ANIMAL[child.id] || j.animal || null;
+  const tv = sendTvCommand('jm_catalog', { child:child.id });
+  return new Promise(resolve => {
+    const sh = portalSheet(`<h2>איזו חיה ${escapeHtml(displayName(child))} בוחר/ת?</h2>
+      <div class="pnote">${tv ? 'הקטלוג פתוח גם במסך הילדים. לוחצים על החיה שהילד/ה בחר/ה.' : 'אין חיבור למסך בחדר. בוחרים כאן.'}</div>
+      <div class="jm-nums">${JM_ANIMALS.map((a, i) => taken.has(a) ? '' : `<button type="button" class="jm-num${a === mine ? ' on' : ''}" data-jm-a="${a}"><img src="${jmFaceSm(a)}" alt="" loading="lazy" decoding="async"><b>${i + 1}</b></button>`).join('')}</div>
+      <div class="confirm-actions" style="grid-template-columns:1fr"><button type="button" class="btn ghost" data-close>סגירה</button></div>`);
+    const done = v => { sendTvCommand('jm_catalog_close', {}); resolve(v); };
+    sh.querySelectorAll('[data-jm-a]').forEach(b => b.addEventListener('click', async () => {
+      const r = await sb.rpc('journey_set_animal', { p_child:child.id, p_animal:b.dataset.jmA });
+      if(r.error){ toast(/taken/.test(r.error.message) ? 'החיה הזו כבר נבחרה. בוחרים מספר אחר.' : /locked/.test(r.error.message) ? 'המסע כבר התחיל: אי אפשר להחליף חיה' : 'הבחירה לא נשמרה'); return; }
+      CHILD_ANIMAL[child.id] = b.dataset.jmA; toast(`נבחרה חיה מספר ${jmNum(b.dataset.jmA)}`); sh.close(); done(b.dataset.jmA);
+    }));
+    sh.querySelector('[data-close]').addEventListener('click', () => done(null));
+  });
+}
+
+// ---- wiring (only where the new journey is on)
+// (the board 13 is added by 14y-journey.js once the other boards are there; it is taken over here when it exists)
+function jmWire(){ const b = typeof SLIDES !== 'undefined' && SLIDES.find(x => x.id === 13); if(b && b.render !== jmRenderBoard){ b.render = jmRenderBoard; b.label = 'המסע בחלל'; } }
+if(mercuryOn()){
+  // the board of the journey is the map now; the old boards of the moon and the word planet go away (Guy 26.11)
+  const refreshBefore = refreshJourneyBoards;
+  refreshJourneyBoards = async function(){ await refreshBefore(); jmWire(); SLIDES[6].hidden = true; SLIDES[7].hidden = true; try { await jmLoad(); const b = SLIDES.find(x => x.id === 13); if(b) b.hidden = !jmClimbers().length; } catch(e){} };
+  // a step of the climb: the map (after step 7 the database already says stage 'fly', step 0, milestone 'ship')
+  const celebrateBefore = typeof journeyCelebrate === 'function' ? journeyCelebrate : null;
+  journeyCelebrate = async function(ev, child){
+    const m = (ev.message || '').match(/· (climb|fly|adventure|extra):(\d+)/), stage = m ? m[1] : '', step = m ? +m[2] : 0;
+    const climbStep = stage === 'climb' ? step : stage === 'fly' && step === 0 && /· ship/.test(ev.message || '') ? 7 : 0;
+    if(climbStep){ queueCelebration(() => jmStep(child, climbStep)); return; }
+    if(celebrateBefore) return celebrateBefore(ev, child);
+  };
+  // the commands from the instructor's app
+  const handleBefore = handleTvCommand;
+  handleTvCommand = function(c){
+    if(c && c.cmd === 'jm_catalog' && !IS_TV_PREVIEW && document.getElementById('view-display').classList.contains('active')){ jmShowCatalog(c.child); return; }
+    if(c && c.cmd === 'jm_catalog_close'){ jmHideCatalog(); return; }
+    return handleBefore(c);
+  };
+  // the app: the animals of everybody, for the figures (a moment after the start; nothing waits for it)
+  setTimeout(() => { if(typeof sb !== 'undefined' && !document.getElementById('view-display')?.classList.contains('active')) jmLoadApp(); }, 2500);
+}
 // ---------- MERCURY: THE SPACE JOURNEY BY SKILLS (stage 4: the frame + the moon route) ----------
 // Every child travels their own route of planets (one skill each; the therapist sets the route). The moon route: 7 steps up the mountain ->
 // the child chooses a ship -> 7 steps to the moon -> a symbol on arrival -> an adventure of 10 steps on the moon -> on to the next planet.
@@ -14619,9 +14873,11 @@ async function journeyPanel(child, fb, containerId){
       <div class="light-title">🚀 המסע בחלל · ${escapeHtml(displayName(child))}</div>
       <div class="journey-where">${escapeHtml(journeyWhere(j, planets))}</div>
       <div class="journey-dots" aria-hidden="true">${Array.from({ length:JOURNEY_LEN[j.stage] }, (_, i) => `<i class="${i < j.step ? 'on' : ''}"></i>`).join('')}</div>
+      ${typeof jmPickAnimal === 'function' && j.stage === 'climb' && j.step === 0 && !j.last_step_day ? `<div class="jm-pick-row">${j.animal ? `<img class="jm-pick-face" src="${jmFace(j.animal)}" alt=""><span>חיה מספר ${jmNum(j.animal)}</span>` : '<span>קודם בוחרים חיה</span>'}<button type="button" class="btn ghost small" id="journey-animal">${j.animal ? 'החלפת חיה' : 'בחירת חיה'}</button></div>` : ''}
       ${done ? '<div class="note" style="color:var(--gold);">✅ כבר נרשם היום צעד. הצעד הבא מחר (מ-05:00).</div>'
              : `<div class="proj-criterion">${escapeHtml(p.question || 'היום הילד/ה התקדם/ה?')}</div><button class="gold-btn moon-main" id="journey-yes">כן, צעד קדימה</button>`}
     </div>`;
+  const pick = fb.querySelector('#journey-animal'); if(pick) pick.addEventListener('click', async () => { if(await jmPickAnimal(child, j)) journeyPanel(child, fb, containerId); });          // (Guy 26.11)
   const yes = fb.querySelector('#journey-yes'); if(!yes) return true;
   yes.addEventListener('click', async () => {
     yes.disabled = true;
@@ -18924,7 +19180,10 @@ const twIsBuilder = () => TW.boss || (!!TW.me && !!twPeriodRow() && twPeriodRow(
 const twFixedOf = (dow, shift) => TW.fixed.filter(x => x.dow === dow && x.shift === shift).map(x => x.person);
 const twIsFixed = (personId, day, shift) => twFixedOf(dowOf(day), shift).includes(personId);
 const twCanFix = () => TW.boss || (!!TW.me && TW.periods.some(p => p.builder === TW.me.id && p.status !== 'published'));
-const twOpenNow = () => { const p = twPeriodRow(); return !!p && p.status === 'open' && (!p.deadline || new Date(p.deadline) > new Date()); };
+// (Guy 25.11) the hand-in stays open until the schedule is built, at the latest until the two weeks begin; the deadline is the time the staff
+// are asked to keep (scheduling-v93.sql says the same in the database)
+const twHandIn = p => !!p && p.status === 'open' && p.start > twToday();
+const twOpenNow = () => twHandIn(twPeriodRow());
 const twPeriodLabel = start => `${twShort(start)} – ${twShort(addDays(start, 13))}`;
 // hours and date ranges always read from left to right, the start first (as rangeHtml in the big site; the review agents 2026-11-14)
 const twL = s => /^[\d:/–\-\s]+$/.test(String(s || '')) ? `<bdi dir="ltr">${s}</bdi>` : s;
@@ -19008,7 +19267,7 @@ function twCardHtml(){
 }
 
 async function twLoadBase(){
-  const [pe, pr, fx, se] = await Promise.all([sbPersonal.from('tw_people').select('*').order('sort').order('name'), sbPersonal.from('tw_period').select('*').order('start', { ascending:false }).limit(8), sbPersonal.from('tw_fixed').select('*'), sbPersonal.from('tw_settings').select('*')]);
+  const [pe, pr, fx, se] = await Promise.all([sbPersonal.from('tw_people').select('*').order('sort').order('name'), sbPersonal.from('tw_period').select('*').order('start', { ascending:false }).limit(16), sbPersonal.from('tw_fixed').select('*'), sbPersonal.from('tw_settings').select('*')]);
   if(pe.error || pr.error){ TW.allowed = false; return false; }          // (before scheduling-v75.sql, or no right: no module)
   TW.people = pe.data || []; TW.periods = pr.data || []; TW.fixed = fx.error ? [] : (fx.data || []); TW.settings = se.error ? [] : (se.data || []);
   // the holidays (scheduling-v83.sql) and each person's own settings (scheduling-v86.sql); a database before them: none, and all works as before
@@ -19025,7 +19284,7 @@ async function twLoadBase(){
   if(typeof twViewAsApply === 'function') twViewAsApply();          // (the test site only: an admin sees the screens as one of the staff)
   if(TW.allowed && !TW.autoDone){          // (the next two weeks open by themselves when they are due: scheduling-v79.sql)
     TW.autoDone = true;
-    try { const r = await sbPersonal.rpc('tw_auto_open'); if(!r.error && r.data && !TW.periods.some(p => p.start === r.data)){ const pr2 = await sbPersonal.from('tw_period').select('*').order('start', { ascending:false }).limit(8); if(!pr2.error) TW.periods = pr2.data || []; } } catch(e){}
+    try { const r = await sbPersonal.rpc('tw_auto_open'); if(!r.error && r.data && !TW.periods.some(p => p.start === r.data)){ const pr2 = await sbPersonal.from('tw_period').select('*').order('start', { ascending:false }).limit(16); if(!pr2.error) TW.periods = pr2.data || []; } } catch(e){}
   }
   try { await twLoadAdmin(); } catch(e){}
   if(!TW.period || !TW.periods.some(p => p.start === TW.period)){
@@ -19186,7 +19445,7 @@ function twEggHtml(person, c, submitted){
 }
 // "העדפות" is about the two weeks that are open for hand-in (Rita 19.11: it opened on the published ones, with "open 8 more")
 async function twToOpenPeriod(){
-  const cur = twPeriodRow(), open = TW.periods.filter(p => p.status === 'open' && (!p.deadline || new Date(p.deadline) > new Date())).sort((a, b) => a.start < b.start ? -1 : 1)[0];
+  const cur = twPeriodRow(), open = TW.periods.filter(twHandIn).sort((a, b) => a.start < b.start ? -1 : 1)[0];
   if(cur && open && cur.start === open.start) return;
   // (Guy 22.11) nothing open: her preferences of the last hand-in, the latest two weeks, for reading; (23.11) the builder too, and while
   // those two weeks are not published she may still fill in for another one
@@ -19209,7 +19468,7 @@ function twCanMark(person){ return twFillOk() || (!!TW.me && person.id === TW.me
 // (Guy 24.11, in the pilot meeting: "בלי האדום ההיסטרי"): plain words, said inside the one header line
 function twDeadlineText(){
   const p = twPeriodRow(); if(!p || p.status !== 'open' || !p.deadline) return '';
-  const d = new Date(p.deadline); if(d <= new Date()) return '';
+  const d = new Date(p.deadline); if(d <= new Date()) return twHandIn(p) ? 'אפשר להגיש עד שהסידור נבנה' : '';
   const day = DOW_NAMES[d.getDay()], dm = d.getDate() + '/' + (d.getMonth() + 1), hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   // closing in the small hours (Guy 20.11: "למחרת בבוקר 5 בבוקר"): said as the end of the day before, so nobody thinks of the wrong day
   if(d.getHours() < 6){ const e = new Date(d.getTime() - 86400000);
@@ -19482,12 +19741,12 @@ const twClosedNow = p => p.status === 'built' || (p.status === 'open' && !!p.dea
 function twBuildPer(){ const today = twToday(); return TW.periods.filter(p => twClosedNow(p) && twEnd(p) >= today && twMayBuild(p.start)).sort((a, b) => a.start < b.start ? -1 : 1)[0] || null; }
 // what the coordinator's view shows: the schedules built or published that are not over, the latest first
 function twBoardPers(){ const today = twToday(); return TW.periods.filter(p => (p.status === 'built' || p.status === 'published') && twEnd(p) >= today && twMayBuild(p.start)).sort((a, b) => a.start < b.start ? 1 : -1); }
-function twOpenPer(){ return TW.periods.filter(p => p.status === 'open' && (!p.deadline || new Date(p.deadline) > new Date()) && twMayBuild(p.start)).sort((a, b) => a.start < b.start ? -1 : 1)[0] || null; }
+function twOpenPer(){ return TW.periods.filter(p => twHandIn(p) && twMayBuild(p.start)).sort((a, b) => a.start < b.start ? -1 : 1)[0] || null; }
 function twBuildCardHtml(){
   const p = twBuildPer(); if(!p) return '';
   const step = p.status === 'built' ? 3 : 1, mine = TW.me && p.builder === TW.me.id;
   return `<button type="button" class="tw-build-card" data-tw-open-build="${p.start}"><span class="tw-build-card-t">${mine ? 'הפעם הסידור אצלך' : 'בניית הסידור'} · ${twL(twPeriodLabel(p.start))}</span>
-    <span class="tw-build-card-s">ההגשה נסגרה · צעד ${step} מתוך 4: ${TW_STEPS[step - 1]}</span><span class="tw-build-card-go" aria-hidden="true">←</span></button>`;
+    <span class="tw-build-card-s">${p.status === 'built' ? 'הסידור נבנה' : 'מועד ההגשה עבר'} · צעד ${step} מתוך 4: ${TW_STEPS[step - 1]}</span><span class="tw-build-card-go" aria-hidden="true">←</span></button>`;
 }
 // what she marked for this shift, for the colours of the board (as the first site): yes, can, no, or nothing marked at all in these two weeks
 function twLvlOf(pid, day, sh){
@@ -19569,7 +19828,7 @@ function twTeamCalHtml(){
   return `${seg}${TW.me ? '<div class="pnote tw-ask-hint">לחיצה על השם שלך: בקשת החלפה</div>' : ''}${nav}${twWeekGrid(Array.from({ length:7 }, (x, i) => addDays(weeks[wi], i)), by, { ask:true })}`;
 }
 // one of the staff in "הסידור": when two weeks are open for hand-in, a line and the way to them
-const twDeadlineOpenHtml = () => { if(!TW.me) return ''; const o = TW.periods.filter(p => p.status === 'open' && (!p.deadline || new Date(p.deadline) > new Date())).sort((a, b) => a.start < b.start ? -1 : 1)[0]; return o ? `<div class="pnote tw-open-line">ההגשה לשבועיים ${twL(twPeriodLabel(o.start))} פתוחה.</div><div class="tw-actions"><button type="button" class="btn ghost" data-tw-tab="mine">להעדפות שלי</button></div>` : ''; };
+const twDeadlineOpenHtml = () => { if(!TW.me) return ''; const o = TW.periods.filter(twHandIn).sort((a, b) => a.start < b.start ? -1 : 1)[0]; return o ? `<div class="pnote tw-open-line">ההגשה לשבועיים ${twL(twPeriodLabel(o.start))} פתוחה.</div><div class="tw-actions"><button type="button" class="btn ghost" data-tw-tab="mine">להעדפות שלי</button></div>` : ''; };
 function twTeamCalWire(box){
   box.querySelectorAll('[data-tw-tcv]').forEach(b => b.addEventListener('click', () => { TW.teamView = b.dataset.twTcv; twRender(); }));
   box.querySelectorAll('[data-tw-tcw]').forEach(b => b.addEventListener('click', () => { TW.teamWk = Number(b.dataset.twTcw); twRender(); }));
@@ -19601,7 +19860,7 @@ function twBoardViewHtml(){
     ? `<div class="pstatus ok">פורסם${at ? ` ב-${twWhen(at)}` : ''}</div>`
     : '<div class="pstatus tw-soft">עוד לא פורסם</div>';
   // (Guy 23.11: "ביטול הפרסום" only in the first hour after publishing)
-  const acts = p.status === 'published' ? `<div class="tw-actions">${typeof twShareAsk === 'function' ? '<button type="button" class="btn ghost" id="tw-share">שיתוף תמונת הסידור</button><button type="button" class="btn ghost" id="tw-print">הדפסה</button>' : ''}${left > 0 ? `<button type="button" class="btn ghost tw-danger" id="tw-unpublish">ביטול הפרסום <small>(עוד ${left} דק׳)</small></button>` : ''}</div>` : '';
+  const acts = p.status === 'published' || twWaGroup() ? `<div class="tw-actions">${p.status === 'published' && typeof twShareAsk === 'function' ? '<button type="button" class="btn ghost" id="tw-share">שיתוף תמונת הסידור</button><button type="button" class="btn ghost" id="tw-print">הדפסה</button>' : ''}${twWaGroupBtn()}${left > 0 ? `<button type="button" class="btn ghost tw-danger" id="tw-unpublish">ביטול הפרסום <small>(עוד ${left} דק׳)</small></button>` : ''}</div>` : '';
   return `${top}${openLine}${seg}${state}${twPendingHtml()}${acts}${typeof twAttentionHtml === 'function' ? twAttentionHtml() : ''}${twBoardHtml()}`;
 }
 // both weeks of the schedule as the coordinator's board, with the folded list of the staff at its left
@@ -19717,9 +19976,15 @@ function twSchedWire(box){
 // a button with a question before it (heavy steps are never one tap: the review agents 2026-11-14); then everything is loaded again
 function twBtn(box, id, fn, ask){ const b = box.querySelector(id); if(b) b.addEventListener('click', async () => { if(TW.busy) return; if(ask && !(await twConfirm(ask()))) return; TW.busy = true; b.disabled = true; try { await fn(); } catch(e){ console.error(e); toast('⚠ הפעולה נכשלה'); } TW.busy = false; await twLoadBase(); await twLoadPeriod(); twRender(); }); }
 const twWaNum = ph => { const d = String(ph || '').replace(/\D/g, ''); return !d ? '' : d.startsWith('972') ? d : d.startsWith('0') ? '972' + d.slice(1) : d; };
+// (Guy 26.11) the wording of the two ready WhatsApp messages is set in "ניהול" (tw_settings 'wa_ask', 'wa_swap'); [שם] and [משמרת] are filled in
+const TW_WA_DEF = {
+  wa_ask: () => `שלום [שם], יש מקום פנוי${(typeof ORG_NAME !== 'undefined' && ORG_NAME) ? ` ב${ORG_NAME}` : ''}: [משמרת]. אפשר לשבץ אותך?`,
+  wa_swap: () => 'מחפשים החלפה: [משמרת]' };
+const twWaTpl = k => String(twSetting(k, '') || '').trim() || TW_WA_DEF[k]();
+const twWaFill = (tpl, name, line) => tpl.split('[שם]').join(name || '').split('[משמרת]').join(line || '');
 function twWaLink(personId, day, shift){
-  const p = twPerson(personId), place = (typeof ORG_NAME !== 'undefined' && ORG_NAME) ? ` ב${ORG_NAME}` : '';
-  const text = `שלום ${p ? p.name : ''}, יש מקום פנוי${place}: ${twShiftLine(day, shift)}. אפשר לשבץ אותך?`;
+  const p = twPerson(personId);
+  const text = twWaFill(twWaTpl('wa_ask'), p ? p.name : '', twShiftLine(day, shift));
   return `https://wa.me/${twWaNum((TW.phones || {})[personId])}?text=${encodeURIComponent(text)}`;
 }
 // before placing somebody who marked "לא" or did not mark the shift (Guy 23.11, as the first site's srvAskBeforePlacing): ask her first in
@@ -19866,7 +20131,8 @@ function twBuildHtml(){
   const p = twPeriodRow(), step = twStepNow(), built = TW.asg.length > 0;
   const head = `<ol class="tw-steps">${TW_STEPS.map((w, i) => { const n = i + 1, off = n > 2 && !built;
     return `<li><button type="button" class="tw-step${n === step ? ' on' : ''}${n < step ? ' done' : ''}" data-tw-step="${n}"${off ? ' disabled' : ''}${n === step ? ' aria-current="step"' : ''}><span class="tw-step-n">${n}</span><span>${w}</span></button></li>`; }).join('')}</ol>`;
-  const who = `<div class="pnote">השבועיים ${twPeriodLabel(p.start)} · בונה את הסידור: <b>${p.builder ? pEsc(twName(p.builder)) : 'מנהלות המערכת'}</b></div>`;
+  const who = `<div class="pnote">השבועיים ${twPeriodLabel(p.start)} · בונה את הסידור: <b>${p.builder ? pEsc(twName(p.builder)) : 'מנהלות המערכת'}</b></div>`
+    + (built || twWaGroup() ? `<div class="tw-actions tw-build-acts">${built && typeof twScheduleCanvas === 'function' ? '<button type="button" class="btn ghost" id="tw-preview">תצוגה מקדימה</button>' : ''}${twWaGroupBtn()}</div>` : '');          // (Guy 26.11)
   const act = TW.people.filter(x => x.active);
   let body = '';
   if(step === 1){
@@ -19905,8 +20171,25 @@ function twBuildHtml(){
 }
 // the turn of the second night (Guy 19.11: two people of each two weeks get one more night, in turn, remembered from schedule to schedule):
 // how many weeks with two nights each person had in the last three published schedules
+// (Guy 26.11) a week without a night is made up for in the next week: who worked in the last week of the schedule before and had no night
+// the published schedules of the last half year before this one (Guy 26.11: "over time" is half a year)
+function twHalfYear(){ const from = addDays(TW.period, -183); return TW.periods.filter(p => p.start < TW.period && p.start >= from && p.status === 'published').map(p => p.start).sort(); }
+async function twNightComp(){
+  const all = twHalfYear(), prev = all.slice(-1)[0], out = { none:[], owed:{} };
+  if(!prev) return out;
+  try {
+    const r = await sbPersonal.from('tw_assignment').select('person,day,shift,period').in('period', all); if(r.error) return out;
+    const rows = r.data || [], last = rows.filter(a => a.period === prev), wk2 = last.filter(a => twWeekOf(prev, a.day) === 1);
+    const worked = new Set(wk2.map(a => a.person)), night = new Set(wk2.filter(a => a.shift === 'N').map(a => a.person));
+    out.none = [...worked].filter(id => !night.has(id));
+    // per person: in how many schedules she worked, and how many nights she had in them; owed = two a schedule less her average
+    const per = {}; rows.forEach(a => { const x = per[a.person] = per[a.person] || { sch:new Set(), n:0 }; x.sch.add(a.period); if(a.shift === 'N') x.n++; });
+    Object.entries(per).forEach(([id, x]) => { out.owed[id] = Math.round((2 - x.n / x.sch.size) * 100) / 100; });
+  } catch(e){}
+  return out;
+}
 async function twNightHist(){
-  const prev = TW.periods.filter(p => p.start < TW.period && p.status === 'published').map(p => p.start).sort().slice(-3), out = {};
+  const prev = twHalfYear(), out = {};
   if(!prev.length) return out;
   try {
     const r = await sbPersonal.from('tw_assignment').select('person,day,period').in('period', prev).eq('shift', 'N'); if(r.error) return out;
@@ -19946,8 +20229,12 @@ function twBuildWire(box){
   // (ask: a question before the step; heavy steps are never one tap: the review agents 2026-11-14)
   const on = (id, fn, ask) => { const b = box.querySelector(id); if(b) b.addEventListener('click', async () => { if(TW.busy) return; if(ask && !(await twConfirm(ask()))) return; TW.busy = true; b.disabled = true; try { await fn(); } catch(e){ console.error(e); toast('⚠ הפעולה נכשלה'); } TW.busy = false; await twLoadBase(); await twLoadPeriod(); twRender(); }); };
   on('#tw-build', async () => {
-    const hist = await twNightHist();
-    const seed = Math.floor(Math.random() * 2147483647), input = { people:TW.people.filter(p => p.active), options:TW.options, fixed:TW.fixed, hand:TW.asg.filter(a => a.by_hand), hist };
+    // marks may still come in until this moment: the build reads the newest, and stops when they did not arrive (never a build from nothing)
+    const [fo, fs, ft] = await Promise.all(['tw_option', 'tw_submission', 'tw_other'].map(t => sbPersonal.from(t).select('*').eq('period', TW.period)));
+    if(fo.error || fs.error || ft.error) throw (fo.error || fs.error || ft.error);
+    TW.options = fo.data || []; TW.subs = fs.data || []; TW.others = ft.data || [];
+    const hist = await twNightHist(), before = await twNightComp(), comp = before.none, owed = before.owed;
+    const seed = Math.floor(Math.random() * 2147483647), input = { people:TW.people.filter(p => p.active), options:TW.options, fixed:TW.fixed, hand:TW.asg.filter(a => a.by_hand), hist, comp, owed };
     const res = twSolve(Object.assign({ start:TW.period, seed }, input));
     const lg = await sbPersonal.from('tw_build_log').insert({ period:TW.period, seed, input, result:{ rows:res.rows, lines:res.lines, missing:res.missing } });
     if(lg.error && !/tw_build_log|PGRST205|42P01/.test(JSON.stringify(lg.error))) throw lg.error;          // (a database before scheduling-v80.sql has no log: build anyway)
@@ -20042,9 +20329,14 @@ function twDemoOptions(person){
 // builder sees it.
 // a small random-number maker with a seed (mulberry32): the same seed gives the same numbers, so a build can be made again exactly
 function twRng(seed){ let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function twSolve({ start, people, options, fixed, hand, seed, hist }){
+function twSolve({ start, people, options, fixed, hand, seed, hist, comp, owed }){
   const rnd = twRng(seed == null ? 1 : seed);
   hist = hist || {};
+  const compPrev = new Set(comp || []);
+  // (Guy 26.11) the layers of fair nights, after "one each week": 1. two nights in the two weeks for each one, the fewest first, also counting
+  // what she had over the last half year (two a schedule on average); 2. only then the size of her job (more shifts a week, a little more nights)
+  owed = owed || {};
+  const owedN = pid => owed[pid] || 0;          // (fewer than two nights a schedule on average in the half year: a little ahead now)          // (no night in the last week of the schedule before: two nights in week 1, if she marked them)
   const days = twDays(start), offer = {}, di = {};          // (di: the number of a day inside the two weeks, 0–13)
   days.forEach((d, i) => { di[d] = i; });
   const onlyCan = {};
@@ -20082,14 +20374,30 @@ function twSolve({ start, people, options, fixed, hand, seed, hist }){
     const doubles = new Set();          // people with two nights in one of the weeks (two people in the two weeks)
     const put = (pid, pl) => { got[pid].push(pl); load[pid] += pl.w; wload[pid][pl.week] += pl.w; kinds[pid][pl.shift]++; if(pl.shift === 'N'){ nights[pid][pl.week]++; if(nights[pid][pl.week] === 2) doubles.add(pid); } };
     pre.forEach(a => { if(got[a.person]) put(a.person, { day:a.day, i:di[a.day], k:di[a.day] + a.shift, shift:a.shift, w:slotW(a.day, a.shift), week:di[a.day] < 7 ? 0 : 1, a:a.a }); });
+    // (Guy 26.11) nights: one a week for everybody who marked one, before anybody gets a second; a week without a night is made up
+    // for by two nights in the next week (compensation: not counted in the two people of the turn)
+    const nightIn = (pid, w) => !!(nightOffer[pid] && nightOffer[pid][w]);
+    const comp1 = new Set();          // (who marked a night in week 1 and could not get one: decided once the nights of week 1 were given)
+    const compIn = (pid, w) => w === 0 ? compPrev.has(pid) && nightIn(pid, 0) : comp1.has(pid);
+    const turnDoubles = () => [...doubles].filter(id => !(compIn(id, 0) || compIn(id, 1))).length;
+    const free = (p, pl) => !got[p.id].some(g => pairOf(p.id, g, pl) === 'block');
+    // somebody else who marked this night, has no night yet that week and could take it
+    // (every fourth try is the old way, without the nights-first rules: when they leave a shift empty, that try wins, since an empty
+    //  shift always counts more than a week without a night)
+    const strictN = round % 4 !== 3;
+    const waiting = (pid, pl) => strictN && people.some(x => x.id !== pid && nights[x.id][pl.week] === 0 && offer[x.id] && offer[x.id].has(pl.k)
+      && load[x.id] + pl.w <= quota(x) && wload[x.id][pl.week] + pl.w <= x.per_week + 1 && free(x, pl));
     const nightOk = (p, pl) => {
       if(pl.shift !== 'N') return true;
       const n = nights[p.id][pl.week];
       if(n >= 2) return false;
-      if(n === 1 && (doubles.has(p.id) || doubles.size >= 2)) return false;
+      if(n === 1){
+        if(waiting(p.id, pl)) return false;
+        if(compIn(p.id, pl.week)) return true;
+        if(doubles.has(p.id) || turnDoubles() >= 2) return false;
+      }
       return true;
     };
-    const free = (p, pl) => !got[p.id].some(g => pairOf(p.id, g, pl) === 'block');
     const can = (p, pl) => {
       if(!(offer[p.id] && offer[p.id].has(pl.k))) return false;
       if(wload[p.id][pl.week] + pl.w > p.per_week) return false;
@@ -20098,19 +20406,40 @@ function twSolve({ start, people, options, fixed, hand, seed, hist }){
     const canMost = (p, pl) => !!(offer[p.id] && offer[p.id].has(pl.k)) && wload[p.id][pl.week] + pl.w <= twMost(p) && free(p, pl) && nightOk(p, pl);
     // nobody below her least can take the place: somebody who opened it, up to her most in that week
     // (also a second night beyond the two people of the turn: an empty night is worse; the builder sees it in the report)
-    const canOver = (p, pl) => !!(offer[p.id] && offer[p.id].has(pl.k)) && wload[p.id][pl.week] + pl.w <= twMost(p) && free(p, pl) && (pl.shift !== 'N' || nights[p.id][pl.week] < 2);
+    const canOver = (p, pl) => !!(offer[p.id] && offer[p.id].has(pl.k)) && wload[p.id][pl.week] + pl.w <= twMost(p) && free(p, pl) && (pl.shift !== 'N' || nights[p.id][pl.week] === 0 || (nights[p.id][pl.week] < 2 && !waiting(p.id, pl)));
     const closeOf = (p, pl) => got[p.id].some(g => pairOf(p.id, g, pl) === 'close');
     const score = (p, pl) => {
       let s = rnd() * 3;
       s += (1 - load[p.id] / Math.max(1, quota(p))) * 10;                      // the one who is furthest from their shifts first
       if((fixedOf[dowOf(pl.day) + '|' + pl.shift] || []).includes(p.id)) s += 50;             // the person's fixed shift
-      if(pl.shift === 'N') s += nights[p.id][pl.week] === 0 ? 8 : -6 - (hist[p.id] || 0) * 4;          // a first night of the week; a second one by turn
+      if(pl.shift === 'N'){
+        const tot = nights[p.id][0] + nights[p.id][1];
+        s += nights[p.id][pl.week] === 0 ? 8 : -6 - (hist[p.id] || 0) * 4;          // a first night of the week; a second one by turn
+        s += -tot * 5 + owedN(p.id) * 3 + (p.per_week - 3) * 0.8;          // (the layers: fewest nights in the two weeks, the schedule before, the job)
+      }
       s -= Math.abs(wload[p.id][pl.week] + pl.w - p.per_week) * 1.5;            // close to the weekly number
       if(pl.shift === 'M' || pl.shift === 'A') s -= kinds[p.id][pl.shift] * 1.5;          // mornings and afternoons balanced
       if(closeOf(p, pl)) s -= 12;                                               // a close pair she agreed to: only when needed
       return s;
     };
     const open = places.map(pl => Object.assign({}, pl)), filled = [], missing = [];
+    // (Guy 26.11) the nights first, week by week: everybody who marked a night that week gets one before the other shifts fill her number;
+    // whoever is owed a night (compensation) first, and then her second one
+    const nightFor = (p, w) => {
+      const cands = open.filter(pl => pl.shift === 'N' && pl.week === w && can(p, pl));
+      if(!cands.length) return false;
+      const others = pl => people.filter(x => x.id !== p.id && nights[x.id][w] === 0 && offer[x.id] && offer[x.id].has(pl.k)).length;
+      const pl = cands.map(c => [others(c) + rnd() * 0.5 - (isCan(p.id, c) ? 0 : 0.6), c]).sort((a, b) => a[0] - b[0])[0][1];
+      open.splice(open.indexOf(pl), 1); put(p.id, pl); filled.push({ pl, pid:p.id }); return true;
+    };
+    if(strictN) [0, 1].forEach(w => {
+      // (who is owed a night first; then whoever marked the fewest nights that week, so that one who marked a single night is not left out)
+      const nOpts = p => open.filter(pl => pl.shift === 'N' && pl.week === w && offer[p.id].has(pl.k)).length;
+      const want = people.filter(p => nightIn(p.id, w) && nights[p.id][w] === 0).map(p => [compIn(p.id, w) ? -1 : nOpts(p) + rnd() * 0.9, p]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+      want.forEach(p => nightFor(p, w));
+      want.filter(p => compIn(p.id, w) && nights[p.id][w] === 1).forEach(p => nightFor(p, w));
+      if(w === 0) people.filter(p => nightIn(p.id, 0) && nights[p.id][0] === 0 && nightIn(p.id, 1)).forEach(p => comp1.add(p.id));
+    });
     while(open.length){
       let bi = 0, bc = null;
       for(let i = 0; i < open.length; i++){ const c = people.filter(p => can(p, open[i])); if(bc === null || c.length < bc.length){ bi = i; bc = c; if(!c.length) break; } }
@@ -20150,11 +20479,15 @@ function twSolve({ start, people, options, fixed, hand, seed, hist }){
     filled.forEach(f => { if(got[f.pid].some(g => g !== f.pl && pairOf(f.pid, g, f.pl) === 'close')) cost += 10; });
     people.forEach(p => {
       cost += Math.max(0, quota(p) - load[p.id]) * 40;
-      [0, 1].forEach(w => { cost += Math.abs(wload[p.id][w] - p.per_week) * 6; if(nights[p.id][w] === 0 && nightOffer[p.id] && nightOffer[p.id][w]) cost += 30; });
-      if(doubles.has(p.id)) cost += 4 + (hist[p.id] || 0) * 6;
+      [0, 1].forEach(w => { cost += Math.abs(wload[p.id][w] - p.per_week) * 6; if(nights[p.id][w] === 0 && nightIn(p.id, w)) cost += 900; if(compIn(p.id, w) && nights[p.id][w] < 2) cost += 40; });
+      if(doubles.has(p.id) && !(compIn(p.id, 0) || compIn(p.id, 1))) cost += 4 + (hist[p.id] || 0) * 6;
       const d = Math.abs(kinds[p.id].M - kinds[p.id].A); if(d > 1) cost += (d - 1) * 4;
+      // (the layers in the comparison of the tries: far from two nights in the two weeks, counting the schedule before; above all of them
+      //  stay one night a week and no empty shift)
+      if(nightIn(p.id, 0) || nightIn(p.id, 1)){ const t = nights[p.id][0] + nights[p.id][1], aim = 2 + Math.max(-1, Math.min(1, owedN(p.id))); cost += (t - aim) * (t - aim) * 12; }
     });
-    if(!best || cost < best.cost) best = { cost, filled, missing, load, nights, overN, doubles:[...doubles] };
+    // (Guy 26.11: an empty shift is always worse, so fewer empty shifts first, and only then the rest of the cost)
+    if(!best || missing.length < best.missing.length || (missing.length === best.missing.length && cost < best.cost)) best = { cost, filled, missing, load, nights, overN, doubles:[...doubles].filter(id => !(compIn(id, 0) || compIn(id, 1))), comps:[...doubles].filter(id => compIn(id, 0) || compIn(id, 1)) };
     if(best.cost === 0) break;
   }
   const lines = [];
@@ -20166,7 +20499,8 @@ function twSolve({ start, people, options, fixed, hand, seed, hist }){
   people.forEach(p => { const l = best.load[p.id], q = quota(p); if(l < q) lines.push(`${twDisp(p)}: ${l} מתוך ${q} משמרות בשבועיים`); else if(l > q) lines.push(`${twDisp(p)}: ${l} משמרות, מעל המינימום (${q}), כי חסרו עובדות שסימנו`); });
   people.forEach(p => { if(!offer[p.id] || !offer[p.id].size) lines.push(`${twDisp(p)}: לא נפתחו משמרות, ולכן אין שיבוצים`); });
   if(best.doubles.length) lines.push(`לילה נוסף בשבועיים (התור של הלילה הנוסף): ${best.doubles.map(id => twDisp(people.find(p => p.id === id))).join(', ')}`);
-  [0, 1].forEach(w => { const none = people.filter(p => best.nights[p.id][w] === 0 && offer[p.id] && offer[p.id].size).map(twDisp); if(none.length) lines.push(`שבוע ${w + 1}, בלי לילה: ${none.join(', ')}`); });
+  if(best.comps.length) lines.push(`שני לילות בשבוע, פיצוי על שבוע בלי לילה: ${best.comps.map(id => twDisp(people.find(p => p.id === id))).join(', ')}`);
+  [0, 1].forEach(w => { const none = people.filter(p => best.nights[p.id][w] === 0 && nightOffer[p.id] && nightOffer[p.id][w]).map(twDisp); if(none.length) lines.push(`שבוע ${w + 1}, בלי לילה למרות שסימנה לילה: ${none.join(', ')}`); });
   const cans = best.filled.filter(f => isCan(f.pid, f.pl)).length;
   if(cans) lines.push(`${cans === 1 ? 'שיבוץ אחד נעשה' : cans + ' שיבוצים נעשו'} במשמרות שסומנו "יכולה", כי לא היה מי שסימן "כן".`);
   if(!lines.length) lines.push('כל המשמרות מלאות, וכל העובדות קיבלו את מספר המשמרות שלהן.');
@@ -20244,7 +20578,8 @@ function twTeamHtml(){
     <div class="tw-form tw-days">ההגשה נפתחת ${sel('tw-open-days', [5, 7, 10, 14, 17, 21, 28], od)} ימים לפני שהשבועיים מתחילים, ונסגרת ${sel('tw-close-days', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14], cd)} ימים לפני, בלילה שאחרי, ב-${twL('05:00')}.</div>`)}
 
     ${fold('periods', 'השבועיים', `
-    ${TW.periods.length ? `<div class="tw-list">${TW.periods.map(x => `<div class="tw-row"><b>${twPeriodLabel(x.start)}</b><span>${st[x.status] || ''}${x.deadline && x.status === 'open' ? ` · ההגשה עד ${new Date(x.deadline).toLocaleDateString('he-IL', { day:'numeric', month:'numeric' })}` : ''}</span>
+    ${TW.periods.length ? `<div class="tw-list">${TW.periods.slice(0, 8).map(x =>          // (half a year is loaded for the nights; the list stays eight)
+ `<div class="tw-row"><b>${twPeriodLabel(x.start)}</b><span>${st[x.status] || ''}${x.deadline && x.status === 'open' ? ` · ההגשה עד ${new Date(x.deadline).toLocaleDateString('he-IL', { day:'numeric', month:'numeric' })}` : ''}</span>
       <label class="tw-inline">בונה: <select data-tw-pb="${x.start}"><option value="">מנהלות המערכת</option>${act.map(p => `<option value="${p.id}"${x.builder === p.id ? ' selected' : ''}>${pEsc(p.name)}</option>`).join('')}</select></label></div>`).join('')}</div>` : '<div class="pnote">עדיין לא נפתחו שבועיים.</div>'}
     <div class="tw-form"><label>פתיחה ידנית: שבועיים מיום ראשון <b>${twShort(next)}</b>, בונה: <select id="tw-new-builder"><option value="">מנהלות המערכת</option>${act.map(x => `<option value="${x.id}">${pEsc(x.name)}</option>`).join('')}</select></label>
       <button type="button" class="btn" id="tw-new-period" data-start="${next}">פתיחה להגשה</button></div>`)}
@@ -20256,6 +20591,11 @@ function twTeamHtml(){
     ${fold('wa', 'קבוצת הוואטסאפ של הצוות', `<p class="tw-step-say">הקישור לקבוצה (בוואטסאפ: פרטי הקבוצה, ואז "הזמנה באמצעות קישור"). כשיש קישור, ליד כפתור השליחה ב"הודעות" מופיע כפתור שפותח את הקבוצה.</p>
       <div class="tw-form"><label>קישור <input type="url" id="tw-wa-link" dir="ltr" maxlength="200" placeholder="https://chat.whatsapp.com/..." value="${pEsc(String(twSetting('wa_group', '') || ''))}"></label></div>
       <div class="tw-actions"><button type="button" class="btn" id="tw-wa-save">שמירה</button></div>`)}
+    ${fold('watext', 'נוסח הודעות הוואטסאפ', [['wa_ask', 'שאלה למדריכה על משמרת', ['שם', 'משמרת']], ['wa_swap', 'בקשת החלפה לקבוצה', ['משמרת']]].map(([k, t, tags]) => `
+      <div class="tw-form tw-form-col tw-watext"><label>${t}<textarea data-tw-watext="${k}" rows="3" maxlength="500">${pEsc(twWaTpl(k))}</textarea></label>
+        <div class="tw-watext-tags">${tags.map(g => `<button type="button" class="btn ghost small" data-tw-watag="${k}|${g}">+ ${g}</button>`).join('')}</div>
+        <div class="pnote tw-watext-ex" data-tw-waex="${k}"></div></div>`).join('') + `
+      <div class="tw-actions"><button type="button" class="btn" id="tw-watext-save">שמירה</button></div>`)}
     ${fold('weekend', 'שעות סוף השבוע', (() => { const wh = twSetting('weekend_hours', null) || {}, g = (k, part, d) => ((wh[k] || {})[part]) || d;
       return `<p class="tw-step-say">משמרת סוף השבוע מתחילה בשישי (או בערב חג) ומסתיימת במוצאי שבת (או חג). השעות שונות בחורף ובקיץ.</p>
       ${[['winter', 'חורף'], ['summer', 'קיץ']].map(([k, w]) => `<div class="tw-form"><b>${w}</b><label>מתחילה <input type="text" inputmode="numeric" maxlength="5" dir="ltr" data-tw-wh="${k}|start" value="${g(k, 'start', '14:00')}"></label><label>מסתיימת <input type="text" inputmode="numeric" maxlength="5" dir="ltr" data-tw-wh="${k}|end" value="${g(k, 'end', '20:30')}"></label></div>`).join('')}
@@ -20344,6 +20684,25 @@ function twTeamWire(box){
   box.querySelectorAll('[data-tw-pb]').forEach(s => s.addEventListener('change', () => run(() => sbPersonal.from('tw_period').update({ builder:s.value || null }).eq('start', s.dataset.twPb), 'נשמר')));
   twReadyOn(box.querySelector('#tw-wh-save'), [...box.querySelectorAll('[data-tw-wh], [data-tw-dst]')]);
   twReadyOn(box.querySelector('#tw-wa-save'), [...box.querySelectorAll('#tw-wa-link')]);
+  twReadyOn(box.querySelector('#tw-watext-save'), [...box.querySelectorAll('[data-tw-watext]')]);
+  const waEx = k => { const ta = box.querySelector(`[data-tw-watext="${k}"]`), ex = box.querySelector(`[data-tw-waex="${k}"]`); if(!ta || !ex) return;
+    const p = TW.people.find(x => x.active), d = (TW.period && TW.period > twToday()) ? TW.period : twToday();
+    ex.textContent = 'כך זה ייראה: ' + twWaFill(ta.value.trim() || TW_WA_DEF[k](), p ? p.name : 'נועה', twShiftLine(d, 'M')); };
+  box.querySelectorAll('[data-tw-watext]').forEach(ta => { waEx(ta.dataset.twWatext); ta.addEventListener('input', () => waEx(ta.dataset.twWatext)); });
+  box.querySelectorAll('[data-tw-watag]').forEach(b => b.addEventListener('click', () => {
+    const [k, g] = b.dataset.twWatag.split('|'), ta = box.querySelector(`[data-tw-watext="${k}"]`); if(!ta) return;
+    const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? s;
+    const before = ta.value.slice(0, s), after = ta.value.slice(e);          // (a space where the word would stick to its neighbour)
+    ta.setRangeText(`${before && !/\s$/.test(before) ? ' ' : ''}[${g}]${after && !/^[\s.,:!?]/.test(after) ? ' ' : ''}`, s, e, 'end'); ta.focus(); ta.dispatchEvent(new Event('input', { bubbles:true }));
+  }));
+  const wts = box.querySelector('#tw-watext-save');
+  if(wts) wts.addEventListener('click', () => run(async () => {
+    for(const ta of box.querySelectorAll('[data-tw-watext]')){
+      const k = ta.dataset.twWatext, v = ta.value.trim(), own = v && v !== TW_WA_DEF[k]() ? v : '';          // (the wording that was there: nothing is kept)
+      const r = await sbPersonal.from('tw_settings').upsert({ key:k, value:own }); if(r.error) return r;
+    }
+    return { error:null };
+  }, 'הנוסח נשמר'));
   twReadyOn(box.querySelector('#tw-add-person'), [...box.querySelectorAll('#tw-new-name, #tw-new-last, #tw-new-mail, #tw-new-phone')]);
   const whs = box.querySelector('#tw-wh-save');
   if(whs) whs.addEventListener('click', () => {
@@ -20533,7 +20892,7 @@ function twAskSheet(asgId){
 }
 // after asking: a ready WhatsApp message for the staff's group
 function twShareSheet(a, note){
-  const text = `מחפשים החלפה: ${twShiftLine(a.day, a.shift)}${note ? `\n${note}` : ''}`;
+  const text = twWaFill(twWaTpl('wa_swap'), twName(a.person), twShiftLine(a.day, a.shift)) + (note ? `\n${note}` : '');
   twSheet(`<h2>הבקשה נשלחה</h2><div class="pnote">אפשר גם לשלוח הודעה מוכנה לקבוצת הצוות:</div><div class="tw-share">${pEsc(text)}</div>
     <div class="confirm-actions"><a class="btn tw-wa-send" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(text)}" data-tw-close>שליחה בוואטסאפ</a><button type="button" class="btn ghost" data-tw-close>סגירה</button></div>`);
 }
@@ -20576,6 +20935,8 @@ function twSwapsWire(box){
 }
 // the link of the team's WhatsApp group (tw_settings 'wa_group', set in "ניהול"): a full link, or only the code of the invitation
 function twWaGroup(){ const v = String(twSetting('wa_group', '') || '').trim(); if(!v) return ''; return /^https:\/\//.test(v) ? v : 'https://chat.whatsapp.com/' + v.replace(/^.*\//, ''); }
+// (Guy 26.11) the button that opens the group, also while building and editing; nothing when no link was set
+const twWaGroupBtn = () => twWaGroup() ? `<a class="btn ghost tw-wa-group" href="${pEsc(twWaGroup())}" target="_blank" rel="noopener">קבוצת הוואטסאפ</a>` : '';
 function twInboxHtml(){
   if(TW.socialOff) return '<div class="pnote">ההודעות עוד לא הופעלו במסד הזה.</div>';
   const who = m => { const p = TW.people.find(x => x.staff_id && x.staff_id === m.from_staff); return p ? p.name : 'הנהלה'; };
@@ -20949,7 +21310,7 @@ async function twShareAsk(){
   await twShareImage();
 }
 // the picture itself: both weeks, the days side by side (for sharing and for printing)
-function twScheduleCanvas(){
+function twScheduleCanvas(draft){
   const days = twDays(TW.period), W = 1600, side = 150, pad = 30, colW = (W - side - pad * 2) / 7, lineH = 30, F = '400 23px Assistant, Arial';
   const c = document.createElement('canvas'), g = c.getContext('2d');
   const list = (day, sh) => TW.asg.filter(a => a.day === day && a.shift === sh).map(a => twName(a.person) + (a.from_time && a.to_time ? ` ${twNice(twHm(a.from_time))}–${twNice(twHm(a.to_time))}` : '')).sort((x, y) => x.localeCompare(y, 'he'));
@@ -20973,6 +21334,7 @@ function twScheduleCanvas(){
   g.direction = 'rtl'; g.textAlign = 'right'; g.fillStyle = '#FAF7F2'; g.fillRect(0, 0, W, H);
   g.fillStyle = '#2D2A24'; g.font = '600 46px Rubik, Assistant, Arial'; g.fillText('סידור העבודה', W - pad, 62);
   g.font = '400 30px Assistant, Arial'; g.fillStyle = '#6E675C'; g.fillText(`${twShort(days[0])} עד ${twShort(days[13])}`, W - pad, 104);
+  if(draft){ g.textAlign = 'left'; g.fillStyle = '#B5502F'; g.font = '700 34px Assistant, Arial'; g.fillText('טיוטה · לא פורסם', pad, 62); g.textAlign = 'right'; }          // (Guy 26.11: so that a draft sent by mistake says so)
   let y = headH;
   const colR = i => W - pad - side - i * colW;
   weeks.forEach((wk, w) => {
@@ -21005,6 +21367,13 @@ async function twShareImage(){
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); toast('התמונה נשמרה. אפשר לצרף אותה בוואטסאפ.');
 }
 
+// (Guy 26.11) "תצוגה מקדימה" while building: the picture the staff will get, with "טיוטה" on it
+function twPreviewSheet(){
+  const url = twScheduleCanvas(true).toDataURL('image/png');
+  twSheet(`<h2>תצוגה מקדימה</h2><img class="tw-prev-img" src="${url}" alt="תמונת הסידור, טיוטה">
+    <div class="confirm-actions"><button type="button" class="btn ghost" data-tw-close>סגירה</button></div>`);
+}
+document.addEventListener('click', e => { if(e.target.closest && e.target.closest('#tw-preview')) twPreviewSheet(); });
 // printing (Guy 23.11): the same picture, both weeks on one page across; the browser's printing also saves a PDF
 function twPrint(){
   const url = twScheduleCanvas().toDataURL('image/png'), w = window.open('', '_blank');
